@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Tool, HardHat } from "lucide-react";
+import { Wrench, HardHat } from "lucide-react";
 
 interface BuildingProgressProps {
   progress: number;
@@ -65,7 +65,7 @@ const BuildingProgress = ({ progress, className }: BuildingProgressProps) => {
             }}
             className="absolute -right-8 top-1/2 transform -translate-y-1/2"
           >
-            <Tool className="w-5 h-5 text-primary-dark" />
+            <Wrench className="w-5 h-5 text-primary-dark" />
           </motion.div>
 
           {[1, 2, 3].map((i) => (
