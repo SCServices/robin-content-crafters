@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { BusinessInfo } from "@/lib/types";
-import { generateTitle } from "./titleGeneration";
+import { generateTitle } from "./useContentGeneration/titleGeneration";
 
 export const useContentGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -60,7 +60,6 @@ export const useContentGeneration = () => {
 
       setProgress(20);
 
-      // Insert services and locations
       const { data: servicesData } = await supabase
         .from("services")
         .insert(
@@ -139,7 +138,6 @@ export const useContentGeneration = () => {
         }
       }
 
-      // Insert content entries
       if (contentEntries.length > 0) {
         const { error: contentError } = await supabase
           .from("generated_content")
