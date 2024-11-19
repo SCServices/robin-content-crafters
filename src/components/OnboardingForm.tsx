@@ -13,18 +13,25 @@ interface OnboardingFormProps {
 
 const OnboardingForm = ({ onComplete, initialData }: OnboardingFormProps) => {
   const [step, setStep] = useState(1);
-  const [companyName, setCompanyName] = useState(initialData?.companyName || "");
-  const [industry, setIndustry] = useState(initialData?.industry || "");
-  const [website, setWebsite] = useState(initialData?.website || "");
-  const [locations, setLocations] = useState<string[]>(initialData?.locations || []);
-  const [services, setServices] = useState<string[]>(initialData?.services || []);
+  const [companyName, setCompanyName] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [website, setWebsite] = useState("");
+  const [locations, setLocations] = useState<string[]>([]);
+  const [services, setServices] = useState<string[]>([]);
   
   const { createCompanyAndContent, isGenerating, progress } = useContentGeneration();
 
   useEffect(() => {
-    const fetchCompanyDetails = async () => {
-      if (initialData?.companyName) {
-        // Fetch company ID first, but now handle multiple results
+    const initializeFormData = async () => {
+      if (!initialData) return;
+
+      // Set basic company info
+      setCompanyName(initialData.companyName);
+      setIndustry(initialData.industry);
+      setWebsite(initialData.website);
+      
+      if (initialData.companyName) {
+        // Fetch company ID first
         const { data: companyData } = await supabase
           .from("companies")
           .select("id, website, industry")
@@ -56,15 +63,7 @@ const OnboardingForm = ({ onComplete, initialData }: OnboardingFormProps) => {
       }
     };
 
-    fetchCompanyDetails();
-  }, [initialData]);
-
-  useEffect(() => {
-    if (initialData) {
-      setCompanyName(initialData.companyName);
-      setIndustry(initialData.industry);
-      setWebsite(initialData.website);
-    }
+    initializeFormData();
   }, [initialData]);
 
   const handleSubmit = async () => {
