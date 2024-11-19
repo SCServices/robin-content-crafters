@@ -103,8 +103,10 @@ export const useContentGeneration = () => {
         contentEntries.push({
           company_id: companyData.id,
           service_id: service.id,
-          title: `${service.name} Services - ${businessInfo.companyName}`,
-          type: "service",
+const title = await generateTitle("service", {
+      companyName: businessInfo.companyName,
+      industry: businessInfo.industry,
+      serviceName: service.name,
         });
       }
 
