@@ -98,7 +98,6 @@ export const useContentGeneration = () => {
 
       if (titleError) throw titleError;
 
-      // Content entries creation
       if (contentData.contentEntries.length > 0) {
         const { error: contentError } = await supabase
           .from("generated_content")
@@ -147,7 +146,7 @@ export const useContentGeneration = () => {
       return { success: true };
     } catch (error) {
       console.error("Error:", error);
-      toast.error('❌ Oops! Something went wrong while creating your content', { id: progressToast });
+      toast.error('❌ Something went wrong during content generation', { id: progressToast });
       return { success: false, error };
     } finally {
       setIsGenerating(false);
