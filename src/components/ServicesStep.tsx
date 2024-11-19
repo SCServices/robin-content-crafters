@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface ServicesStepProps {
@@ -10,9 +10,10 @@ interface ServicesStepProps {
   setServices: (services: string[]) => void;
   onSubmit: () => void;
   onBack: () => void;
+  isGenerating: boolean;
 }
 
-const ServicesStep = ({ services, setServices, onSubmit, onBack }: ServicesStepProps) => {
+const ServicesStep = ({ services, setServices, onSubmit, onBack, isGenerating }: ServicesStepProps) => {
   const [newService, setNewService] = useState("");
 
   const addService = (e: React.FormEvent) => {
@@ -83,14 +84,23 @@ const ServicesStep = ({ services, setServices, onSubmit, onBack }: ServicesStepP
           variant="outline"
           onClick={onBack}
           className="flex-1"
+          disabled={isGenerating}
         >
           Back
         </Button>
         <Button
           onClick={handleSubmit}
           className="flex-1 bg-primary hover:bg-primary-dark text-white"
+          disabled={isGenerating}
         >
-          Generate Content
+          {isGenerating ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            "Generate Content"
+          )}
         </Button>
       </div>
     </div>
