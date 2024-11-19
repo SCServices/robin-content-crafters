@@ -9,7 +9,162 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      companies: {
+        Row: {
+          created_at: string
+          id: string
+          industry: string
+          name: string
+          updated_at: string
+          website: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          industry: string
+          name: string
+          updated_at?: string
+          website: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          industry?: string
+          name?: string
+          updated_at?: string
+          website?: string
+        }
+        Relationships: []
+      }
+      generated_content: {
+        Row: {
+          company_id: string
+          content: string | null
+          created_at: string
+          id: string
+          location_id: string | null
+          parent_content_id: string | null
+          service_id: string | null
+          status: Database["public"]["Enums"]["content_status"]
+          title: string
+          type: Database["public"]["Enums"]["content_type"]
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          location_id?: string | null
+          parent_content_id?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
+          title: string
+          type: Database["public"]["Enums"]["content_type"]
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          location_id?: string | null
+          parent_content_id?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["content_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_content_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_content_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "service_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_content_parent_content_id_fkey"
+            columns: ["parent_content_id"]
+            isOneToOne: false
+            referencedRelation: "generated_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_content_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_locations: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          location: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          location: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          location?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_locations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +173,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      content_status: "pending" | "generated" | "error"
+      content_type: "service" | "location" | "blog"
     }
     CompositeTypes: {
       [_ in never]: never
