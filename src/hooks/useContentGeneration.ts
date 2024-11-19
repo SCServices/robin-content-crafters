@@ -132,7 +132,7 @@ export const useContentGeneration = () => {
           companyName: businessInfo.companyName,
           industry: businessInfo.industry,
           serviceName: service.name,
-          companyId: companyData.id, // Add company ID
+          companyId: companyData.id,
         };
 
         // Generate service page

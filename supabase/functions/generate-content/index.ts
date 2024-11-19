@@ -18,14 +18,22 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     const { contentType, companyInfo, serviceId, locationId } = await req.json();
     
     console.log('Received request:', { contentType, companyInfo, serviceId, locationId });
 
-    if (!contentType || !companyInfo || !serviceId) {
+    // Validate required parameters
+    if (!contentType || !companyInfo || !serviceId || !companyInfo.companyId) {
       throw new Error('Missing required parameters');
     }
+
+    // Validate UUIDs
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(companyInfo.companyId) || !uuidRegex.test(serviceId) || (locationId && !uuidRegex.test(locationId))) {
+      throw new Error('Invalid UUID format');
+    }
+
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     let prompt = '';
     const systemPrompt = 'You are an expert content writer specializing in creating high-quality, SEO-optimized content for business websites.';
@@ -98,8 +106,9 @@ serve(async (req) => {
         throw new Error('Invalid content type specified');
     }
 
+    console.log('Calling OpenAI with prompt:', prompt);
+    
     // Call OpenAI API
-    console.log('Calling OpenAI API with prompt:', prompt);
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -107,7 +116,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
@@ -134,6 +143,7 @@ serve(async (req) => {
         status: 'generated'
       })
       .match({ 
+        company_id: companyInfo.companyId,
         service_id: serviceId,
         ...(locationId ? { location_id: locationId } : {}),
         type: contentType
