@@ -50,6 +50,47 @@ export default {
           900: "#111827",
         },
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: '100%',
+            color: '#374151',
+            h1: {
+              color: '#9b87f5',
+              marginTop: '2rem',
+              marginBottom: '1rem',
+            },
+            h2: {
+              color: '#9b87f5',
+              marginTop: '1.5rem',
+              marginBottom: '0.75rem',
+            },
+            h3: {
+              color: '#9b87f5',
+              marginTop: '1.25rem',
+              marginBottom: '0.5rem',
+            },
+            p: {
+              marginTop: '1rem',
+              marginBottom: '1rem',
+            },
+            ul: {
+              marginTop: '1rem',
+              marginBottom: '1rem',
+            },
+            li: {
+              marginTop: '0.5rem',
+              marginBottom: '0.5rem',
+            },
+            a: {
+              color: '#9b87f5',
+              '&:hover': {
+                color: '#7E69AB',
+              },
+            },
+          },
+        },
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -71,5 +112,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;

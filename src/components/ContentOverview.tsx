@@ -75,24 +75,22 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
       </Card>
 
       <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-primary">
+            <DialogTitle className="text-2xl font-bold text-primary mb-4">
               {selectedItem?.title}
             </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            <div className="prose prose-primary max-w-none">
-              {selectedItem?.content ? (
-                <ReactMarkdown className="prose prose-headings:text-primary prose-a:text-primary hover:prose-a:text-primary-dark">
-                  {selectedItem.content}
-                </ReactMarkdown>
-              ) : (
-                <p className="text-neutral-500 italic text-center py-8">
-                  Content is still being generated...
-                </p>
-              )}
-            </div>
+            {selectedItem?.content ? (
+              <article className="prose prose-lg prose-primary max-w-none">
+                <ReactMarkdown>{selectedItem.content}</ReactMarkdown>
+              </article>
+            ) : (
+              <p className="text-neutral-500 italic text-center py-8">
+                Content is still being generated...
+              </p>
+            )}
           </div>
           <DialogFooter className="mt-6">
             <Button variant="outline" onClick={() => setSelectedItem(null)}>
