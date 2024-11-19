@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { Tool, HardHat } from "lucide-react";
 
 interface BuildingProgressProps {
   progress: number;
@@ -17,6 +18,19 @@ const BuildingProgress = ({ progress, className }: BuildingProgressProps) => {
   return (
     <div className={cn("relative w-full h-48", className)}>
       <div className="absolute inset-0 flex flex-col items-center justify-end">
+        {/* Construction Worker - Top */}
+        <motion.div
+          initial={{ x: -100, opacity: 0 }}
+          animate={{ 
+            x: showRoof ? 0 : -100,
+            opacity: showRoof ? 1 : 0
+          }}
+          transition={{ duration: 0.5 }}
+          className="absolute top-0 right-[15%] transform -translate-y-full"
+        >
+          <HardHat className="w-6 h-6 text-primary-dark" />
+        </motion.div>
+
         {/* Roof */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -34,8 +48,26 @@ const BuildingProgress = ({ progress, className }: BuildingProgressProps) => {
             opacity: showWindows ? 1 : 0,
             scaleX: showWindows ? 1 : 0.8
           }}
-          className="w-[70%] h-16 bg-primary-light flex items-center justify-around px-4"
+          className="w-[70%] h-16 bg-primary-light flex items-center justify-around px-4 relative"
         >
+          {/* Tool Animation */}
+          <motion.div
+            initial={{ rotate: -45, opacity: 0 }}
+            animate={{ 
+              rotate: showWindows ? 0 : -45,
+              opacity: showWindows ? 1 : 0
+            }}
+            transition={{ 
+              duration: 0.5,
+              repeat: showWindows ? Infinity : 0,
+              repeatType: "reverse",
+              repeatDelay: 1
+            }}
+            className="absolute -right-8 top-1/2 transform -translate-y-1/2"
+          >
+            <Tool className="w-5 h-5 text-primary-dark" />
+          </motion.div>
+
           {[1, 2, 3].map((i) => (
             <motion.div
               key={i}
@@ -54,8 +86,21 @@ const BuildingProgress = ({ progress, className }: BuildingProgressProps) => {
             opacity: showWalls ? 1 : 0,
             scaleY: showWalls ? 1 : 0
           }}
-          className="w-[70%] h-24 bg-primary flex items-center justify-center"
+          className="w-[70%] h-24 bg-primary flex items-center justify-center relative"
         >
+          {/* Construction Worker - Side */}
+          <motion.div
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ 
+              x: showWalls ? 0 : 100,
+              opacity: showWalls ? 1 : 0
+            }}
+            transition={{ duration: 0.5 }}
+            className="absolute -left-8 bottom-0"
+          >
+            <HardHat className="w-6 h-6 text-primary-dark" />
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: showWalls ? 1 : 0 }}

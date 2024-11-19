@@ -91,7 +91,7 @@ const ServicesStep = ({
 
       {isGenerating && (
         <div className="space-y-2">
-          <BuildingProgress value={progress} className="w-full" />
+          <BuildingProgress progress={progress} className="w-full" />
           <p className="text-sm text-neutral-600 text-center">
             Building your content: {Math.round(progress)}% complete
           </p>
