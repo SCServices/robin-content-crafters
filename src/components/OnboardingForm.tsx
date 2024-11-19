@@ -24,25 +24,31 @@ const OnboardingForm = ({ onComplete, initialData }: OnboardingFormProps) => {
   useEffect(() => {
     const fetchCompanyDetails = async () => {
       if (initialData?.companyName) {
-        // Fetch company ID first
+        // Fetch company ID first, but now handle multiple results
         const { data: companyData } = await supabase
           .from("companies")
-          .select("id")
+          .select("id, website, industry")
           .eq("name", initialData.companyName)
-          .single();
+          .limit(1);
 
-        if (companyData) {
+        if (companyData && companyData.length > 0) {
+          const company = companyData[0];
+          
+          // Set website and industry from the company data
+          setWebsite(company.website);
+          setIndustry(company.industry);
+
           // Fetch locations
           const { data: locationData } = await supabase
             .from("service_locations")
             .select("location")
-            .eq("company_id", companyData.id);
+            .eq("company_id", company.id);
 
           // Fetch services
           const { data: serviceData } = await supabase
             .from("services")
             .select("name")
-            .eq("company_id", companyData.id);
+            .eq("company_id", company.id);
 
           setLocations(locationData?.map(l => l.location) || []);
           setServices(serviceData?.map(s => s.name) || []);
