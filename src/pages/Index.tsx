@@ -4,8 +4,7 @@ import OnboardingForm from "@/components/OnboardingForm";
 import Dashboard from "@/components/Dashboard";
 import ContentOverview from "@/components/ContentOverview";
 import Layout from "@/components/Layout";
-import type { BusinessInfo, ContentItem, ContentStats } from "@/lib/types";
-import { toast } from "sonner";
+import type { BusinessInfo } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -14,14 +13,7 @@ import { useContentGeneration } from "@/hooks/useContentGeneration";
 const Index = () => {
   const [isOnboarding, setIsOnboarding] = useState(true);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
-  const [contentStats, setContentStats] = useState<ContentStats>({
-    total: 0,
-    generated: 0,
-    pending: 0,
-    error: 0,
-  });
-  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
-  const { createCompanyAndContent, isGenerating, progress } = useContentGeneration();
+  const { contentStats, contentItems, createCompanyAndContent } = useContentGeneration();
 
   const { data: companies } = useQuery({
     queryKey: ["companies"],
@@ -39,72 +31,9 @@ const Index = () => {
   const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
 
   const handleFormSubmit = async (data: BusinessInfo) => {
-    // Calculate total content items
-    const servicePages = data.services.length;
-    const locationPages = data.services.length * data.locations.length;
-    const blogPosts = locationPages;
-    const total = servicePages + locationPages + blogPosts;
-
-    // Initialize content items
-    const items: ContentItem[] = [
-      // Service pages
-      ...data.services.map((service): ContentItem => ({
-        title: `${service} Services - ${data.companyName}`,
-        type: "service",
-        status: "pending",
-        companies: { name: data.companyName }
-      })),
-      // Location pages
-      ...data.locations.flatMap((location) =>
-        data.services.map((service): ContentItem => ({
-          title: `${service} Services in ${location} - ${data.companyName}`,
-          type: "location",
-          status: "pending",
-          companies: { name: data.companyName }
-        }))
-      ),
-      // Blog posts
-      ...data.locations.flatMap((location) =>
-        data.services.map((service): ContentItem => ({
-          title: `Guide to ${service} Services in ${location}`,
-          type: "blog",
-          status: "pending",
-          companies: { name: data.companyName }
-        }))
-      ),
-    ];
-
-    setContentStats({
-      total,
-      generated: 0,
-      pending: total,
-      error: 0,
-    });
-    
-    setContentItems(items);
-    setIsOnboarding(false);
-
-    // Start content generation
     const result = await createCompanyAndContent(data);
     if (result.success) {
-      // Update content items with generated status
-      const updatedItems = items.map(item => ({
-        ...item,
-        status: "generated" as const
-      }));
-      setContentItems(updatedItems);
-      setContentStats(prev => ({
-        ...prev,
-        generated: total,
-        pending: 0
-      }));
-    } else {
-      // Handle error case
-      setContentStats(prev => ({
-        ...prev,
-        error: total,
-        pending: 0
-      }));
+      setIsOnboarding(false);
     }
   };
 

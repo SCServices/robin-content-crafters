@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { BusinessInfo } from "@/lib/types";
+import type { BusinessInfo, ContentItem, ContentStats } from "@/lib/types";
+import { generateInitialContentItems } from "./useContentGeneration/contentItems";
 
 const generateFallbackTitle = (
   type: string,
@@ -23,18 +24,25 @@ const generateFallbackTitle = (
 export const useContentGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
+  const [contentStats, setContentStats] = useState<ContentStats>({
+    total: 0,
+    generated: 0,
+    pending: 0,
+    error: 0,
+  });
 
- const generateTitle = async (
-  type: string,
-  info: { companyName: string; industry: string; serviceName: string },
-  location?: string
-) => {
-  try {
-    // Create content-type specific prompts
-    let prompt = '';
-    switch (type) {
-      case 'service':
-        prompt = `
+  const generateTitle = async (
+    type: string,
+    info: { companyName: string; industry: string; serviceName: string },
+    location?: string
+  ) => {
+    try {
+      // Create content-type specific prompts
+      let prompt = '';
+      switch (type) {
+        case 'service':
+          prompt = `
 You are an experienced copywriter specializing in creating engaging and natural-sounding titles for service pages in the ${info.industry} industry.
 
 Please generate a compelling and natural title for a **service page** for **${info.companyName}** that offers **${info.serviceName}** services.
@@ -45,9 +53,9 @@ Please generate a compelling and natural title for a **service page** for **${in
 - Make it stand out and accurately reflect the service.
 - Use title case capitalization.
 `;
-        break;
-      case 'location':
-        prompt = `
+          break;
+        case 'location':
+          prompt = `
 You are an experienced copywriter specializing in creating engaging and natural-sounding titles for location-specific service pages in the ${info.industry} industry.
 
 Please generate a compelling and natural title for a **location-specific service page** for **${info.companyName}**, focusing on **${info.serviceName}** services in **${location}**.
@@ -58,9 +66,9 @@ Please generate a compelling and natural title for a **location-specific service
 - Appeal to the local audience.
 - Use title case capitalization.
 `;
-        break;
-      case 'blog':
-        prompt = `
+          break;
+        case 'blog':
+          prompt = `
 You are an experienced copywriter specializing in creating engaging and natural-sounding titles for blog posts in the ${info.industry} industry.
 
 Please generate a compelling and natural title for a **blog post** for **${info.companyName}** about **${info.serviceName}** services${location ? ` in ${location}` : ''}.
@@ -71,26 +79,35 @@ Please generate a compelling and natural title for a **blog post** for **${info.
 - Use natural language that resonates with homeowners and DIY enthusiasts.
 - Use title case capitalization.
 `;
-        break;
-      default:
-        prompt = `
+          break;
+        default:
+          prompt = `
 Please generate a title for ${info.serviceName} services by ${info.companyName}.
 `;
-    }
+      }
 
-    const { data } = await supabase.functions.invoke("generate-titles", {
-      body: { contentType: type, companyInfo: info, location, prompt },
-    });
-    return data?.title || generateFallbackTitle(type, info, location);
-  } catch (error) {
-    console.error("Error generating title:", error);
-    return generateFallbackTitle(type, info, location);
-  }
-};
+      const { data } = await supabase.functions.invoke("generate-titles", {
+        body: { contentType: type, companyInfo: info, location, prompt },
+      });
+      return data?.title || generateFallbackTitle(type, info, location);
+    } catch (error) {
+      console.error("Error generating title:", error);
+      return generateFallbackTitle(type, info, location);
+    }
+  };
 
   const createCompanyAndContent = async (businessInfo: BusinessInfo) => {
     setIsGenerating(true);
     setProgress(0);
+
+    const { items, total } = generateInitialContentItems(businessInfo);
+    setContentItems(items);
+    setContentStats({
+      total,
+      generated: 0,
+      pending: total,
+      error: 0,
+    });
 
     const progressToast = toast.loading('Starting content generation process...', {
       duration: Infinity,
@@ -313,7 +330,7 @@ Please generate a title for ${info.serviceName} services by ${info.companyName}.
       }
 
       toast.success('Content generation completed successfully!', { id: progressToast });
-      return { success: true };
+      return { success: true, items };
     } catch (error) {
       console.error("Error:", error);
       toast.error('An error occurred while processing your information', { id: progressToast });
@@ -328,5 +345,7 @@ Please generate a title for ${info.serviceName} services by ${info.companyName}.
     createCompanyAndContent,
     isGenerating,
     progress,
+    contentItems,
+    contentStats,
   };
 };
