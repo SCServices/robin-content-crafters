@@ -106,15 +106,13 @@ export const useContentGeneration = () => {
           });
 
           // Blog posts for each location page
-          for (let i = 1; i <= 5; i++) {
-            contentEntries.push({
-              company_id: companyData.id,
-              service_id: service.id,
-              location_id: location.id,
-              title: `Guide to ${service.name} Services in ${location.location}`,
-              type: "blog",
-            });
-          }
+          contentEntries.push({
+            company_id: companyData.id,
+            service_id: service.id,
+            location_id: location.id,
+            title: `Guide to ${service.name} Services in ${location.location}`,
+            type: "blog",
+          });
         }
       }
 
@@ -134,6 +132,7 @@ export const useContentGeneration = () => {
           companyName: businessInfo.companyName,
           industry: businessInfo.industry,
           serviceName: service.name,
+          companyId: companyData.id, // Add company ID
         };
 
         // Generate service page
@@ -164,16 +163,14 @@ export const useContentGeneration = () => {
           });
 
           // Generate blog posts
-          for (let i = 0; i < 5; i++) {
-            await supabase.functions.invoke("generate-content", {
-              body: {
-                contentType: "blog",
-                companyInfo: locationInfo,
-                serviceId: service.id,
-                locationId: location.id,
-              },
-            });
-          }
+          await supabase.functions.invoke("generate-content", {
+            body: {
+              contentType: "blog",
+              companyInfo: locationInfo,
+              serviceId: service.id,
+              locationId: location.id,
+            },
+          });
         }
       }
 

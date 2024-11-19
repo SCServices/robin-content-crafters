@@ -8,6 +8,8 @@ const corsHeaders = {
 };
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -16,12 +18,18 @@ serve(async (req) => {
   }
 
   try {
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     const { contentType, companyInfo, serviceId, locationId } = await req.json();
-    console.log('Generating content for:', { contentType, companyInfo, serviceId, locationId });
+    
+    console.log('Received request:', { contentType, companyInfo, serviceId, locationId });
+
+    if (!contentType || !companyInfo || !serviceId) {
+      throw new Error('Missing required parameters');
+    }
 
     let prompt = '';
-    let systemPrompt = 'You are an expert content writer specializing in creating high-quality, SEO-optimized content for business websites.';
-    
+    const systemPrompt = 'You are an expert content writer specializing in creating high-quality, SEO-optimized content for business websites.';
+
     // Construct prompt based on content type
     switch (contentType) {
       case 'service':
@@ -91,14 +99,15 @@ serve(async (req) => {
     }
 
     // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    console.log('Calling OpenAI API with prompt:', prompt);
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
@@ -107,44 +116,36 @@ serve(async (req) => {
       }),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
+    if (!openAIResponse.ok) {
+      const error = await openAIResponse.json();
       console.error('OpenAI API error:', error);
       throw new Error('Failed to generate content');
     }
 
-    const data = await response.json();
-    const generatedContent = data.choices[0].message.content;
+    const completion = await openAIResponse.json();
+    const generatedContent = completion.choices[0].message.content;
 
     // Update the content in the database
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const supabase = createClient(supabaseUrl!, supabaseKey!);
-
-    // Construct the query based on content type
-    const query = {
-      company_id: companyInfo.companyId,
-      service_id: serviceId,
-      ...(locationId && { location_id: locationId }),
-      type: contentType,
-    };
-
+    console.log('Updating content in database for:', { serviceId, locationId });
     const { error: updateError } = await supabase
       .from('generated_content')
       .update({ 
         content: generatedContent,
         status: 'generated'
       })
-      .match(query);
+      .match({ 
+        service_id: serviceId,
+        ...(locationId ? { location_id: locationId } : {}),
+        type: contentType
+      });
 
     if (updateError) {
-      console.error('Error updating content:', updateError);
+      console.error('Database update error:', updateError);
       throw updateError;
     }
 
-    // Return the generated content
     return new Response(
-      JSON.stringify({ success: true, content: generatedContent }),
+      JSON.stringify({ success: true }),
       { 
         headers: { 
           ...corsHeaders,
