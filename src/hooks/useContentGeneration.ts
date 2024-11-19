@@ -2,7 +2,6 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { BusinessInfo } from "@/lib/types";
-import { generateTitle } from "./useContentGeneration/titleGeneration";
 
 export const useContentGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -60,6 +59,7 @@ export const useContentGeneration = () => {
 
       setProgress(20);
 
+      // Insert services and locations
       const { data: servicesData } = await supabase
         .from("services")
         .insert(
@@ -82,66 +82,26 @@ export const useContentGeneration = () => {
 
       setProgress(40);
 
-      // Generate content entries with AI-generated titles
-      const contentEntries = [];
-
-      // Service pages
-      for (const service of servicesData || []) {
-        if (!service?.id) continue;
-        const title = await generateTitle("service", {
-          companyName: businessInfo.companyName,
-          industry: businessInfo.industry,
-          serviceName: service.name,
-        });
-        
-        contentEntries.push({
-          company_id: companyData.id,
-          service_id: service.id,
-          title,
-          type: "service",
-        });
-      }
-
-      // Location pages and blog posts
-      for (const service of servicesData || []) {
-        if (!service?.id) continue;
-        for (const location of locationsData || []) {
-          if (!location?.id) continue;
-          
-          const locationTitle = await generateTitle("location", {
+      // Generate all titles and content entries using the Edge Function
+      const { data: contentData, error: titleError } = await supabase.functions.invoke("generate-titles", {
+        body: {
+          services: servicesData,
+          locations: locationsData,
+          companyInfo: {
             companyName: businessInfo.companyName,
             industry: businessInfo.industry,
-            serviceName: service.name,
-          }, location.location);
+            companyId: companyData.id,
+          },
+        },
+      });
 
-          contentEntries.push({
-            company_id: companyData.id,
-            service_id: service.id,
-            location_id: location.id,
-            title: locationTitle,
-            type: "location",
-          });
+      if (titleError) throw titleError;
 
-          const blogTitle = await generateTitle("blog", {
-            companyName: businessInfo.companyName,
-            industry: businessInfo.industry,
-            serviceName: service.name,
-          }, location.location);
-
-          contentEntries.push({
-            company_id: companyData.id,
-            service_id: service.id,
-            location_id: location.id,
-            title: blogTitle,
-            type: "blog",
-          });
-        }
-      }
-
-      if (contentEntries.length > 0) {
+      // Insert content entries
+      if (contentData.contentEntries.length > 0) {
         const { error: contentError } = await supabase
           .from("generated_content")
-          .insert(contentEntries);
+          .insert(contentData.contentEntries);
 
         if (contentError) throw contentError;
       }
@@ -149,10 +109,10 @@ export const useContentGeneration = () => {
       setProgress(60);
 
       // Generate content using the Edge Function
-      const totalItems = contentEntries.length;
+      const totalItems = contentData.contentEntries.length;
       let completedItems = 0;
 
-      for (const entry of contentEntries) {
+      for (const entry of contentData.contentEntries) {
         await supabase.functions.invoke("generate-content", {
           body: {
             contentType: entry.type,
