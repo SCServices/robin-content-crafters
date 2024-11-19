@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { FileText, MapPin, Briefcase, NewspaperIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ContentListProps {
   items: any[];
@@ -16,6 +17,7 @@ interface ContentListProps {
 
 const ContentList = ({ items }: ContentListProps) => {
   const [selectedContent, setSelectedContent] = useState<any | null>(null);
+  const [activeTab, setActiveTab] = useState("all");
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -43,10 +45,23 @@ const ContentList = ({ items }: ContentListProps) => {
     }
   };
 
+  const filteredItems = activeTab === "all" 
+    ? items 
+    : items.filter(item => item.type === activeTab);
+
   return (
     <>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <TabsList className="w-full justify-start">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="service">Services</TabsTrigger>
+          <TabsTrigger value="location">Locations</TabsTrigger>
+          <TabsTrigger value="blog">Blog Posts</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <div className="space-y-4">
-        {items.map((item) => (
+        {filteredItems.map((item) => (
           <Card
             key={item.id}
             className="p-4 hover:shadow-md transition-shadow cursor-pointer"
