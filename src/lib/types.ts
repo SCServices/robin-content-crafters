@@ -11,8 +11,13 @@ export interface ContentItem {
   type: "service" | "location" | "blog";
   status: "pending" | "generated" | "error";
   content?: string;
-  companies?: {
+  companies: {
+    id: string;
     name: string;
+    industry: string;
+    website: string;
+    created_at: string;
+    updated_at: string;
   };
 }
 

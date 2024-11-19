@@ -1,26 +1,10 @@
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { BusinessInfo, ContentItem } from "@/lib/types";
 import { useContentState } from "./useContentGeneration/contentState";
 import { useContentSubscription } from "./useContentGeneration/supabaseSubscription";
 import { generateInitialContentItems } from "./useContentGeneration/contentItems";
-
-const generateFallbackTitle = (
-  type: string,
-  info: { companyName: string; industry: string; serviceName: string },
-  location?: string
-): string => {
-  switch (type) {
-    case 'service':
-      return `${info.serviceName} Services - ${info.companyName}`;
-    case 'location':
-      return `${info.serviceName} Services in ${location} - ${info.companyName}`;
-    case 'blog':
-      return `Guide to ${info.serviceName} Services${location ? ` in ${location}` : ''}`;
-    default:
-      return `${info.serviceName} - ${info.companyName}`;
-  }
-};
 
 export const useContentGeneration = () => {
   const {
@@ -34,14 +18,24 @@ export const useContentGeneration = () => {
     setProgress,
   } = useContentState();
 
-  // Subscribe to content updates
-  useContentSubscription(
+  // Get the setupSubscription function
+  const setupSubscription = useContentSubscription(
     contentItems[0]?.companies?.id || null,
     (updatedItems) => {
       setContentItems(updatedItems);
       updateContentStats(updatedItems);
     }
   );
+
+  // Call setupSubscription when contentItems changes
+  useEffect(() => {
+    if (contentItems[0]?.companies?.id) {
+      const cleanup = setupSubscription();
+      return () => {
+        if (cleanup) cleanup();
+      };
+    }
+  }, [contentItems[0]?.companies?.id]);
 
   const generateTitle = async (
     type: string,
