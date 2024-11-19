@@ -36,152 +36,135 @@ const Index = () => {
 
   const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
 
-  const handleOnboardingComplete = (data: BusinessInfo) => {
-    // Calculate total content items
-    const servicePages = data.services.length;
-    const locationPages = data.services.length * data.locations.length;
-    const blogPosts = locationPages * 5;
-    const total = servicePages + locationPages + blogPosts;
-
-    // Initialize content items
-    const items: ContentItem[] = [
-      // Service pages
-      ...data.services.map((service): ContentItem => ({
-        title: `${service} Services - ${data.companyName}`,
-        type: "service",
-        status: "pending",
-      })),
-      // Location pages
-      ...data.locations.flatMap((location) =>
-        data.services.map((service): ContentItem => ({
-          title: `${service} Services in ${location} - ${data.companyName}`,
-          type: "location",
-          status: "pending",
-        }))
-      ),
-      // Blog posts (5 per location page)
-      ...data.locations.flatMap((location) =>
-        data.services.flatMap((service) =>
-          Array.from({ length: 5 }, (_, i): ContentItem => ({
-            title: `${i + 1}. Guide to ${service} Services in ${location}`,
-            type: "blog",
-            status: "pending",
-          }))
-        )
-      ),
-    ];
-
-    setContentStats({
-      total,
-      generated: 0,
-      pending: total,
-      error: 0,
-    });
-    setContentItems(items);
-    setIsOnboarding(false);
-
-    // Simulate content generation
-    simulateContentGeneration(items);
-  };
-
-  const simulateContentGeneration = (items: ContentItem[]) => {
-    let generated = 0;
-    let errors = 0;
-
-    items.forEach((_, index) => {
-      setTimeout(() => {
-        setContentItems((prev) => {
-          const newItems = [...prev];
-          newItems[index] = {
-            ...newItems[index],
-            status: Math.random() > 0.1 ? "generated" : "error",
-          };
-          return newItems;
-        });
-
-        const success = Math.random() > 0.1;
-        if (success) {
-          generated++;
-        } else {
-          errors++;
-        }
-
-        setContentStats((prev) => ({
-          ...prev,
-          generated: generated,
-          pending: prev.total - generated - errors,
-          error: errors,
-        }));
-
-        if (index === items.length - 1) {
-          toast.success("Content generation completed!");
-        }
-      }, index * 100); // Simulate generation time
-    });
-  };
-
   return (
     <Layout>
-      <div className="container py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+      <div className="container py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto space-y-12">
+          <div className="text-center animate-fade-in">
+            <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-primary via-primary-dark to-primary bg-clip-text text-transparent">
               Transform Your Business with SEO Automation
             </h1>
-            <p className="text-neutral-600">
+            <p className="text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
               Create optimized content for your business website that stands out and ranks #1 on Google.
+              Our AI-powered platform helps you generate high-quality, SEO-optimized content at scale.
             </p>
           </div>
 
           {isOnboarding ? (
             <>
-              {companies && companies.length > 0 && (
-                <div className="mb-8 p-4 bg-white rounded-lg shadow-sm">
-                  <Label htmlFor="companySelect">Select an existing company to pre-fill information</Label>
-                  <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Choose a company" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      {companies.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-8 animate-fade-in delay-100">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                  <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
+                    <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-primary font-semibold">1</span>
+                    </div>
+                    <h3 className="font-semibold mb-2 text-neutral-800">Generate Content</h3>
+                    <p className="text-sm text-neutral-600">
+                      Automatically create optimized content for your service areas
+                    </p>
+                  </div>
+                  <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
+                    <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-primary font-semibold">2</span>
+                    </div>
+                    <h3 className="font-semibold mb-2 text-neutral-800">Rank Higher</h3>
+                    <p className="text-sm text-neutral-600">
+                      Create standout pages that rank high on search engines
+                    </p>
+                  </div>
+                  <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
+                    <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-primary font-semibold">3</span>
+                    </div>
+                    <h3 className="font-semibold mb-2 text-neutral-800">Automate SEO</h3>
+                    <p className="text-sm text-neutral-600">
+                      Streamline your SEO strategy without technical hassle
+                    </p>
+                  </div>
                 </div>
-              )}
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Our SEO SaaS tool helps you:</h2>
-                <ul className="space-y-2">
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Generate optimized content for your service area and industry
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Create standout pages that rank high on search engines
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Automate your SEO strategy without any technical hassle
-                  </li>
-                </ul>
+
+                {companies && companies.length > 0 && (
+                  <div className="p-6 bg-white rounded-xl shadow-sm border border-neutral-100 max-w-md mx-auto">
+                    <Label htmlFor="companySelect" className="block text-sm font-medium text-neutral-700 mb-2">
+                      Select an existing company to pre-fill information
+                    </Label>
+                    <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                      <SelectTrigger className="w-full bg-white">
+                        <SelectValue placeholder="Choose a company" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {companies.map((company) => (
+                          <SelectItem key={company.id} value={company.id}>
+                            {company.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="max-w-md mx-auto">
+                  <OnboardingForm 
+                    onComplete={(data: BusinessInfo) => {
+                      // Calculate total content items
+                      const servicePages = data.services.length;
+                      const locationPages = data.services.length * data.locations.length;
+                      const blogPosts = locationPages * 5;
+                      const total = servicePages + locationPages + blogPosts;
+
+                      // Initialize content items
+                      const items: ContentItem[] = [
+                        // Service pages
+                        ...data.services.map((service): ContentItem => ({
+                          title: `${service} Services - ${data.companyName}`,
+                          type: "service",
+                          status: "pending",
+                        })),
+                        // Location pages
+                        ...data.locations.flatMap((location) =>
+                          data.services.map((service): ContentItem => ({
+                            title: `${service} Services in ${location} - ${data.companyName}`,
+                            type: "location",
+                            status: "pending",
+                          }))
+                        ),
+                        // Blog posts (5 per location page)
+                        ...data.locations.flatMap((location) =>
+                          data.services.flatMap((service) =>
+                            Array.from({ length: 5 }, (_, i): ContentItem => ({
+                              title: `${i + 1}. Guide to ${service} Services in ${location}`,
+                              type: "blog",
+                              status: "pending",
+                            }))
+                          )
+                        ),
+                      ];
+
+                      setContentStats({
+                        total,
+                        generated: 0,
+                        pending: total,
+                        error: 0,
+                      });
+                      setContentItems(items);
+                      setIsOnboarding(false);
+
+                      // Simulate content generation
+                      simulateContentGeneration(items);
+                    }}
+                    initialData={selectedCompany ? {
+                      companyName: selectedCompany.name,
+                      industry: selectedCompany.industry,
+                      website: selectedCompany.website,
+                      locations: [],
+                      services: []
+                    } : undefined}
+                  />
+                </div>
               </div>
-              <OnboardingForm 
-                onComplete={handleOnboardingComplete} 
-                initialData={selectedCompany ? {
-                  companyName: selectedCompany.name,
-                  industry: selectedCompany.industry,
-                  website: selectedCompany.website,
-                  locations: [],
-                  services: []
-                } : undefined}
-              />
             </>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-fade-in">
               <Dashboard stats={contentStats} />
               <ContentOverview items={contentItems} />
             </div>
