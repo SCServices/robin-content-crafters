@@ -7,59 +7,77 @@ export const useContentGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const generateTitle = async (
-    type: string,
-    info: { companyName: string; industry: string; serviceName: string },
-    location?: string
-  ) => {
-    try {
-      // Updated prompt to generate more natural titles
-      const prompt = `
-You are an experienced copywriter specializing in creating engaging and natural-sounding titles for business websites in blue-collar industries, homeowners' advice, and DIY topics.
+ const generateTitle = async (
+  type: string,
+  info: { companyName: string; industry: string; serviceName: string },
+  location?: string
+) => {
+  try {
+    // Create content-type specific prompts
+    let prompt = '';
+    switch (type) {
+      case 'service':
+        prompt = `
+You are an experienced copywriter specializing in creating engaging and natural-sounding titles for service pages in the ${info.industry} industry.
 
-Please generate a compelling and natural title for a **${type}** page for **${info.companyName}**, a ${info.industry} company.
+Please generate a compelling and natural title for a **service page** for **${info.companyName}** that offers **${info.serviceName}** services.
 
 **Guidelines:**
 - Keep the title concise (60 characters or less).
 - Use natural language that appeals to the target audience.
-- Avoid generic phrases; make sure it stands out.
-- Stay on topic and accurately reflect the page content.
+- Make it stand out and accurately reflect the service.
+- Use title case capitalization.
+
+**Examples:**
+- "Expert ${info.serviceName} Services by ${info.companyName}"
+- "Professional ${info.serviceName} Solutions from ${info.companyName}"
+`;
+        break;
+      case 'location':
+        prompt = `
+You are an experienced copywriter specializing in creating engaging and natural-sounding titles for location-specific service pages in the ${info.industry} industry.
+
+Please generate a compelling and natural title for a **location-specific service page** for **${info.companyName}**, focusing on **${info.serviceName}** services in **${location}**.
+
+**Guidelines:**
+- Keep the title concise (60 characters or less).
+- Naturally include the location in the title.
+- Appeal to the local audience.
+- Use title case capitalization.
+
+**Examples:**
+- "${info.serviceName} Services in ${location}"
+- "Your ${location} ${info.serviceName} Experts"
+`;
+        break;
+      case 'blog':
+        prompt = `
+You are an experienced copywriter specializing in creating engaging and natural-sounding titles for blog posts in the ${info.industry} industry.
+
+Please generate a compelling and natural title for a **blog post** for **${info.companyName}** about **${info.serviceName}** services${location ? ` in ${location}` : ''}.
+
+**Guidelines:**
+- Keep the title concise (60 characters or less).
+- Make it interesting and informative.
+- Use natural language that resonates with homeowners and DIY enthusiasts.
 - Use title case capitalization.
 `;
-
-      const { data } = await supabase.functions.invoke("generate-titles", {
-        body: { contentType: type, companyInfo: info, location, prompt },
-      });
-      return data?.title || generateFallbackTitle(type, info, location);
-    } catch (error) {
-      console.error("Error generating title:", error);
-      return generateFallbackTitle(type, info, location);
-    }
-  };
-
-  // Added a fallback title generator for more natural titles
-  const generateFallbackTitle = (
-    type: string,
-    info: { companyName: string; industry: string; serviceName: string },
-    location?: string
-  ) => {
-    let title = "";
-    switch (type) {
-      case "service":
-        title = `${info.serviceName} Services by ${info.companyName}`;
-        break;
-      case "location":
-        title = `${info.serviceName} Services in ${location} | ${info.companyName}`;
-        break;
-      case "blog":
-        title = `Tips on ${info.serviceName}${location ? ` in ${location}` : ""} by ${info.companyName}`;
         break;
       default:
-        title = `${info.serviceName} Services - ${info.companyName}`;
-        break;
+        prompt = `
+Please generate a title for ${info.serviceName} services by ${info.companyName}.
+`;
     }
-    return title;
-  };
+
+    const { data } = await supabase.functions.invoke("generate-titles", {
+      body: { contentType: type, companyInfo: info, location, prompt },
+    });
+    return data?.title || generateFallbackTitle(type, info, location);
+  } catch (error) {
+    console.error("Error generating title:", error);
+    return generateFallbackTitle(type, info, location);
+  }
+};
 
   const createCompanyAndContent = async (businessInfo: BusinessInfo) => {
     setIsGenerating(true);
