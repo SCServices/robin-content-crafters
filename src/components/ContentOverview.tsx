@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import type { ContentItem } from "@/lib/types";
-import { CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 interface ContentOverviewProps {
@@ -39,28 +39,17 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
     return matchesCompany && matchesType;
   });
 
-  const getStatusIcon = (status: ContentItem["status"]) => {
-    switch (status) {
-      case "generated":
-        return <CheckCircle className="text-success" size={16} />;
-      case "pending":
-        return <Clock className="text-primary" size={16} />;
-      case "error":
-        return <AlertCircle className="text-secondary" size={16} />;
-    }
-  };
-
   return (
     <>
       <Card className="p-6 animate-fade-in bg-white/50 backdrop-blur-sm">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+            <h2 className="text-2xl font-bold text-primary">
               Content Overview
             </h2>
             <Select value={selectedCompany} onValueChange={setSelectedCompany}>
               <SelectTrigger className="w-[200px] bg-white">
-                <SelectValue placeholder="Select a company" />
+                <SelectValue placeholder="All Companies" />
               </SelectTrigger>
               <SelectContent className="bg-white">
                 <SelectItem value="all">All Companies</SelectItem>
@@ -74,7 +63,7 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-neutral-50">
+            <TabsList className="w-full space-x-2 bg-transparent">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="service">Services</TabsTrigger>
               <TabsTrigger value="location">Locations</TabsTrigger>
@@ -86,18 +75,24 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
                 {filteredItems.map((item, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all duration-200 cursor-pointer border-l-2 hover:border-l-primary"
+                    className="flex items-center justify-between p-4 bg-white rounded-lg hover:bg-neutral-50 transition-all duration-200 cursor-pointer"
                     onClick={() => setSelectedItem(item)}
                   >
                     <div className="flex items-center gap-3">
-                      {getStatusIcon(item.status)}
+                      <CheckCircle className="text-emerald-500" size={16} />
                       <span className="font-medium">{item.title}</span>
                     </div>
-                    <span className="text-sm text-neutral-500 capitalize px-3 py-1 bg-white rounded-full">
+                    <span className="text-sm text-neutral-500 capitalize">
                       {item.type}
                     </span>
                   </div>
                 ))}
+
+                {filteredItems.length === 0 && (
+                  <div className="text-center py-8 text-neutral-500">
+                    No content items found
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>

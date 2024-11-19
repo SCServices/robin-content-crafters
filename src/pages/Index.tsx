@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { generateTitle } from "@/hooks/useContentGeneration/titleGeneration";
 
 const Index = () => {
   const [isOnboarding, setIsOnboarding] = useState(true);
@@ -39,23 +38,72 @@ const Index = () => {
 
   const handleContentGeneration = async (items: ContentItem[]) => {
     setContentItems(items);
+    
+    // Query the generated content from the database
+    const { data: generatedContent } = await supabase
+      .from("generated_content")
+      .select(`
+        id,
+        title,
+        content,
+        type,
+        status,
+        companies:company_id (
+          name
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (generatedContent) {
+      setContentItems(generatedContent.map(item => ({
+        title: item.title,
+        type: item.type,
+        status: item.status,
+        content: item.content,
+        company: item.companies
+      })));
+    }
+
     // Simulate content generation progress
     let generated = 0;
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       if (generated < items.length) {
-        const updatedItems = [...items];
-        updatedItems[generated].status = "generated";
-        setContentItems(updatedItems);
+        // Query latest content status
+        const { data: latestContent } = await supabase
+          .from("generated_content")
+          .select(`
+            id,
+            title,
+            content,
+            type,
+            status,
+            companies:company_id (
+              name
+            )
+          `)
+          .order('created_at', { ascending: false });
+
+        if (latestContent) {
+          setContentItems(latestContent.map(item => ({
+            title: item.title,
+            type: item.type,
+            status: item.status,
+            content: item.content,
+            company: item.companies
+          })));
+        }
+
+        const generatedCount = latestContent?.filter(item => item.status === 'generated').length || 0;
         setContentStats(prev => ({
           ...prev,
-          generated: prev.generated + 1,
-          pending: prev.pending - 1,
+          generated: generatedCount,
+          pending: items.length - generatedCount,
         }));
         generated++;
       } else {
         clearInterval(interval);
       }
-    }, 1000);
+    }, 2000); // Check every 2 seconds
   };
 
   return (
