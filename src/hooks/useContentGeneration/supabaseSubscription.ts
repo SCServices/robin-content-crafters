@@ -1,47 +1,43 @@
-import { useEffect } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { ContentItem } from "@/lib/types";
 
 export const useContentSubscription = (
   companyId: string | null,
-  onContentUpdate: (items: ContentItem[]) => void
+  onUpdate: (items: ContentItem[]) => void
 ) => {
-  useEffect(() => {
+  const setupSubscription = async () => {
     if (!companyId) return;
 
-    // Subscribe to content updates for this company
-    const subscription = supabase
-      .channel('generated_content_changes')
+    const channel = supabase
+      .channel(`generated_content_${companyId}`)
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'generated_content',
           filter: `company_id=eq.${companyId}`,
         },
-        async (payload) => {
-          // Fetch all content items for this company to ensure UI is in sync
-          const { data: items } = await supabase
-            .from("generated_content")
-            .select(`
-              *,
-              companies (name),
-              services (name),
-              service_locations (location)
-            `)
+        async () => {
+          // Fetch the latest content items
+          const { data: updatedItems } = await supabase
+            .from('generated_content')
+            .select('*, companies(*), services(*), service_locations(*)')
             .eq('company_id', companyId)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: true });
 
-          if (items) {
-            onContentUpdate(items);
+          if (updatedItems) {
+            onUpdate(updatedItems as ContentItem[]);
           }
         }
       )
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, [companyId, onContentUpdate]);
+  };
+
+  return setupSubscription;
 };
