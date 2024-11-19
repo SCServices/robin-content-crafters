@@ -53,6 +53,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </main>
     </div>
   );
-});
+};
 
 export default Layout;
