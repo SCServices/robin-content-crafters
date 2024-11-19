@@ -53,7 +53,6 @@ const Index = () => {
         generated++;
       } else {
         clearInterval(interval);
-        setIsOnboarding(false); // Only change the view after generation is complete
       }
     }, 1000);
   };
@@ -73,57 +72,56 @@ const Index = () => {
           </div>
 
           {isOnboarding ? (
-            <>
-              <div className="space-y-8 animate-fade-in delay-100">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                  <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
-                    <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-primary font-semibold">1</span>
-                    </div>
-                    <h3 className="font-semibold mb-2 text-neutral-800">Generate Content</h3>
-                    <p className="text-sm text-neutral-600">
-                      Automatically create optimized content for your service areas
-                    </p>
+            <div className="space-y-8 animate-fade-in delay-100">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
+                  <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-primary font-semibold">1</span>
                   </div>
-                  <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
-                    <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-primary font-semibold">2</span>
-                    </div>
-                    <h3 className="font-semibold mb-2 text-neutral-800">Rank Higher</h3>
-                    <p className="text-sm text-neutral-600">
-                      Create standout pages that rank high on search engines
-                    </p>
-                  </div>
-                  <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
-                    <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-primary font-semibold">3</span>
-                    </div>
-                    <h3 className="font-semibold mb-2 text-neutral-800">Automate SEO</h3>
-                    <p className="text-sm text-neutral-600">
-                      Streamline your SEO strategy without technical hassle
-                    </p>
-                  </div>
+                  <h3 className="font-semibold mb-2 text-neutral-800">Generate Content</h3>
+                  <p className="text-sm text-neutral-600">
+                    Automatically create optimized content for your service areas
+                  </p>
                 </div>
-
-                {companies && companies.length > 0 && (
-                  <div className="p-6 bg-white rounded-xl shadow-sm border border-neutral-100 max-w-md mx-auto">
-                    <Label htmlFor="companySelect" className="block text-sm font-medium text-neutral-700 mb-2">
-                      Select an existing company to pre-fill information
-                    </Label>
-                    <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
-                      <SelectTrigger id="companySelect" className="w-full bg-white">
-                        <SelectValue placeholder="Choose a company" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white">
-                        {companies.map((company) => (
-                          <SelectItem key={company.id} value={company.id}>
-                            {company.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
+                  <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-primary font-semibold">2</span>
                   </div>
-                )}
+                  <h3 className="font-semibold mb-2 text-neutral-800">Rank Higher</h3>
+                  <p className="text-sm text-neutral-600">
+                    Create standout pages that rank high on search engines
+                  </p>
+                </div>
+                <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
+                  <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-primary font-semibold">3</span>
+                  </div>
+                  <h3 className="font-semibold mb-2 text-neutral-800">Automate SEO</h3>
+                  <p className="text-sm text-neutral-600">
+                    Streamline your SEO strategy without technical hassle
+                  </p>
+                </div>
+              </div>
+
+              {companies && companies.length > 0 && (
+                <div className="p-6 bg-white rounded-xl shadow-sm border border-neutral-100 max-w-md mx-auto">
+                  <Label htmlFor="companySelect" className="block text-sm font-medium text-neutral-700 mb-2">
+                    Select an existing company to pre-fill information
+                  </Label>
+                  <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                    <SelectTrigger id="companySelect" className="w-full bg-white">
+                      <SelectValue placeholder="Choose a company" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      {companies.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="max-w-md mx-auto">
                 <OnboardingForm 
@@ -182,7 +180,7 @@ const Index = () => {
                   } : undefined}
                 />
               </div>
-            </>
+            </div>
           ) : (
             <div className="space-y-6 animate-fade-in">
               <Dashboard stats={contentStats} />
