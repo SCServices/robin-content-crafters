@@ -6,10 +6,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { ContentItem } from "@/lib/types";
 import { CheckCircle, Clock, AlertCircle } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface ContentOverviewProps {
   items: ContentItem[];
@@ -36,11 +38,13 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
 
   return (
     <>
-      <Card className="p-6 animate-fade-in">
+      <Card className="p-6 animate-fade-in bg-white/50 backdrop-blur-sm">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold">Content Overview</h2>
-            <TabsList>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+              Content Overview
+            </h2>
+            <TabsList className="bg-neutral-50">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="service">Services</TabsTrigger>
               <TabsTrigger value="location">Locations</TabsTrigger>
@@ -53,14 +57,16 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
               {filteredItems.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all duration-200 cursor-pointer border-l-2 hover:border-l-primary"
                   onClick={() => setSelectedItem(item)}
                 >
                   <div className="flex items-center gap-3">
                     {getStatusIcon(item.status)}
-                    <span>{item.title}</span>
+                    <span className="font-medium">{item.title}</span>
                   </div>
-                  <span className="text-sm text-neutral-500 capitalize">{item.type}</span>
+                  <span className="text-sm text-neutral-500 capitalize px-3 py-1 bg-white rounded-full">
+                    {item.type}
+                  </span>
                 </div>
               ))}
             </div>
@@ -69,26 +75,30 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
       </Card>
 
       <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedItem?.title}</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-primary">
+              {selectedItem?.title}
+            </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            <div className="prose max-w-none">
+            <div className="prose prose-primary max-w-none">
               {selectedItem?.content ? (
-                <div dangerouslySetInnerHTML={{ __html: selectedItem.content }} />
+                <ReactMarkdown className="prose prose-headings:text-primary prose-a:text-primary hover:prose-a:text-primary-dark">
+                  {selectedItem.content}
+                </ReactMarkdown>
               ) : (
-                <p className="text-neutral-500 italic">
+                <p className="text-neutral-500 italic text-center py-8">
                   Content is still being generated...
                 </p>
               )}
             </div>
           </div>
-          <div className="mt-4 flex justify-end">
+          <DialogFooter className="mt-6">
             <Button variant="outline" onClick={() => setSelectedItem(null)}>
               Close
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

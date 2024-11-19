@@ -6,10 +6,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { FileText, MapPin, Briefcase, NewspaperIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ReactMarkdown from "react-markdown";
 
 interface ContentListProps {
   items: any[];
@@ -22,26 +24,26 @@ const ContentList = ({ items }: ContentListProps) => {
   const getIcon = (type: string) => {
     switch (type) {
       case "service":
-        return <Briefcase className="h-5 w-5" />;
+        return <Briefcase className="h-5 w-5 text-primary" />;
       case "location":
-        return <MapPin className="h-5 w-5" />;
+        return <MapPin className="h-5 w-5 text-secondary" />;
       case "blog":
-        return <NewspaperIcon className="h-5 w-5" />;
+        return <NewspaperIcon className="h-5 w-5 text-success" />;
       default:
-        return <FileText className="h-5 w-5" />;
+        return <FileText className="h-5 w-5 text-neutral-500" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "generated":
-        return "bg-green-500";
+        return "bg-success";
       case "pending":
-        return "bg-yellow-500";
+        return "bg-primary";
       case "error":
-        return "bg-red-500";
+        return "bg-secondary";
       default:
-        return "bg-gray-500";
+        return "bg-neutral-400";
     }
   };
 
@@ -52,11 +54,11 @@ const ContentList = ({ items }: ContentListProps) => {
   return (
     <>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="service">Services</TabsTrigger>
-          <TabsTrigger value="location">Locations</TabsTrigger>
-          <TabsTrigger value="blog">Blog Posts</TabsTrigger>
+        <TabsList className="w-full justify-start bg-neutral-50 p-1">
+          <TabsTrigger value="all" className="flex-1">All</TabsTrigger>
+          <TabsTrigger value="service" className="flex-1">Services</TabsTrigger>
+          <TabsTrigger value="location" className="flex-1">Locations</TabsTrigger>
+          <TabsTrigger value="blog" className="flex-1">Blog Posts</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -64,14 +66,14 @@ const ContentList = ({ items }: ContentListProps) => {
         {filteredItems.map((item) => (
           <Card
             key={item.id}
-            className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+            className="p-4 hover:shadow-md transition-all duration-200 cursor-pointer border-l-4 hover:border-l-primary animate-fade-in"
             onClick={() => setSelectedContent(item)}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {getIcon(item.type)}
                 <div>
-                  <h3 className="font-medium">{item.title}</h3>
+                  <h3 className="font-medium text-lg">{item.title}</h3>
                   <p className="text-sm text-neutral-500">
                     {item.companies?.name} • {new Date(item.created_at).toLocaleDateString()}
                   </p>
@@ -91,26 +93,30 @@ const ContentList = ({ items }: ContentListProps) => {
       </div>
 
       <Dialog open={!!selectedContent} onOpenChange={() => setSelectedContent(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedContent?.title}</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-primary">
+              {selectedContent?.title}
+            </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            <div className="prose max-w-none">
+            <div className="prose prose-primary max-w-none">
               {selectedContent?.content ? (
-                <div dangerouslySetInnerHTML={{ __html: selectedContent.content }} />
+                <ReactMarkdown className="prose prose-headings:text-primary prose-a:text-primary hover:prose-a:text-primary-dark">
+                  {selectedContent.content}
+                </ReactMarkdown>
               ) : (
-                <p className="text-neutral-500 italic">
+                <p className="text-neutral-500 italic text-center py-8">
                   Content is still being generated...
                 </p>
               )}
             </div>
           </div>
-          <div className="mt-4 flex justify-end">
+          <DialogFooter className="mt-6">
             <Button variant="outline" onClick={() => setSelectedContent(null)}>
               Close
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
