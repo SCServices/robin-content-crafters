@@ -24,7 +24,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <img 
             src="https://i.ibb.co/27f58Ms/2.png" 
             alt="Robin" 
-            className="h-12 w-auto" 
+            className="h-48 w-auto" 
           />
           <p className="text-sm text-neutral-500 mt-2">Automate Your SEO Success</p>
         </div>
