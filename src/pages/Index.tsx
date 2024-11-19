@@ -8,6 +8,7 @@ import type { BusinessInfo, ContentItem, ContentStats } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { useContentGeneration } from "@/hooks/useContentGeneration";
 
 const Index = () => {
   const [isOnboarding, setIsOnboarding] = useState(true);
@@ -19,6 +20,7 @@ const Index = () => {
     error: 0,
   });
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
+  const { createCompanyAndContent } = useContentGeneration();
 
   const { data: companies } = useQuery({
     queryKey: ["companies"],
@@ -130,8 +132,13 @@ const Index = () => {
 
                 <div className="max-w-md mx-auto">
                   <OnboardingForm 
-                    onComplete={(data: BusinessInfo) => {
-                      setIsOnboarding(false);
+                    onComplete={async (data: BusinessInfo) => {
+                      const result = await createCompanyAndContent(data);
+                      if (result.success) {
+                        const generatedContent = await handleContentGeneration([]);
+                        setContentItems(generatedContent);
+                        setIsOnboarding(false);
+                      }
                     }}
                     initialData={companies?.find(company => company.id === selectedCompanyId) ? {
                       companyName: companies.find(company => company.id === selectedCompanyId)!.name,
