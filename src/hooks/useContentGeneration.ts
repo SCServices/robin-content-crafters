@@ -7,6 +7,22 @@ export const useContentGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
 
+  const generateTitle = async (
+    type: string,
+    info: { companyName: string; industry: string; serviceName: string },
+    location?: string
+  ) => {
+    try {
+      const { data } = await supabase.functions.invoke("generate-titles", {
+        body: { contentType: type, companyInfo: info, location },
+      });
+      return data?.title || `${info.serviceName} Services - ${info.companyName}`;
+    } catch (error) {
+      console.error("Error generating title:", error);
+      return `${info.serviceName} Services - ${info.companyName}`;
+    }
+  };
+
   const createCompanyAndContent = async (businessInfo: BusinessInfo) => {
     setIsGenerating(true);
     setProgress(0);
@@ -100,13 +116,18 @@ export const useContentGeneration = () => {
       // Service pages
       for (const service of servicesData) {
         if (!service?.id) continue;
+        
+        const title = await generateTitle("service", {
+          companyName: businessInfo.companyName,
+          industry: businessInfo.industry,
+          serviceName: service.name,
+        });
+
         contentEntries.push({
           company_id: companyData.id,
           service_id: service.id,
-const title = await generateTitle("service", {
-      companyName: businessInfo.companyName,
-      industry: businessInfo.industry,
-      serviceName: service.name,
+          title,
+          type: "service",
         });
       }
 
@@ -115,42 +136,46 @@ const title = await generateTitle("service", {
         if (!service?.id) continue;
         for (const location of locationsData) {
           if (!location?.id) continue;
+          
+          const locationTitle = await generateTitle(
+            "location",
+            {
+              companyName: businessInfo.companyName,
+              industry: businessInfo.industry,
+              serviceName: service.name,
+            },
+            location.location
+          );
+
           contentEntries.push({
             company_id: companyData.id,
             service_id: service.id,
             location_id: location.id,
-            const locationTitle = await generateTitle(
-        "location",
-        {
-          companyName: businessInfo.companyName,
-          industry: businessInfo.industry,
-          serviceName: service.name,
-        },
-        location.location
-      );
+            title: locationTitle,
             type: "location",
           });
 
           // Blog posts for each location page
+          const blogTitle = await generateTitle(
+            "blog",
+            {
+              companyName: businessInfo.companyName,
+              industry: businessInfo.industry,
+              serviceName: service.name,
+            },
+            location.location
+          );
+
           contentEntries.push({
             company_id: companyData.id,
             service_id: service.id,
             location_id: location.id,
-            const blogTitle = await generateTitle(
-        "blog",
-        {
-          companyName: businessInfo.companyName,
-          industry: businessInfo.industry,
-          serviceName: service.name,
-        },
-        location.location
-      );
+            title: blogTitle,
             type: "blog",
           });
         }
       }
 
-      setProgress(80);
       // Insert all content entries
       if (contentEntries.length > 0) {
         const { error: contentError } = await supabase
