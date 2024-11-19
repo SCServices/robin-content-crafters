@@ -119,7 +119,15 @@ const title = await generateTitle("service", {
             company_id: companyData.id,
             service_id: service.id,
             location_id: location.id,
-            title: `${service.name} Services in ${location.location} - ${businessInfo.companyName}`,
+            const locationTitle = await generateTitle(
+        "location",
+        {
+          companyName: businessInfo.companyName,
+          industry: businessInfo.industry,
+          serviceName: service.name,
+        },
+        location.location
+      );
             type: "location",
           });
 
@@ -128,7 +136,15 @@ const title = await generateTitle("service", {
             company_id: companyData.id,
             service_id: service.id,
             location_id: location.id,
-            title: `Guide to ${service.name} Services in ${location.location}`,
+            const blogTitle = await generateTitle(
+        "blog",
+        {
+          companyName: businessInfo.companyName,
+          industry: businessInfo.industry,
+          serviceName: service.name,
+        },
+        location.location
+      );
             type: "blog",
           });
         }
