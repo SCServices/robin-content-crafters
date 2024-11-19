@@ -19,8 +19,7 @@ serve(async (req) => {
     console.log('Generating title for:', { contentType, companyInfo, location });
 
     let prompt = `Generate a compelling, SEO-optimized title for a ${contentType} page. 
-    The title should be natural, engaging, and include the company name "${companyInfo.companyName}" 
-    and the service "${companyInfo.serviceName}".`;
+    The title should be natural, engaging, easy to read and understand and compelling to the reader.`;
 
     if (location) {
       prompt += ` The content is specific to ${location}.`;
