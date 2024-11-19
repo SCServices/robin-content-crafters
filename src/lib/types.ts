@@ -10,6 +10,7 @@ export interface ContentItem {
   title: string;
   type: "service" | "location" | "blog";
   status: "pending" | "generated" | "error";
+  content?: string;
 }
 
 export interface ContentStats {
