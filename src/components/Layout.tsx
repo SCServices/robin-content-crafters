@@ -21,7 +21,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-neutral-200">
         <div className="p-6">
-          <img src="/og-image.svg" alt="Robin" className="h-8 w-auto" />
+          <img 
+            src="https://i.ibb.co/27f58Ms/2.png" 
+            alt="Robin" 
+            className="h-12 w-auto" 
+          />
           <p className="text-sm text-neutral-500 mt-2">Automate Your SEO Success</p>
         </div>
         
