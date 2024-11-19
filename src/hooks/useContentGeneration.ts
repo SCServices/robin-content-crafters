@@ -17,7 +17,7 @@ export const useContentGeneration = () => {
       const prompt = `
 You are an experienced copywriter specializing in creating engaging and natural-sounding titles for business websites in blue-collar industries, homeowners' advice, and DIY topics.
 
-Please generate a compelling and natural title for a **${type}** page for **${info.companyName}**, a ${info.industry} company. The title should focus on their **${info.serviceName}** service${location ? ` in ${location}` : ''}.
+Please generate a compelling and natural title for a **${type}** page for **${info.companyName}**, a ${info.industry} company.
 
 **Guidelines:**
 - Keep the title concise (60 characters or less).
@@ -25,11 +25,6 @@ Please generate a compelling and natural title for a **${type}** page for **${in
 - Avoid generic phrases; make sure it stands out.
 - Stay on topic and accurately reflect the page content.
 - Use title case capitalization.
-
-**Examples:**
-- "${info.serviceName} Solutions ${location ? `in ${location}` : ''} by ${info.companyName}"
-- "Expert ${info.serviceName} Services ${location ? `for ${location} Homeowners` : ''}"
-- "Your Trusted ${info.serviceName} Provider ${location ? `in ${location}` : ''}"
 `;
 
       const { data } = await supabase.functions.invoke("generate-titles", {
