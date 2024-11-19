@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
 import Layout from "@/components/Layout";
 import CompanyEditForm from "@/components/CompanyEditForm";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -25,12 +26,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 
 type Company = Tables<"companies">;
 
 const Companies = () => {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
 

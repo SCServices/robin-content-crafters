@@ -53,6 +53,7 @@ export const useContentGeneration = () => {
 
       // Service pages
       for (const service of servicesData) {
+        if (!service?.id) continue; // Skip if service ID is undefined
         contentEntries.push({
           company_id: companyData.id,
           service_id: service.id,
@@ -63,7 +64,9 @@ export const useContentGeneration = () => {
 
       // Location pages and blog posts
       for (const service of servicesData) {
+        if (!service?.id) continue; // Skip if service ID is undefined
         for (const location of locationsData) {
+          if (!location?.id) continue; // Skip if location ID is undefined
           contentEntries.push({
             company_id: companyData.id,
             service_id: service.id,
@@ -86,14 +89,17 @@ export const useContentGeneration = () => {
       }
 
       // Insert all content entries
-      const { error: contentError } = await supabase
-        .from("generated_content")
-        .insert(contentEntries);
+      if (contentEntries.length > 0) {
+        const { error: contentError } = await supabase
+          .from("generated_content")
+          .insert(contentEntries);
 
-      if (contentError) throw contentError;
+        if (contentError) throw contentError;
+      }
 
       // Start content generation process
       for (const service of servicesData) {
+        if (!service?.id) continue; // Skip if service ID is undefined
         const companyInfo = {
           companyName: businessInfo.companyName,
           industry: businessInfo.industry,
@@ -111,6 +117,7 @@ export const useContentGeneration = () => {
 
         // Generate location pages and blog posts
         for (const location of locationsData) {
+          if (!location?.id) continue; // Skip if location ID is undefined
           const locationInfo = {
             ...companyInfo,
             location: location.location,
