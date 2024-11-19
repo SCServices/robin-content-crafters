@@ -36,7 +36,7 @@ const Index = () => {
 
   const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
 
-  const handleContentGeneration = (items: ContentItem[]) => {
+  const handleContentGeneration = async (items: ContentItem[]) => {
     setContentItems(items);
     // Simulate content generation progress
     let generated = 0;
@@ -53,6 +53,7 @@ const Index = () => {
         generated++;
       } else {
         clearInterval(interval);
+        setIsOnboarding(false); // Only change the view after generation is complete
       }
     }, 1000);
   };
@@ -124,64 +125,62 @@ const Index = () => {
                   </div>
                 )}
 
-                <div className="max-w-md mx-auto">
-                  <OnboardingForm 
-                    onComplete={(data: BusinessInfo) => {
-                      // Calculate total content items
-                      const servicePages = data.services.length;
-                      const locationPages = data.services.length * data.locations.length;
-                      const blogPosts = locationPages * 5;
-                      const total = servicePages + locationPages + blogPosts;
+              <div className="max-w-md mx-auto">
+                <OnboardingForm 
+                  onComplete={(data: BusinessInfo) => {
+                    // Calculate total content items
+                    const servicePages = data.services.length;
+                    const locationPages = data.services.length * data.locations.length;
+                    const blogPosts = locationPages;
+                    const total = servicePages + locationPages + blogPosts;
 
-                      // Initialize content items
-                      const items: ContentItem[] = [
-                        // Service pages
-                        ...data.services.map((service): ContentItem => ({
-                          title: `${service} Services - ${data.companyName}`,
-                          type: "service",
+                    // Initialize content items
+                    const items: ContentItem[] = [
+                      // Service pages
+                      ...data.services.map((service): ContentItem => ({
+                        title: `${service} Services - ${data.companyName}`,
+                        type: "service",
+                        status: "pending",
+                        companies: { name: data.companyName }
+                      })),
+                      // Location pages
+                      ...data.locations.flatMap((location) =>
+                        data.services.map((service): ContentItem => ({
+                          title: `${service} Services in ${location} - ${data.companyName}`,
+                          type: "location",
                           status: "pending",
-                        })),
-                        // Location pages
-                        ...data.locations.flatMap((location) =>
-                          data.services.map((service): ContentItem => ({
-                            title: `${service} Services in ${location} - ${data.companyName}`,
-                            type: "location",
-                            status: "pending",
-                          }))
-                        ),
-                        // Blog posts (5 per location page)
-                        ...data.locations.flatMap((location) =>
-                          data.services.flatMap((service) =>
-                            Array.from({ length: 5 }, (_, i): ContentItem => ({
-                              title: `${i + 1}. Guide to ${service} Services in ${location}`,
-                              type: "blog",
-                              status: "pending",
-                            }))
-                          )
-                        ),
-                      ];
+                          companies: { name: data.companyName }
+                        }))
+                      ),
+                      // Blog posts
+                      ...data.locations.flatMap((location) =>
+                        data.services.map((service): ContentItem => ({
+                          title: `Guide to ${service} Services in ${location}`,
+                          type: "blog",
+                          status: "pending",
+                          companies: { name: data.companyName }
+                        }))
+                      ),
+                    ];
 
-                      setContentStats({
-                        total,
-                        generated: 0,
-                        pending: total,
-                        error: 0,
-                      });
-                      setContentItems(items);
-                      setIsOnboarding(false);
+                    setContentStats({
+                      total,
+                      generated: 0,
+                      pending: total,
+                      error: 0,
+                    });
 
-                      // Start content generation simulation
-                      handleContentGeneration(items);
-                    }}
-                    initialData={selectedCompany ? {
-                      companyName: selectedCompany.name,
-                      industry: selectedCompany.industry,
-                      website: selectedCompany.website,
-                      locations: [],
-                      services: []
-                    } : undefined}
-                  />
-                </div>
+                    // Start content generation
+                    handleContentGeneration(items);
+                  }}
+                  initialData={selectedCompany ? {
+                    companyName: selectedCompany.name,
+                    industry: selectedCompany.industry,
+                    website: selectedCompany.website,
+                    locations: [],
+                    services: []
+                  } : undefined}
+                />
               </div>
             </>
           ) : (
