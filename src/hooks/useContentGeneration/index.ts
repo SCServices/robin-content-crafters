@@ -11,7 +11,7 @@ export const useContentGeneration = () => {
     setIsGenerating(true);
     setProgress(0);
     
-    const progressToast = toast.loading('🚀 Initializing your content generation journey...', {
+    const progressToast = toast.loading('🚀 Phase 1/5: Setting up your business profile...', {
       duration: Infinity,
     });
 
@@ -19,7 +19,6 @@ export const useContentGeneration = () => {
       let companyData;
       
       // Company setup phase
-      toast.loading('📋 Phase 1/5: Setting up your business profile...', { id: progressToast });
       const { data: existingCompany } = await supabase
         .from("companies")
         .select("*")
@@ -131,19 +130,20 @@ export const useContentGeneration = () => {
         });
 
         completedItems++;
-        const newProgress = 60 + (completedItems / totalItems) * 40;
+        const newProgress = 60 + (completedItems / totalItems) * 35;
         setProgress(newProgress);
         
         // Show detailed progress during content creation
-        const percentComplete = Math.round(newProgress);
         toast.loading(`📝 Phase 4/5: Creating content (${completedItems}/${totalItems} pieces)...`, { id: progressToast });
       }
 
       // Final phase
+      setProgress(95);
       toast.loading('🎨 Phase 5/5: Applying final touches...', { id: progressToast });
       await new Promise(resolve => setTimeout(resolve, 1000)); // Brief pause for user to see final phase
 
-      toast.success('✨ Success! Your content is ready to explore', { id: progressToast });
+      setProgress(100);
+      toast.success('✨ All done! Your content is ready to explore', { id: progressToast });
       return { success: true };
     } catch (error) {
       console.error("Error:", error);
