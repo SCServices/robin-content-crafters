@@ -111,7 +111,7 @@ export const useContentGeneration = () => {
               company_id: companyData.id,
               service_id: service.id,
               location_id: location.id,
-              title: `${i}. Guide to ${service.name} Services in ${location.location}`,
+              title: `Guide to ${service.name} Services in ${location.location}`,
               type: "blog",
             });
           }
