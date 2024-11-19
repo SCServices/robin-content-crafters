@@ -4,16 +4,22 @@ import OnboardingForm from "@/components/OnboardingForm";
 import Dashboard from "@/components/Dashboard";
 import ContentOverview from "@/components/ContentOverview";
 import Layout from "@/components/Layout";
-import type { BusinessInfo } from "@/lib/types";
+import type { BusinessInfo, ContentItem, ContentStats } from "@/lib/types";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useContentGeneration } from "@/hooks/useContentGeneration";
 
 const Index = () => {
   const [isOnboarding, setIsOnboarding] = useState(true);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
-  const { contentStats, contentItems, createCompanyAndContent } = useContentGeneration();
+  const [contentStats, setContentStats] = useState<ContentStats>({
+    total: 0,
+    generated: 0,
+    pending: 0,
+    error: 0,
+  });
+  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
 
   const { data: companies } = useQuery({
     queryKey: ["companies"],
@@ -30,11 +36,25 @@ const Index = () => {
 
   const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
 
-  const handleFormSubmit = async (data: BusinessInfo) => {
-    const result = await createCompanyAndContent(data);
-    if (result.success) {
-      setIsOnboarding(false);
-    }
+  const handleContentGeneration = (items: ContentItem[]) => {
+    setContentItems(items);
+    // Simulate content generation progress
+    let generated = 0;
+    const interval = setInterval(() => {
+      if (generated < items.length) {
+        const updatedItems = [...items];
+        updatedItems[generated].status = "generated";
+        setContentItems(updatedItems);
+        setContentStats(prev => ({
+          ...prev,
+          generated: prev.generated + 1,
+          pending: prev.pending - 1,
+        }));
+        generated++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 1000);
   };
 
   return (
@@ -52,70 +72,118 @@ const Index = () => {
           </div>
 
           {isOnboarding ? (
-            <div className="space-y-8 animate-fade-in delay-100">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
-                  <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-primary font-semibold">1</span>
+            <>
+              <div className="space-y-8 animate-fade-in delay-100">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                  <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
+                    <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-primary font-semibold">1</span>
+                    </div>
+                    <h3 className="font-semibold mb-2 text-neutral-800">Generate Content</h3>
+                    <p className="text-sm text-neutral-600">
+                      Automatically create optimized content for your service areas
+                    </p>
                   </div>
-                  <h3 className="font-semibold mb-2 text-neutral-800">Generate Content</h3>
-                  <p className="text-sm text-neutral-600">
-                    Automatically create optimized content for your service areas
-                  </p>
+                  <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
+                    <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-primary font-semibold">2</span>
+                    </div>
+                    <h3 className="font-semibold mb-2 text-neutral-800">Rank Higher</h3>
+                    <p className="text-sm text-neutral-600">
+                      Create standout pages that rank high on search engines
+                    </p>
+                  </div>
+                  <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
+                    <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-primary font-semibold">3</span>
+                    </div>
+                    <h3 className="font-semibold mb-2 text-neutral-800">Automate SEO</h3>
+                    <p className="text-sm text-neutral-600">
+                      Streamline your SEO strategy without technical hassle
+                    </p>
+                  </div>
                 </div>
-                <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
-                  <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-primary font-semibold">2</span>
+
+                {companies && companies.length > 0 && (
+                  <div className="p-6 bg-white rounded-xl shadow-sm border border-neutral-100 max-w-md mx-auto">
+                    <Label htmlFor="companySelect" className="block text-sm font-medium text-neutral-700 mb-2">
+                      Select an existing company to pre-fill information
+                    </Label>
+                    <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                      <SelectTrigger id="companySelect" className="w-full bg-white">
+                        <SelectValue placeholder="Choose a company" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white">
+                        {companies.map((company) => (
+                          <SelectItem key={company.id} value={company.id}>
+                            {company.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <h3 className="font-semibold mb-2 text-neutral-800">Rank Higher</h3>
-                  <p className="text-sm text-neutral-600">
-                    Create standout pages that rank high on search engines
-                  </p>
-                </div>
-                <div className="p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-100">
-                  <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-primary font-semibold">3</span>
-                  </div>
-                  <h3 className="font-semibold mb-2 text-neutral-800">Automate SEO</h3>
-                  <p className="text-sm text-neutral-600">
-                    Streamline your SEO strategy without technical hassle
-                  </p>
+                )}
+
+                <div className="max-w-md mx-auto">
+                  <OnboardingForm 
+                    onComplete={(data: BusinessInfo) => {
+                      // Calculate total content items
+                      const servicePages = data.services.length;
+                      const locationPages = data.services.length * data.locations.length;
+                      const blogPosts = locationPages * 5;
+                      const total = servicePages + locationPages + blogPosts;
+
+                      // Initialize content items
+                      const items: ContentItem[] = [
+                        // Service pages
+                        ...data.services.map((service): ContentItem => ({
+                          title: `${service} Services - ${data.companyName}`,
+                          type: "service",
+                          status: "pending",
+                        })),
+                        // Location pages
+                        ...data.locations.flatMap((location) =>
+                          data.services.map((service): ContentItem => ({
+                            title: `${service} Services in ${location} - ${data.companyName}`,
+                            type: "location",
+                            status: "pending",
+                          }))
+                        ),
+                        // Blog posts (5 per location page)
+                        ...data.locations.flatMap((location) =>
+                          data.services.flatMap((service) =>
+                            Array.from({ length: 5 }, (_, i): ContentItem => ({
+                              title: `${i + 1}. Guide to ${service} Services in ${location}`,
+                              type: "blog",
+                              status: "pending",
+                            }))
+                          )
+                        ),
+                      ];
+
+                      setContentStats({
+                        total,
+                        generated: 0,
+                        pending: total,
+                        error: 0,
+                      });
+                      setContentItems(items);
+                      setIsOnboarding(false);
+
+                      // Start content generation simulation
+                      handleContentGeneration(items);
+                    }}
+                    initialData={selectedCompany ? {
+                      companyName: selectedCompany.name,
+                      industry: selectedCompany.industry,
+                      website: selectedCompany.website,
+                      locations: [],
+                      services: []
+                    } : undefined}
+                  />
                 </div>
               </div>
-
-              {companies && companies.length > 0 && (
-                <div className="p-6 bg-white rounded-xl shadow-sm border border-neutral-100 max-w-md mx-auto">
-                  <Label htmlFor="companySelect" className="block text-sm font-medium text-neutral-700 mb-2">
-                    Select an existing company to pre-fill information
-                  </Label>
-                  <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
-                    <SelectTrigger id="companySelect" className="w-full bg-white">
-                      <SelectValue placeholder="Choose a company" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      {companies.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className="max-w-md mx-auto">
-                <OnboardingForm 
-                  onComplete={handleFormSubmit}
-                  initialData={selectedCompany ? {
-                    companyName: selectedCompany.name,
-                    industry: selectedCompany.industry,
-                    website: selectedCompany.website,
-                    locations: [],
-                    services: []
-                  } : undefined}
-                />
-              </div>
-            </div>
+            </>
           ) : (
             <div className="space-y-6 animate-fade-in">
               <Dashboard stats={contentStats} />

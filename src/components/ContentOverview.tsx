@@ -30,11 +30,11 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
   const [selectedCompany, setSelectedCompany] = useState<string>("all");
 
   // Get unique companies from items
-  const companies = Array.from(new Set(items.map(item => item.companies?.name))).filter(Boolean);
+  const companies = Array.from(new Set(items.map(item => item.company?.name))).filter(Boolean);
 
   // Filter items by both company and type
   const filteredItems = items.filter(item => {
-    const matchesCompany = selectedCompany === "all" || item.companies?.name === selectedCompany;
+    const matchesCompany = selectedCompany === "all" || item.company?.name === selectedCompany;
     const matchesType = activeTab === "all" || item.type === activeTab;
     return matchesCompany && matchesType;
   });

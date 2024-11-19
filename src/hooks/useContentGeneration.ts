@@ -1,73 +1,23 @@
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { BusinessInfo, ContentItem } from "@/lib/types";
-import { useContentState } from "./useContentGeneration/contentState";
-import { useContentSubscription } from "./useContentGeneration/supabaseSubscription";
-import { generateInitialContentItems } from "./useContentGeneration/contentItems";
+import { toast } from "sonner";
+import type { BusinessInfo } from "@/lib/types";
 
 export const useContentGeneration = () => {
-  const {
-    contentItems,
-    setContentItems,
-    contentStats,
-    updateContentStats,
-    isGenerating,
-    setIsGenerating,
-    progress,
-    setProgress,
-  } = useContentState();
-
-  // Get the setupSubscription function
-  const setupSubscription = useContentSubscription(
-    contentItems[0]?.companies?.id || null,
-    (updatedItems) => {
-      setContentItems(updatedItems);
-      updateContentStats(updatedItems);
-    }
-  );
-
-  // Call setupSubscription when contentItems changes
-  useEffect(() => {
-    if (contentItems[0]?.companies?.id) {
-      const cleanup = setupSubscription();
-      return () => {
-        if (cleanup) cleanup();
-      };
-    }
-  }, [contentItems[0]?.companies?.id]);
-
-  const generateTitle = async (
-    type: string,
-    info: { companyName: string; industry: string; serviceName: string },
-    location?: string
-  ) => {
-    try {
-      const { data } = await supabase.functions.invoke("generate-titles", {
-        body: { contentType: type, companyInfo: info, location },
-      });
-      return data?.title || generateFallbackTitle(type, info, location);
-    } catch (error) {
-      console.error("Error generating title:", error);
-      return generateFallbackTitle(type, info, location);
-    }
-  };
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const createCompanyAndContent = async (businessInfo: BusinessInfo) => {
     setIsGenerating(true);
     setProgress(0);
-
-    const { items, total } = generateInitialContentItems(businessInfo);
-    setContentItems(items);
-    updateContentStats(items);
-
+    
     const progressToast = toast.loading('Starting content generation process...', {
       duration: Infinity,
     });
 
     try {
       let companyData;
-
+      
       toast.loading('Checking existing company data...', { id: progressToast });
       // Check if company already exists by name
       const { data: existingCompany } = await supabase
@@ -150,17 +100,10 @@ export const useContentGeneration = () => {
       // Service pages
       for (const service of servicesData) {
         if (!service?.id) continue;
-
-        const title = await generateTitle("service", {
-          companyName: businessInfo.companyName,
-          industry: businessInfo.industry,
-          serviceName: service.name,
-        });
-
         contentEntries.push({
           company_id: companyData.id,
           service_id: service.id,
-          title,
+          title: `${service.name} Services - ${businessInfo.companyName}`,
           type: "service",
         });
       }
@@ -170,46 +113,26 @@ export const useContentGeneration = () => {
         if (!service?.id) continue;
         for (const location of locationsData) {
           if (!location?.id) continue;
-
-          const locationTitle = await generateTitle(
-            "location",
-            {
-              companyName: businessInfo.companyName,
-              industry: businessInfo.industry,
-              serviceName: service.name,
-            },
-            location.location
-          );
-
           contentEntries.push({
             company_id: companyData.id,
             service_id: service.id,
             location_id: location.id,
-            title: locationTitle,
+            title: `${service.name} Services in ${location.location} - ${businessInfo.companyName}`,
             type: "location",
           });
 
           // Blog posts for each location page
-          const blogTitle = await generateTitle(
-            "blog",
-            {
-              companyName: businessInfo.companyName,
-              industry: businessInfo.industry,
-              serviceName: service.name,
-            },
-            location.location
-          );
-
           contentEntries.push({
             company_id: companyData.id,
             service_id: service.id,
             location_id: location.id,
-            title: blogTitle,
+            title: `Guide to ${service.name} Services in ${location.location}`,
             type: "blog",
           });
         }
       }
 
+      setProgress(80);
       // Insert all content entries
       if (contentEntries.length > 0) {
         const { error: contentError } = await supabase
@@ -282,7 +205,7 @@ export const useContentGeneration = () => {
       }
 
       toast.success('Content generation completed successfully!', { id: progressToast });
-      return { success: true, items };
+      return { success: true };
     } catch (error) {
       console.error("Error:", error);
       toast.error('An error occurred while processing your information', { id: progressToast });
@@ -297,7 +220,5 @@ export const useContentGeneration = () => {
     createCompanyAndContent,
     isGenerating,
     progress,
-    contentItems,
-    contentStats,
   };
 };
