@@ -57,19 +57,11 @@ const Companies = () => {
       .eq("id", companyId);
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete company",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete company");
       return;
     }
 
-    toast({
-      title: "Success",
-      description: "Company deleted successfully",
-    });
-    
+    toast.success("Company deleted successfully");
     queryClient.invalidateQueries({ queryKey: ["companies"] });
   };
 
