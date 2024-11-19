@@ -43,7 +43,7 @@ const Index = () => {
     const interval = setInterval(() => {
       if (generated < items.length) {
         const updatedItems = [...items];
-        updatedItems[generated].status = "completed";
+        updatedItems[generated].status = "generated";
         setContentItems(updatedItems);
         setContentStats(prev => ({
           ...prev,
@@ -110,10 +110,10 @@ const Index = () => {
                       Select an existing company to pre-fill information
                     </Label>
                     <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
-                      <SelectTrigger className="w-full bg-white">
+                      <SelectTrigger id="companySelect" className="w-full bg-white">
                         <SelectValue placeholder="Choose a company" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white">
                         {companies.map((company) => (
                           <SelectItem key={company.id} value={company.id}>
                             {company.name}
