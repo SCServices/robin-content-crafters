@@ -11,6 +11,9 @@ export interface ContentItem {
   type: "service" | "location" | "blog";
   status: "pending" | "generated" | "error";
   content?: string;
+  company?: {
+    name: string;
+  };
 }
 
 export interface ContentStats {

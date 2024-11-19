@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { generateTitle } from "@/hooks/useContentGeneration/titleGeneration";
 
 const Index = () => {
   const [isOnboarding, setIsOnboarding] = useState(true);
@@ -36,7 +37,7 @@ const Index = () => {
 
   const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
 
-  const handleContentGeneration = (items: ContentItem[]) => {
+  const handleContentGeneration = async (items: ContentItem[]) => {
     setContentItems(items);
     // Simulate content generation progress
     let generated = 0;
@@ -137,14 +138,14 @@ const Index = () => {
                       const items: ContentItem[] = [
                         // Service pages
                         ...data.services.map((service): ContentItem => ({
-                          title: `${service} Services - ${data.companyName}`,
+                          title: "",
                           type: "service",
                           status: "pending",
                         })),
                         // Location pages
                         ...data.locations.flatMap((location) =>
                           data.services.map((service): ContentItem => ({
-                            title: `${service} Services in ${location} - ${data.companyName}`,
+                            title: "",
                             type: "location",
                             status: "pending",
                           }))
@@ -153,7 +154,7 @@ const Index = () => {
                         ...data.locations.flatMap((location) =>
                           data.services.flatMap((service) =>
                             Array.from({ length: 5 }, (_, i): ContentItem => ({
-                              title: `${i + 1}. Guide to ${service} Services in ${location}`,
+                              title: "",
                               type: "blog",
                               status: "pending",
                             }))
