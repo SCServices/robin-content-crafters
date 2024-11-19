@@ -58,7 +58,7 @@ const BusinessInfoStep = ({
           <SelectTrigger>
             <SelectValue placeholder="Select your industry" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white">
             {INDUSTRIES.map((ind) => (
               <SelectItem key={ind} value={ind.toLowerCase()}>
                 {ind}
