@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { BusinessInfo } from "@/lib/types";
 import { createContentEntries } from "./titleGeneration";
+import { handleCompanyCreation } from "./companyManagement";
+import { generateContent } from "./contentGeneration";
 import type { ContentEntry } from "./types";
 
 export const useContentGeneration = () => {
@@ -18,73 +20,12 @@ export const useContentGeneration = () => {
     });
 
     try {
-      let companyData;
-      
-      // Check if company exists and create/update it
-      toast.loading('Checking existing company data...', { id: progressToast });
-      const { data: existingCompany } = await supabase
-        .from("companies")
-        .select("*")
-        .eq("name", businessInfo.companyName)
-        .limit(1);
-
-      if (existingCompany && existingCompany.length > 0) {
-        const { data: updatedCompany, error: updateError } = await supabase
-          .from("companies")
-          .update({
-            industry: businessInfo.industry,
-            website: businessInfo.website,
-          })
-          .eq("id", existingCompany[0].id)
-          .select()
-          .single();
-
-        if (updateError) throw updateError;
-        companyData = updatedCompany;
-
-        await supabase.from("services").delete().eq("company_id", companyData.id);
-        await supabase.from("service_locations").delete().eq("company_id", companyData.id);
-      } else {
-        const { data: newCompany, error: companyError } = await supabase
-          .from("companies")
-          .insert({
-            name: businessInfo.companyName,
-            industry: businessInfo.industry,
-            website: businessInfo.website,
-          })
-          .select()
-          .single();
-
-        if (companyError) throw companyError;
-        companyData = newCompany;
-      }
-
-      setProgress(20);
-
-      // Insert services and locations
-      const { data: servicesData } = await supabase
-        .from("services")
-        .insert(
-          businessInfo.services.map((service) => ({
-            company_id: companyData.id,
-            name: service,
-          }))
-        )
-        .select();
-
-      const { data: locationsData } = await supabase
-        .from("service_locations")
-        .insert(
-          businessInfo.locations.map((location) => ({
-            company_id: companyData.id,
-            location: location,
-          }))
-        )
-        .select();
-
+      // Handle company creation/update
+      const { companyData, servicesData, locationsData } = await handleCompanyCreation(businessInfo);
       setProgress(40);
 
       // Generate titles and create content entries
+      toast.loading('Generating optimized titles...', { id: progressToast });
       const contentEntries = await createContentEntries(
         companyData,
         servicesData || [],
@@ -103,30 +44,18 @@ export const useContentGeneration = () => {
 
       setProgress(60);
 
-      // Generate content using the Edge Function
-      const totalItems = contentEntries.length;
-      let completedItems = 0;
-
-      for (const entry of contentEntries) {
-        await supabase.functions.invoke("generate-content", {
-          body: {
-            contentType: entry.type,
-            companyInfo: {
-              companyName: businessInfo.companyName,
-              industry: businessInfo.industry,
-              serviceName: servicesData?.find(s => s.id === entry.service_id)?.name,
-              companyId: companyData.id,
-            },
-            serviceId: entry.service_id,
-            locationId: entry.location_id,
-          },
-        });
-
-        completedItems++;
-        const newProgress = 60 + (completedItems / totalItems) * 40;
-        setProgress(newProgress);
-        toast.loading(`Generating content: ${Math.round(newProgress)}% complete...`, { id: progressToast });
-      }
+      // Generate content using Edge Function
+      await generateContent(
+        contentEntries,
+        businessInfo,
+        servicesData,
+        companyData,
+        (progress) => {
+          const newProgress = 60 + progress * 40;
+          setProgress(newProgress);
+          toast.loading(`Generating content: ${Math.round(newProgress)}% complete...`, { id: progressToast });
+        }
+      );
 
       toast.success('Content generation completed successfully!', { id: progressToast });
       return { success: true };
