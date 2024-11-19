@@ -3,6 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { BusinessInfo } from "@/lib/types";
 
+const generateFallbackTitle = (
+  type: string,
+  info: { companyName: string; industry: string; serviceName: string },
+  location?: string
+): string => {
+  switch (type) {
+    case 'service':
+      return `${info.serviceName} Services - ${info.companyName}`;
+    case 'location':
+      return `${info.serviceName} Services in ${location} - ${info.companyName}`;
+    case 'blog':
+      return `Guide to ${info.serviceName} Services${location ? ` in ${location}` : ''}`;
+    default:
+      return `${info.serviceName} - ${info.companyName}`;
+  }
+};
+
 export const useContentGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
