@@ -28,11 +28,10 @@ serve(async (req) => {
 
     prompt += `\n\nGuidelines:
     - Keep it under 60 characters for SEO
-    - Include the main service and location (if applicable)
     - Make it action-oriented and benefit-focused
     - Avoid generic templates
     - Don't use special characters
-    - Include the company name naturally`;
+`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
