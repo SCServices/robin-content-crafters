@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { BusinessInfo, ContentItem, ContentStats } from "@/lib/types";
+import { supabase } from "@/integrations/supabase/client";
+import type { BusinessInfo, ContentItem } from "@/lib/types";
+import { useContentState } from "./useContentGeneration/contentState";
+import { useContentSubscription } from "./useContentGeneration/supabaseSubscription";
 import { generateInitialContentItems } from "./useContentGeneration/contentItems";
 
 const generateFallbackTitle = (
@@ -22,15 +23,25 @@ const generateFallbackTitle = (
 };
 
 export const useContentGeneration = () => {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
-  const [contentStats, setContentStats] = useState<ContentStats>({
-    total: 0,
-    generated: 0,
-    pending: 0,
-    error: 0,
-  });
+  const {
+    contentItems,
+    setContentItems,
+    contentStats,
+    updateContentStats,
+    isGenerating,
+    setIsGenerating,
+    progress,
+    setProgress,
+  } = useContentState();
+
+  // Subscribe to content updates
+  useContentSubscription(
+    contentItems[0]?.companies?.id || null,
+    (updatedItems) => {
+      setContentItems(updatedItems);
+      updateContentStats(updatedItems);
+    }
+  );
 
   const generateTitle = async (
     type: string,
@@ -38,56 +49,8 @@ export const useContentGeneration = () => {
     location?: string
   ) => {
     try {
-      // Create content-type specific prompts
-      let prompt = '';
-      switch (type) {
-        case 'service':
-          prompt = `
-You are an experienced copywriter specializing in creating engaging and natural-sounding titles for service pages in the ${info.industry} industry.
-
-Please generate a compelling and natural title for a **service page** for **${info.companyName}** that offers **${info.serviceName}** services.
-
-**Guidelines:**
-- Keep the title concise (60 characters or less).
-- Use natural language that appeals to the target audience.
-- Make it stand out and accurately reflect the service.
-- Use title case capitalization.
-`;
-          break;
-        case 'location':
-          prompt = `
-You are an experienced copywriter specializing in creating engaging and natural-sounding titles for location-specific service pages in the ${info.industry} industry.
-
-Please generate a compelling and natural title for a **location-specific service page** for **${info.companyName}**, focusing on **${info.serviceName}** services in **${location}**.
-
-**Guidelines:**
-- Keep the title concise (60 characters or less).
-- Naturally include the location in the title.
-- Appeal to the local audience.
-- Use title case capitalization.
-`;
-          break;
-        case 'blog':
-          prompt = `
-You are an experienced copywriter specializing in creating engaging and natural-sounding titles for blog posts in the ${info.industry} industry.
-
-Please generate a compelling and natural title for a **blog post** for **${info.companyName}** about **${info.serviceName}** services${location ? ` in ${location}` : ''}.
-
-**Guidelines:**
-- Keep the title concise (60 characters or less).
-- Make it interesting and informative.
-- Use natural language that resonates with homeowners and DIY enthusiasts.
-- Use title case capitalization.
-`;
-          break;
-        default:
-          prompt = `
-Please generate a title for ${info.serviceName} services by ${info.companyName}.
-`;
-      }
-
       const { data } = await supabase.functions.invoke("generate-titles", {
-        body: { contentType: type, companyInfo: info, location, prompt },
+        body: { contentType: type, companyInfo: info, location },
       });
       return data?.title || generateFallbackTitle(type, info, location);
     } catch (error) {
@@ -102,12 +65,7 @@ Please generate a title for ${info.serviceName} services by ${info.companyName}.
 
     const { items, total } = generateInitialContentItems(businessInfo);
     setContentItems(items);
-    setContentStats({
-      total,
-      generated: 0,
-      pending: total,
-      error: 0,
-    });
+    updateContentStats(items);
 
     const progressToast = toast.loading('Starting content generation process...', {
       duration: Infinity,
