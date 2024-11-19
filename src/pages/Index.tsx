@@ -2,6 +2,7 @@ import { useState } from "react";
 import OnboardingForm from "@/components/OnboardingForm";
 import Dashboard from "@/components/Dashboard";
 import ContentOverview from "@/components/ContentOverview";
+import Layout from "@/components/Layout";
 import type { BusinessInfo, ContentItem, ContentStats } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -100,20 +101,39 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <Layout>
       <div className="container py-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
-              Robin SEO Assistant
+              Transform Your Business with SEO Automation
             </h1>
             <p className="text-neutral-600">
-              Create optimized content for your business website
+              Create optimized content for your business website that stands out and ranks #1 on Google.
             </p>
           </div>
 
           {isOnboarding ? (
-            <OnboardingForm onComplete={handleOnboardingComplete} />
+            <>
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">Our SEO SaaS tool helps you:</h2>
+                <ul className="space-y-2">
+                  <li className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-primary rounded-full" />
+                    Generate optimized content for your service area and industry
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-primary rounded-full" />
+                    Create standout pages that rank high on search engines
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-primary rounded-full" />
+                    Automate your SEO strategy without any technical hassle
+                  </li>
+                </ul>
+              </div>
+              <OnboardingForm onComplete={handleOnboardingComplete} />
+            </>
           ) : (
             <div className="space-y-6">
               <Dashboard stats={contentStats} />
@@ -122,7 +142,7 @@ const Index = () => {
           )}
         </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 
