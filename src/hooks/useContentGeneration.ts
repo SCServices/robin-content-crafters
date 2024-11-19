@@ -13,27 +13,70 @@ export const useContentGeneration = () => {
     location?: string
   ) => {
     try {
+      // Updated prompt to generate more natural titles
+      const prompt = `
+You are an experienced copywriter specializing in creating engaging and natural-sounding titles for business websites in blue-collar industries, homeowners' advice, and DIY topics.
+
+Please generate a compelling and natural title for a **${type}** page for **${info.companyName}**, a ${info.industry} company. The title should focus on their **${info.serviceName}** service${location ? ` in ${location}` : ''}.
+
+**Guidelines:**
+- Keep the title concise (60 characters or less).
+- Use natural language that appeals to the target audience.
+- Avoid generic phrases; make sure it stands out.
+- Stay on topic and accurately reflect the page content.
+- Use title case capitalization.
+
+**Examples:**
+- "${info.serviceName} Solutions ${location ? `in ${location}` : ''} by ${info.companyName}"
+- "Expert ${info.serviceName} Services ${location ? `for ${location} Homeowners` : ''}"
+- "Your Trusted ${info.serviceName} Provider ${location ? `in ${location}` : ''}"
+`;
+
       const { data } = await supabase.functions.invoke("generate-titles", {
-        body: { contentType: type, companyInfo: info, location },
+        body: { contentType: type, companyInfo: info, location, prompt },
       });
-      return data?.title || `${info.serviceName} Services - ${info.companyName}`;
+      return data?.title || generateFallbackTitle(type, info, location);
     } catch (error) {
       console.error("Error generating title:", error);
-      return `${info.serviceName} Services - ${info.companyName}`;
+      return generateFallbackTitle(type, info, location);
     }
+  };
+
+  // Added a fallback title generator for more natural titles
+  const generateFallbackTitle = (
+    type: string,
+    info: { companyName: string; industry: string; serviceName: string },
+    location?: string
+  ) => {
+    let title = "";
+    switch (type) {
+      case "service":
+        title = `${info.serviceName} Services by ${info.companyName}`;
+        break;
+      case "location":
+        title = `${info.serviceName} Services in ${location} | ${info.companyName}`;
+        break;
+      case "blog":
+        title = `Tips on ${info.serviceName}${location ? ` in ${location}` : ""} by ${info.companyName}`;
+        break;
+      default:
+        title = `${info.serviceName} Services - ${info.companyName}`;
+        break;
+    }
+    return title;
   };
 
   const createCompanyAndContent = async (businessInfo: BusinessInfo) => {
     setIsGenerating(true);
     setProgress(0);
-    
+
     const progressToast = toast.loading('Starting content generation process...', {
       duration: Infinity,
     });
 
     try {
       let companyData;
-      
+
       toast.loading('Checking existing company data...', { id: progressToast });
       // Check if company already exists by name
       const { data: existingCompany } = await supabase
@@ -116,7 +159,7 @@ export const useContentGeneration = () => {
       // Service pages
       for (const service of servicesData) {
         if (!service?.id) continue;
-        
+
         const title = await generateTitle("service", {
           companyName: businessInfo.companyName,
           industry: businessInfo.industry,
@@ -136,7 +179,7 @@ export const useContentGeneration = () => {
         if (!service?.id) continue;
         for (const location of locationsData) {
           if (!location?.id) continue;
-          
+
           const locationTitle = await generateTitle(
             "location",
             {
