@@ -1,13 +1,18 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import OnboardingForm from "@/components/OnboardingForm";
 import Dashboard from "@/components/Dashboard";
 import ContentOverview from "@/components/ContentOverview";
 import Layout from "@/components/Layout";
 import type { BusinessInfo, ContentItem, ContentStats } from "@/lib/types";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 const Index = () => {
   const [isOnboarding, setIsOnboarding] = useState(true);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [contentStats, setContentStats] = useState<ContentStats>({
     total: 0,
     generated: 0,
@@ -15,6 +20,19 @@ const Index = () => {
     error: 0,
   });
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
+
+  const { data: companies } = useQuery({
+    queryKey: ["companies"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("companies")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const handleOnboardingComplete = (data: BusinessInfo) => {
     // Calculate total content items
@@ -100,6 +118,8 @@ const Index = () => {
     });
   };
 
+  const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
+
   return (
     <Layout>
       <div className="container py-8">
@@ -115,6 +135,23 @@ const Index = () => {
 
           {isOnboarding ? (
             <>
+              {companies && companies.length > 0 && (
+                <div className="mb-8 p-4 bg-white rounded-lg shadow-sm">
+                  <Label htmlFor="companySelect">Select an existing company to pre-fill information</Label>
+                  <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder="Choose a company" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {companies.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="mb-8">
                 <h2 className="text-xl font-semibold mb-4">Our SEO SaaS tool helps you:</h2>
                 <ul className="space-y-2">
@@ -132,7 +169,16 @@ const Index = () => {
                   </li>
                 </ul>
               </div>
-              <OnboardingForm onComplete={handleOnboardingComplete} />
+              <OnboardingForm 
+                onComplete={handleOnboardingComplete} 
+                initialData={selectedCompany ? {
+                  companyName: selectedCompany.name,
+                  industry: selectedCompany.industry,
+                  website: selectedCompany.website,
+                  locations: [],
+                  services: []
+                } : undefined}
+              />
             </>
           ) : (
             <div className="space-y-6">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BusinessInfoStep from "./BusinessInfoStep";
 import LocationsStep from "./LocationsStep";
 import ServicesStep from "./ServicesStep";
@@ -7,17 +7,28 @@ import { useContentGeneration } from "@/hooks/useContentGeneration";
 
 interface OnboardingFormProps {
   onComplete: (data: BusinessInfo) => void;
+  initialData?: BusinessInfo;
 }
 
-const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
+const OnboardingForm = ({ onComplete, initialData }: OnboardingFormProps) => {
   const [step, setStep] = useState(1);
-  const [companyName, setCompanyName] = useState("");
-  const [industry, setIndustry] = useState("");
-  const [website, setWebsite] = useState("");
-  const [locations, setLocations] = useState<string[]>([]);
-  const [services, setServices] = useState<string[]>([]);
+  const [companyName, setCompanyName] = useState(initialData?.companyName || "");
+  const [industry, setIndustry] = useState(initialData?.industry || "");
+  const [website, setWebsite] = useState(initialData?.website || "");
+  const [locations, setLocations] = useState<string[]>(initialData?.locations || []);
+  const [services, setServices] = useState<string[]>(initialData?.services || []);
   
   const { createCompanyAndContent, isGenerating } = useContentGeneration();
+
+  useEffect(() => {
+    if (initialData) {
+      setCompanyName(initialData.companyName);
+      setIndustry(initialData.industry);
+      setWebsite(initialData.website);
+      setLocations(initialData.locations);
+      setServices(initialData.services);
+    }
+  }, [initialData]);
 
   const handleSubmit = async () => {
     const businessInfo: BusinessInfo = {
