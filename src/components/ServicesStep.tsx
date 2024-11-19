@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,9 +12,17 @@ interface ServicesStepProps {
   onSubmit: () => void;
   onBack: () => void;
   isGenerating: boolean;
+  progress?: number;
 }
 
-const ServicesStep = ({ services, setServices, onSubmit, onBack, isGenerating }: ServicesStepProps) => {
+const ServicesStep = ({ 
+  services, 
+  setServices, 
+  onSubmit, 
+  onBack, 
+  isGenerating,
+  progress = 0
+}: ServicesStepProps) => {
   const [newService, setNewService] = useState("");
 
   const addService = (e: React.FormEvent) => {
@@ -47,12 +56,12 @@ const ServicesStep = ({ services, setServices, onSubmit, onBack, isGenerating }:
               value={newService}
               onChange={(e) => setNewService(e.target.value)}
               placeholder="Enter service name"
-              disabled={services.length >= 5}
+              disabled={services.length >= 5 || isGenerating}
             />
             <Button
               type="submit"
               variant="outline"
-              disabled={services.length >= 5 || !newService}
+              disabled={services.length >= 5 || !newService || isGenerating}
             >
               Add
             </Button>
@@ -72,12 +81,22 @@ const ServicesStep = ({ services, setServices, onSubmit, onBack, isGenerating }:
               size="sm"
               onClick={() => removeService(index)}
               className="text-neutral-500 hover:text-red-500"
+              disabled={isGenerating}
             >
               <X size={16} />
             </Button>
           </div>
         ))}
       </div>
+
+      {isGenerating && (
+        <div className="space-y-2">
+          <Progress value={progress} className="w-full" />
+          <p className="text-sm text-neutral-600 text-center">
+            Generating content: {Math.round(progress)}% complete
+          </p>
+        </div>
+      )}
 
       <div className="flex gap-4">
         <Button

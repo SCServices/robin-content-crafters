@@ -5,12 +5,20 @@ import type { BusinessInfo } from "@/lib/types";
 
 export const useContentGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const createCompanyAndContent = async (businessInfo: BusinessInfo) => {
     setIsGenerating(true);
+    setProgress(0);
+    
+    const progressToast = toast.loading('Starting content generation process...', {
+      duration: Infinity,
+    });
+
     try {
       let companyData;
       
+      toast.loading('Checking existing company data...', { id: progressToast });
       // Check if company already exists by name
       const { data: existingCompany } = await supabase
         .from("companies")
@@ -19,6 +27,7 @@ export const useContentGeneration = () => {
         .limit(1);
 
       if (existingCompany && existingCompany.length > 0) {
+        toast.loading('Updating existing company information...', { id: progressToast });
         // Update existing company
         const { data: updatedCompany, error: updateError } = await supabase
           .from("companies")
@@ -37,6 +46,7 @@ export const useContentGeneration = () => {
         await supabase.from("services").delete().eq("company_id", companyData.id);
         await supabase.from("service_locations").delete().eq("company_id", companyData.id);
       } else {
+        toast.loading('Creating new company profile...', { id: progressToast });
         // Insert new company
         const { data: newCompany, error: companyError } = await supabase
           .from("companies")
@@ -52,6 +62,8 @@ export const useContentGeneration = () => {
         companyData = newCompany;
       }
 
+      setProgress(20);
+      toast.loading('Setting up service information...', { id: progressToast });
       // Insert services
       const { data: servicesData, error: servicesError } = await supabase
         .from("services")
@@ -65,6 +77,8 @@ export const useContentGeneration = () => {
 
       if (servicesError) throw servicesError;
 
+      setProgress(40);
+      toast.loading('Adding location data...', { id: progressToast });
       // Insert locations
       const { data: locationsData, error: locationsError } = await supabase
         .from("service_locations")
@@ -78,6 +92,8 @@ export const useContentGeneration = () => {
 
       if (locationsError) throw locationsError;
 
+      setProgress(60);
+      toast.loading('Preparing content structure...', { id: progressToast });
       // Create content entries for each combination
       const contentEntries = [];
 
@@ -116,6 +132,7 @@ export const useContentGeneration = () => {
         }
       }
 
+      setProgress(80);
       // Insert all content entries
       if (contentEntries.length > 0) {
         const { error: contentError } = await supabase
@@ -126,6 +143,10 @@ export const useContentGeneration = () => {
       }
 
       // Start content generation process
+      toast.loading('Starting AI content generation...', { id: progressToast });
+      const totalItems = servicesData.length * (1 + locationsData.length * 2); // Services + (Locations + Blogs) per service
+      let completedItems = 0;
+
       for (const service of servicesData) {
         if (!service?.id) continue;
         const companyInfo = {
@@ -143,6 +164,9 @@ export const useContentGeneration = () => {
             serviceId: service.id,
           },
         });
+        completedItems++;
+        setProgress(80 + (completedItems / totalItems) * 20);
+        toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
 
         // Generate location pages and blog posts
         for (const location of locationsData) {
@@ -161,6 +185,9 @@ export const useContentGeneration = () => {
               locationId: location.id,
             },
           });
+          completedItems++;
+          setProgress(80 + (completedItems / totalItems) * 20);
+          toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
 
           // Generate blog posts
           await supabase.functions.invoke("generate-content", {
@@ -171,22 +198,27 @@ export const useContentGeneration = () => {
               locationId: location.id,
             },
           });
+          completedItems++;
+          setProgress(80 + (completedItems / totalItems) * 20);
+          toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
         }
       }
 
-      toast.success("Information submitted and content generation started!");
+      toast.success('Content generation completed successfully!', { id: progressToast });
       return { success: true };
     } catch (error) {
       console.error("Error:", error);
-      toast.error("An error occurred while processing your information");
+      toast.error('An error occurred while processing your information', { id: progressToast });
       return { success: false, error };
     } finally {
       setIsGenerating(false);
+      setProgress(0);
     }
   };
 
   return {
     createCompanyAndContent,
     isGenerating,
+    progress,
   };
 };

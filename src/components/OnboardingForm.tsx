@@ -19,7 +19,7 @@ const OnboardingForm = ({ onComplete, initialData }: OnboardingFormProps) => {
   const [locations, setLocations] = useState<string[]>(initialData?.locations || []);
   const [services, setServices] = useState<string[]>(initialData?.services || []);
   
-  const { createCompanyAndContent, isGenerating } = useContentGeneration();
+  const { createCompanyAndContent, isGenerating, progress } = useContentGeneration();
 
   useEffect(() => {
     const fetchCompanyDetails = async () => {
@@ -135,6 +135,7 @@ const OnboardingForm = ({ onComplete, initialData }: OnboardingFormProps) => {
           onSubmit={handleSubmit}
           onBack={() => setStep(2)}
           isGenerating={isGenerating}
+          progress={progress}
         />
       )}
     </div>
