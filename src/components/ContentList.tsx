@@ -69,10 +69,10 @@ const ContentList = ({ items }: ContentListProps) => {
     <>
       <div className="space-y-6">
         <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full bg-white">
             <SelectValue placeholder="Select a company" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white">
             <SelectItem value="all">All Companies</SelectItem>
             {companies.map((company) => (
               <SelectItem key={company} value={company}>
