@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import BuildingProgress from "@/components/BuildingProgress";
 import { X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -91,9 +91,9 @@ const ServicesStep = ({
 
       {isGenerating && (
         <div className="space-y-2">
-          <Progress value={progress} className="w-full" />
+          <BuildingProgress value={progress} className="w-full" />
           <p className="text-sm text-neutral-600 text-center">
-            Generating content: {Math.round(progress)}% complete
+            Building your content: {Math.round(progress)}% complete
           </p>
         </div>
       )}
