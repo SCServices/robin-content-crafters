@@ -36,6 +36,27 @@ const Index = () => {
 
   const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
 
+  const handleContentGeneration = (items: ContentItem[]) => {
+    setContentItems(items);
+    // Simulate content generation progress
+    let generated = 0;
+    const interval = setInterval(() => {
+      if (generated < items.length) {
+        const updatedItems = [...items];
+        updatedItems[generated].status = "completed";
+        setContentItems(updatedItems);
+        setContentStats(prev => ({
+          ...prev,
+          generated: prev.generated + 1,
+          pending: prev.pending - 1,
+        }));
+        generated++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 1000);
+  };
+
   return (
     <Layout>
       <div className="container py-12 px-4 sm:px-6 lg:px-8">
@@ -149,8 +170,8 @@ const Index = () => {
                       setContentItems(items);
                       setIsOnboarding(false);
 
-                      // Simulate content generation
-                      simulateContentGeneration(items);
+                      // Start content generation simulation
+                      handleContentGeneration(items);
                     }}
                     initialData={selectedCompany ? {
                       companyName: selectedCompany.name,
