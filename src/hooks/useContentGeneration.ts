@@ -9,18 +9,48 @@ export const useContentGeneration = () => {
   const createCompanyAndContent = async (businessInfo: BusinessInfo) => {
     setIsGenerating(true);
     try {
-      // Insert company
-      const { data: companyData, error: companyError } = await supabase
+      let companyData;
+      
+      // Check if company already exists by name
+      const { data: existingCompany } = await supabase
         .from("companies")
-        .insert({
-          name: businessInfo.companyName,
-          industry: businessInfo.industry,
-          website: businessInfo.website,
-        })
-        .select()
-        .single();
+        .select("*")
+        .eq("name", businessInfo.companyName)
+        .limit(1);
 
-      if (companyError) throw companyError;
+      if (existingCompany && existingCompany.length > 0) {
+        // Update existing company
+        const { data: updatedCompany, error: updateError } = await supabase
+          .from("companies")
+          .update({
+            industry: businessInfo.industry,
+            website: businessInfo.website,
+          })
+          .eq("id", existingCompany[0].id)
+          .select()
+          .single();
+
+        if (updateError) throw updateError;
+        companyData = updatedCompany;
+
+        // Delete existing services and locations
+        await supabase.from("services").delete().eq("company_id", companyData.id);
+        await supabase.from("service_locations").delete().eq("company_id", companyData.id);
+      } else {
+        // Insert new company
+        const { data: newCompany, error: companyError } = await supabase
+          .from("companies")
+          .insert({
+            name: businessInfo.companyName,
+            industry: businessInfo.industry,
+            website: businessInfo.website,
+          })
+          .select()
+          .single();
+
+        if (companyError) throw companyError;
+        companyData = newCompany;
+      }
 
       // Insert services
       const { data: servicesData, error: servicesError } = await supabase
@@ -53,7 +83,7 @@ export const useContentGeneration = () => {
 
       // Service pages
       for (const service of servicesData) {
-        if (!service?.id) continue; // Skip if service ID is undefined
+        if (!service?.id) continue;
         contentEntries.push({
           company_id: companyData.id,
           service_id: service.id,
@@ -64,9 +94,9 @@ export const useContentGeneration = () => {
 
       // Location pages and blog posts
       for (const service of servicesData) {
-        if (!service?.id) continue; // Skip if service ID is undefined
+        if (!service?.id) continue;
         for (const location of locationsData) {
-          if (!location?.id) continue; // Skip if location ID is undefined
+          if (!location?.id) continue;
           contentEntries.push({
             company_id: companyData.id,
             service_id: service.id,
@@ -99,7 +129,7 @@ export const useContentGeneration = () => {
 
       // Start content generation process
       for (const service of servicesData) {
-        if (!service?.id) continue; // Skip if service ID is undefined
+        if (!service?.id) continue;
         const companyInfo = {
           companyName: businessInfo.companyName,
           industry: businessInfo.industry,
@@ -117,7 +147,7 @@ export const useContentGeneration = () => {
 
         // Generate location pages and blog posts
         for (const location of locationsData) {
-          if (!location?.id) continue; // Skip if location ID is undefined
+          if (!location?.id) continue;
           const locationInfo = {
             ...companyInfo,
             location: location.location,
