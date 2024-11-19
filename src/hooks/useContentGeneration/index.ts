@@ -11,15 +11,15 @@ export const useContentGeneration = () => {
     setIsGenerating(true);
     setProgress(0);
     
-    const progressToast = toast.loading('Starting content generation process...', {
+    const progressToast = toast.loading('🚀 Initializing your content generation journey...', {
       duration: Infinity,
     });
 
     try {
       let companyData;
       
-      // Check if company exists and create/update it
-      toast.loading('Checking existing company data...', { id: progressToast });
+      // Company setup phase
+      toast.loading('📋 Phase 1/5: Setting up your business profile...', { id: progressToast });
       const { data: existingCompany } = await supabase
         .from("companies")
         .select("*")
@@ -58,8 +58,9 @@ export const useContentGeneration = () => {
       }
 
       setProgress(20);
+      toast.loading('🗺️ Phase 2/5: Mapping your service areas...', { id: progressToast });
 
-      // Insert services and locations
+      // Services and locations setup
       const { data: servicesData } = await supabase
         .from("services")
         .insert(
@@ -81,9 +82,10 @@ export const useContentGeneration = () => {
         .select();
 
       setProgress(40);
+      toast.loading('✍️ Phase 3/5: Crafting engaging titles...', { id: progressToast });
 
-      // Generate all titles using the Edge Function
-      const { data: titleData, error: titleError } = await supabase.functions.invoke("generate-titles", {
+      // Title generation phase
+      const { data: contentData, error: titleError } = await supabase.functions.invoke("generate-titles", {
         body: {
           services: servicesData,
           locations: locationsData,
@@ -96,24 +98,24 @@ export const useContentGeneration = () => {
       });
 
       if (titleError) throw titleError;
-      const contentEntries = titleData.contentEntries;
 
-      // Insert content entries
-      if (contentEntries.length > 0) {
+      // Content entries creation
+      if (contentData.contentEntries.length > 0) {
         const { error: contentError } = await supabase
           .from("generated_content")
-          .insert(contentEntries);
+          .insert(contentData.contentEntries);
 
         if (contentError) throw contentError;
       }
 
       setProgress(60);
+      toast.loading('📝 Phase 4/5: Creating your content...', { id: progressToast });
 
-      // Generate content using the Edge Function
-      const totalItems = contentEntries.length;
+      // Content generation phase
+      const totalItems = contentData.contentEntries.length;
       let completedItems = 0;
 
-      for (const entry of contentEntries) {
+      for (const entry of contentData.contentEntries) {
         await supabase.functions.invoke("generate-content", {
           body: {
             contentType: entry.type,
@@ -131,14 +133,21 @@ export const useContentGeneration = () => {
         completedItems++;
         const newProgress = 60 + (completedItems / totalItems) * 40;
         setProgress(newProgress);
-        toast.loading(`Generating content: ${Math.round(newProgress)}% complete...`, { id: progressToast });
+        
+        // Show detailed progress during content creation
+        const percentComplete = Math.round(newProgress);
+        toast.loading(`📝 Phase 4/5: Creating content (${completedItems}/${totalItems} pieces)...`, { id: progressToast });
       }
 
-      toast.success('Content generation completed successfully!', { id: progressToast });
+      // Final phase
+      toast.loading('🎨 Phase 5/5: Applying final touches...', { id: progressToast });
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Brief pause for user to see final phase
+
+      toast.success('✨ Success! Your content is ready to explore', { id: progressToast });
       return { success: true };
     } catch (error) {
       console.error("Error:", error);
-      toast.error('An error occurred while processing your information', { id: progressToast });
+      toast.error('❌ Oops! Something went wrong while creating your content', { id: progressToast });
       return { success: false, error };
     } finally {
       setIsGenerating(false);
