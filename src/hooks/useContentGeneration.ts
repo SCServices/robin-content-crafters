@@ -27,10 +27,6 @@ Please generate a compelling and natural title for a **service page** for **${in
 - Use natural language that appeals to the target audience.
 - Make it stand out and accurately reflect the service.
 - Use title case capitalization.
-
-**Examples:**
-- "Expert ${info.serviceName} Services by ${info.companyName}"
-- "Professional ${info.serviceName} Solutions from ${info.companyName}"
 `;
         break;
       case 'location':
@@ -44,10 +40,6 @@ Please generate a compelling and natural title for a **location-specific service
 - Naturally include the location in the title.
 - Appeal to the local audience.
 - Use title case capitalization.
-
-**Examples:**
-- "${info.serviceName} Services in ${location}"
-- "Your ${location} ${info.serviceName} Experts"
 `;
         break;
       case 'blog':
