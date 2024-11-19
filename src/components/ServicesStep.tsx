@@ -45,14 +45,6 @@ const ServicesStep = ({
     onSubmit();
   };
 
-  const getPhaseMessage = (progress: number) => {
-    if (progress < 20) return "🚀 Phase 1/5: Setting up your business profile";
-    if (progress < 40) return "🗺️ Phase 2/5: Mapping your service areas";
-    if (progress < 60) return "✍️ Phase 3/5: Crafting engaging titles";
-    if (progress < 95) return "📝 Phase 4/5: Creating your content";
-    return "🎨 Phase 5/5: Applying final touches";
-  };
-
   return (
     <div className="space-y-6 animate-fade-in">
       <form onSubmit={addService} className="space-y-4">
@@ -98,16 +90,11 @@ const ServicesStep = ({
       </div>
 
       {isGenerating && (
-        <div className="space-y-4">
+        <div className="space-y-2">
           <Progress value={progress} className="w-full" />
-          <div className="text-center space-y-2">
-            <p className="text-lg font-medium text-primary">
-              {getPhaseMessage(progress)}
-            </p>
-            <p className="text-sm text-neutral-600">
-              Overall progress: {Math.round(progress)}%
-            </p>
-          </div>
+          <p className="text-sm text-neutral-600 text-center">
+            Generating content: {Math.round(progress)}% complete
+          </p>
         </div>
       )}
 

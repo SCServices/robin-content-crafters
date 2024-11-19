@@ -18,8 +18,8 @@ export const useContentGeneration = () => {
     try {
       let companyData;
       
-      // Check if company exists and create/update it
       toast.loading('Checking existing company data...', { id: progressToast });
+      // Check if company already exists by name
       const { data: existingCompany } = await supabase
         .from("companies")
         .select("*")
@@ -27,6 +27,8 @@ export const useContentGeneration = () => {
         .limit(1);
 
       if (existingCompany && existingCompany.length > 0) {
+        toast.loading('Updating existing company information...', { id: progressToast });
+        // Update existing company
         const { data: updatedCompany, error: updateError } = await supabase
           .from("companies")
           .update({
@@ -40,9 +42,12 @@ export const useContentGeneration = () => {
         if (updateError) throw updateError;
         companyData = updatedCompany;
 
+        // Delete existing services and locations
         await supabase.from("services").delete().eq("company_id", companyData.id);
         await supabase.from("service_locations").delete().eq("company_id", companyData.id);
       } else {
+        toast.loading('Creating new company profile...', { id: progressToast });
+        // Insert new company
         const { data: newCompany, error: companyError } = await supabase
           .from("companies")
           .insert({
@@ -58,9 +63,9 @@ export const useContentGeneration = () => {
       }
 
       setProgress(20);
-
-      // Insert services and locations
-      const { data: servicesData } = await supabase
+      toast.loading('Setting up service information...', { id: progressToast });
+      // Insert services
+      const { data: servicesData, error: servicesError } = await supabase
         .from("services")
         .insert(
           businessInfo.services.map((service) => ({
@@ -70,7 +75,12 @@ export const useContentGeneration = () => {
         )
         .select();
 
-      const { data: locationsData } = await supabase
+      if (servicesError) throw servicesError;
+
+      setProgress(40);
+      toast.loading('Adding location data...', { id: progressToast });
+      // Insert locations
+      const { data: locationsData, error: locationsError } = await supabase
         .from("service_locations")
         .insert(
           businessInfo.locations.map((location) => ({
@@ -80,57 +90,118 @@ export const useContentGeneration = () => {
         )
         .select();
 
-      setProgress(40);
+      if (locationsError) throw locationsError;
 
-      // Generate all titles and content entries using the Edge Function
-      const { data: contentData, error: titleError } = await supabase.functions.invoke("generate-titles", {
-        body: {
-          services: servicesData,
-          locations: locationsData,
-          companyInfo: {
-            companyName: businessInfo.companyName,
-            industry: businessInfo.industry,
-            companyId: companyData.id,
-          },
-        },
-      });
+      setProgress(60);
+      toast.loading('Preparing content structure...', { id: progressToast });
+      // Create content entries for each combination
+      const contentEntries = [];
 
-      if (titleError) throw titleError;
+      // Service pages
+      for (const service of servicesData) {
+        if (!service?.id) continue;
+        contentEntries.push({
+          company_id: companyData.id,
+          service_id: service.id,
+          title: `${service.name} Services - ${businessInfo.companyName}`,
+          type: "service",
+        });
+      }
 
-      // Insert content entries
-      if (contentData.contentEntries.length > 0) {
+      // Location pages and blog posts
+      for (const service of servicesData) {
+        if (!service?.id) continue;
+        for (const location of locationsData) {
+          if (!location?.id) continue;
+          contentEntries.push({
+            company_id: companyData.id,
+            service_id: service.id,
+            location_id: location.id,
+            title: `${service.name} Services in ${location.location} - ${businessInfo.companyName}`,
+            type: "location",
+          });
+
+          // Blog posts for each location page
+          contentEntries.push({
+            company_id: companyData.id,
+            service_id: service.id,
+            location_id: location.id,
+            title: `Guide to ${service.name} Services in ${location.location}`,
+            type: "blog",
+          });
+        }
+      }
+
+      setProgress(80);
+      // Insert all content entries
+      if (contentEntries.length > 0) {
         const { error: contentError } = await supabase
           .from("generated_content")
-          .insert(contentData.contentEntries);
+          .insert(contentEntries);
 
         if (contentError) throw contentError;
       }
 
-      setProgress(60);
-
-      // Generate content using the Edge Function
-      const totalItems = contentData.contentEntries.length;
+      // Start content generation process
+      toast.loading('Starting AI content generation...', { id: progressToast });
+      const totalItems = servicesData.length * (1 + locationsData.length * 2); // Services + (Locations + Blogs) per service
       let completedItems = 0;
 
-      for (const entry of contentData.contentEntries) {
+      for (const service of servicesData) {
+        if (!service?.id) continue;
+        const companyInfo = {
+          companyName: businessInfo.companyName,
+          industry: businessInfo.industry,
+          serviceName: service.name,
+          companyId: companyData.id,
+        };
+
+        // Generate service page
         await supabase.functions.invoke("generate-content", {
           body: {
-            contentType: entry.type,
-            companyInfo: {
-              companyName: businessInfo.companyName,
-              industry: businessInfo.industry,
-              serviceName: servicesData?.find(s => s.id === entry.service_id)?.name,
-              companyId: companyData.id,
-            },
-            serviceId: entry.service_id,
-            locationId: entry.location_id,
+            contentType: "service",
+            companyInfo,
+            serviceId: service.id,
           },
         });
-
         completedItems++;
-        const newProgress = 60 + (completedItems / totalItems) * 40;
-        setProgress(newProgress);
-        toast.loading(`Generating content: ${Math.round(newProgress)}% complete...`, { id: progressToast });
+        setProgress(80 + (completedItems / totalItems) * 20);
+        toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
+
+        // Generate location pages and blog posts
+        for (const location of locationsData) {
+          if (!location?.id) continue;
+          const locationInfo = {
+            ...companyInfo,
+            location: location.location,
+          };
+
+          // Generate location page
+          await supabase.functions.invoke("generate-content", {
+            body: {
+              contentType: "location",
+              companyInfo: locationInfo,
+              serviceId: service.id,
+              locationId: location.id,
+            },
+          });
+          completedItems++;
+          setProgress(80 + (completedItems / totalItems) * 20);
+          toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
+
+          // Generate blog posts
+          await supabase.functions.invoke("generate-content", {
+            body: {
+              contentType: "blog",
+              companyInfo: locationInfo,
+              serviceId: service.id,
+              locationId: location.id,
+            },
+          });
+          completedItems++;
+          setProgress(80 + (completedItems / totalItems) * 20);
+          toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
+        }
       }
 
       toast.success('Content generation completed successfully!', { id: progressToast });

@@ -11,13 +11,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { FileText, MapPin, Briefcase, NewspaperIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import ReactMarkdown from "react-markdown";
 
 interface ContentListProps {
@@ -27,10 +20,6 @@ interface ContentListProps {
 const ContentList = ({ items }: ContentListProps) => {
   const [selectedContent, setSelectedContent] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("all");
-  const [selectedCompany, setSelectedCompany] = useState<string>("all");
-
-  // Get unique companies from items
-  const companies = Array.from(new Set(items.map(item => item.companies?.name))).filter(Boolean);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -58,41 +47,22 @@ const ContentList = ({ items }: ContentListProps) => {
     }
   };
 
-  // Filter items by both company and type
-  const filteredItems = items.filter(item => {
-    const matchesCompany = selectedCompany === "all" || item.companies?.name === selectedCompany;
-    const matchesType = activeTab === "all" || item.type === activeTab;
-    return matchesCompany && matchesType;
-  });
+  const filteredItems = activeTab === "all" 
+    ? items 
+    : items.filter(item => item.type === activeTab);
 
   return (
     <>
-      <div className="space-y-6">
-        <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-          <SelectTrigger className="w-full bg-white">
-            <SelectValue placeholder="Select a company" />
-          </SelectTrigger>
-          <SelectContent className="bg-white">
-            <SelectItem value="all">All Companies</SelectItem>
-            {companies.map((company) => (
-              <SelectItem key={company} value={company}>
-                {company}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <TabsList className="w-full justify-start bg-neutral-50 p-1">
+          <TabsTrigger value="all" className="flex-1">All</TabsTrigger>
+          <TabsTrigger value="service" className="flex-1">Services</TabsTrigger>
+          <TabsTrigger value="location" className="flex-1">Locations</TabsTrigger>
+          <TabsTrigger value="blog" className="flex-1">Blog Posts</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full justify-start bg-neutral-50 p-1">
-            <TabsTrigger value="all" className="flex-1">All</TabsTrigger>
-            <TabsTrigger value="service" className="flex-1">Services</TabsTrigger>
-            <TabsTrigger value="location" className="flex-1">Locations</TabsTrigger>
-            <TabsTrigger value="blog" className="flex-1">Blog Posts</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
-      <div className="space-y-4 mt-6">
+      <div className="space-y-4">
         {filteredItems.map((item) => (
           <Card
             key={item.id}
