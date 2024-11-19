@@ -10,11 +10,14 @@ export async function generateTitle(
   },
   location?: string
 ): Promise<string> {
+  // Call the Supabase Edge Function 'generate-titles'
   const { data, error } = await supabase.functions.invoke("generate-titles", {
     body: { contentType, companyInfo, location },
   });
 
   if (error) throw error;
+  
+  // Provide a fallback title if the Edge Function fails
   return data.title || `${companyInfo.serviceName} Services - ${companyInfo.companyName}`;
 }
 
