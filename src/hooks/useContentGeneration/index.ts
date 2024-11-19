@@ -2,8 +2,6 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { BusinessInfo } from "@/lib/types";
-import { createContentEntries } from "./titleGeneration";
-import type { ContentEntry } from "./types";
 
 export const useContentGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -84,13 +82,21 @@ export const useContentGeneration = () => {
 
       setProgress(40);
 
-      // Generate titles and create content entries
-      const contentEntries = await createContentEntries(
-        companyData,
-        servicesData || [],
-        locationsData || [],
-        businessInfo
-      );
+      // Generate all titles using the Edge Function
+      const { data: titleData, error: titleError } = await supabase.functions.invoke("generate-titles", {
+        body: {
+          services: servicesData,
+          locations: locationsData,
+          companyInfo: {
+            companyName: businessInfo.companyName,
+            industry: businessInfo.industry,
+            companyId: companyData.id,
+          },
+        },
+      });
+
+      if (titleError) throw titleError;
+      const contentEntries = titleData.contentEntries;
 
       // Insert content entries
       if (contentEntries.length > 0) {
