@@ -9,23 +9,21 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { ContentItem } from "@/lib/types";
 import { CheckCircle, Clock, AlertCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useContentItems } from "@/hooks/useContentItems";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface ContentOverviewProps {
-  items: ContentItem[];
-}
-
-const ContentOverview = ({ items }: ContentOverviewProps) => {
+const ContentOverview = () => {
   const [activeTab, setActiveTab] = useState("all");
-  const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const { data: items, isLoading } = useContentItems();
 
   const filteredItems = activeTab === "all" 
     ? items 
-    : items.filter(item => item.type === activeTab);
+    : items?.filter(item => item.type === activeTab);
 
-  const getStatusIcon = (status: ContentItem["status"]) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case "generated":
         return <CheckCircle className="text-success" size={16} />;
@@ -35,6 +33,22 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
         return <AlertCircle className="text-secondary" size={16} />;
     }
   };
+
+  if (isLoading) {
+    return (
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-10 w-64" />
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <>
@@ -54,7 +68,7 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
 
           <TabsContent value={activeTab} className="mt-0">
             <div className="space-y-2">
-              {filteredItems.map((item, index) => (
+              {filteredItems?.map((item, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all duration-200 cursor-pointer border-l-2 hover:border-l-primary"

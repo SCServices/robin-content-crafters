@@ -4,7 +4,7 @@ import OnboardingForm from "@/components/OnboardingForm";
 import Dashboard from "@/components/Dashboard";
 import ContentOverview from "@/components/ContentOverview";
 import Layout from "@/components/Layout";
-import type { BusinessInfo, ContentItem, ContentStats } from "@/lib/types";
+import type { BusinessInfo, ContentStats } from "@/lib/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,7 +19,6 @@ const Index = () => {
     pending: 0,
     error: 0,
   });
-  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
 
   const { data: companies } = useQuery({
     queryKey: ["companies"],
@@ -37,7 +36,6 @@ const Index = () => {
   const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
 
   const handleContentGeneration = (items: ContentItem[]) => {
-    setContentItems(items);
     // Simulate content generation progress
     let generated = 0;
     const interval = setInterval(() => {
@@ -187,7 +185,7 @@ const Index = () => {
           ) : (
             <div className="space-y-6 animate-fade-in">
               <Dashboard stats={contentStats} />
-              <ContentOverview items={contentItems} />
+              <ContentOverview />
             </div>
           )}
         </div>

@@ -1,27 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 import Layout from "@/components/Layout";
 import ContentList from "@/components/ContentList";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useContentItems } from "@/hooks/useContentItems";
 
 const Content = () => {
-  const { data: content, isLoading } = useQuery({
-    queryKey: ["content"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("generated_content")
-        .select(`
-          *,
-          companies (name),
-          services (name),
-          service_locations (location)
-        `)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: content, isLoading } = useContentItems();
 
   return (
     <Layout>
