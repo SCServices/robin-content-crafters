@@ -82,13 +82,17 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
             </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            {selectedItem?.content ? (
+            {selectedItem?.status === "pending" ? (
+              <p className="text-neutral-500 italic text-center py-8">
+                Content is still being generated...
+              </p>
+            ) : selectedItem?.content ? (
               <article className="prose prose-lg prose-primary max-w-none">
                 <ReactMarkdown>{selectedItem.content}</ReactMarkdown>
               </article>
             ) : (
               <p className="text-neutral-500 italic text-center py-8">
-                Content is still being generated...
+                No content available
               </p>
             )}
           </div>
