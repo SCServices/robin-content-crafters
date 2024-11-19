@@ -19,8 +19,7 @@ serve(async (req) => {
     console.log('Generating title for:', { contentType, companyInfo, location });
 
     let prompt = `Generate a compelling, SEO-optimized title for a ${contentType} page. 
-    The title should be natural, engaging, and include the company name "${companyInfo.companyName}" 
-    and the service "${companyInfo.serviceName}".`;
+    The title should be natural, engaging, and related to the company's industry but not include its name.`;
 
     if (location) {
       prompt += ` The content is specific to ${location}.`;
@@ -31,8 +30,7 @@ serve(async (req) => {
     - Include the main service and location (if applicable)
     - Make it action-oriented and benefit-focused
     - Avoid generic templates
-    - Don't use special characters
-    - Include the company name naturally`;
+    - Don't use special characters`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
