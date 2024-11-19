@@ -36,7 +36,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     let prompt = '';
-    const systemPrompt = 'You are an expert content writer specializing in creating high-quality, SEO-optimized content for business websites.';
+    const systemPrompt = `You are a Local SEO expert and experienced content writer specializing in creating high-quality, SEO-optimized content for business websites in blue-collar industries, homeowners' advice, and DIY topics. You focus on writing engaging, easy-to-read articles that are accessible to a wide audience. Use simple language, avoid technical jargon, and write in a conversational and friendly tone.`;
 
     // Construct prompt based on content type
     switch (contentType) {
@@ -54,11 +54,15 @@ serve(async (req) => {
                  
                  Requirements:
                  - Use H2 and H3 headings for sections
-                 - Keep the tone professional yet engaging
-                 - Include relevant keywords naturally
-                 - Focus on value proposition
-                 - Make it SEO-friendly
-                 - Around 800-1000 words`;
+                 - Keep the tone professional but approachable, ensuring clarity and simplicity
+                 - Write in a conversational and friendly tone, using simple language
+                 - Avoid technical jargon and complex terms; use common everyday words
+                 - Use active voice and positive language
+                 - Include relevant keywords naturally (avoid keyword stuffing)
+                 - Focus on value proposition and address customer needs and pain points
+                 - Make it SEO-friendly, aiming for a keyword density of 1-2%
+                 - Around 800-1000 words
+                 - Before finalizing, review the content to ensure it meets all the above guidelines and is free of errors.`;
         break;
       
       case 'location':
@@ -67,39 +71,56 @@ serve(async (req) => {
                  Structure the content with these sections:
                  1. Introduction (with local context)
                  2. Our ${companyInfo.serviceName} Services in ${companyInfo.location}
-                 3. Why Choose Us in ${companyInfo.location}
+                 3. Why Choose ${companyInfo.companyName} in ${companyInfo.location}
                  4. Local Service Coverage
                  5. ${companyInfo.location}-Specific Benefits
                  6. Contact Information and Call to Action
                  
                  Requirements:
                  - Use H2 and H3 headings for sections
-                 - Include local landmarks and context
-                 - Optimize for local SEO
-                 - Maintain professional tone
+                 - Include local landmarks, events, or community initiatives to strengthen local connections
+                 - Write in a conversational and friendly tone, using simple language
+                 - Avoid technical jargon and complex terms; use common everyday words
+                 - Use active voice and positive language
+                 - Optimize for local SEO, including location-specific keywords naturally (avoid keyword stuffing)
+                 - Address the needs and pain points of local customers
+                 - Emphasize the local expertise of the service provider
                  - Around 600-800 words
-                 - Include location-specific keywords`;
+                 - Before finalizing, review the content to ensure it meets all the above guidelines and is free of errors.`;
         break;
       
       case 'blog':
-        prompt = `Write an informative blog post about ${companyInfo.serviceName} services in ${companyInfo.location}.
-                 This is for ${companyInfo.companyName}, a ${companyInfo.industry} company.
+        prompt = `Write an informative blog post for ${companyInfo.companyName}, a ${companyInfo.industry} company, about ${companyInfo.serviceName} services in ${companyInfo.location}.
                  
-                 Structure the content with these sections:
-                 1. Introduction
-                 2. Understanding ${companyInfo.serviceName} in ${companyInfo.location}
-                 3. Key Considerations
-                 4. Expert Tips and Best Practices
-                 5. Local Factors to Consider
-                 6. Conclusion with Call to Action
-                 
+                 Choose one of the following blog post types that best suits the topic and audience:
+
+                 1. Listicles
+                 2. How-To Guides
+                 3. Comparison Posts
+                 4. Case Studies
+                 5. Checklists
+                 6. Beginner's Guides
+                 7. Problem-Solution Posts
+                 8. Ultimate Guides
+                 9. Personal Stories
+                 10. Trend Analysis Posts
+                 11. Reviews
+
+                 Structure the content appropriately based on the chosen blog post type.
+
                  Requirements:
                  - Use H2 and H3 headings for sections
-                 - Include actionable advice
-                 - Write in an engaging, informative style
-                 - Include relevant statistics or examples
-                 - Around 800-1000 words
-                 - Optimize for both local and service-related keywords`;
+                 - Write in a conversational and friendly tone, using simple language
+                 - Avoid technical jargon and complex terms; use common everyday words
+                 - Use active voice and positive language
+                 - Include actionable advice and practical tips
+                 - Include relevant examples or statistics
+                 - Include local context, referencing local landmarks or community aspects where appropriate
+                 - Address the needs and pain points of local customers
+                 - Emphasize the local expertise of the service provider
+                 - Optimize for both local and service-related keywords naturally (avoid keyword stuffing)
+                 - Aim for a length of 800-1000 words
+                 - Before finalizing, review the content to ensure it meets all the above guidelines and is free of errors.`;
         break;
       
       default:
