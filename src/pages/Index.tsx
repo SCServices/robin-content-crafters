@@ -4,7 +4,7 @@ import OnboardingForm from "@/components/OnboardingForm";
 import Dashboard from "@/components/Dashboard";
 import ContentOverview from "@/components/ContentOverview";
 import Layout from "@/components/Layout";
-import type { BusinessInfo, ContentStats } from "@/lib/types";
+import type { BusinessInfo, ContentItem, ContentStats } from "@/lib/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 const Index = () => {
   const [isOnboarding, setIsOnboarding] = useState(true);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [contentStats, setContentStats] = useState<ContentStats>({
     total: 0,
     generated: 0,
