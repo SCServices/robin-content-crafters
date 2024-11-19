@@ -4,6 +4,7 @@ import LocationsStep from "./LocationsStep";
 import ServicesStep from "./ServicesStep";
 import type { BusinessInfo } from "@/lib/types";
 import { useContentGeneration } from "@/hooks/useContentGeneration";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OnboardingFormProps {
   onComplete: (data: BusinessInfo) => void;
@@ -21,12 +22,42 @@ const OnboardingForm = ({ onComplete, initialData }: OnboardingFormProps) => {
   const { createCompanyAndContent, isGenerating } = useContentGeneration();
 
   useEffect(() => {
+    const fetchCompanyDetails = async () => {
+      if (initialData?.companyName) {
+        // Fetch company ID first
+        const { data: companyData } = await supabase
+          .from("companies")
+          .select("id")
+          .eq("name", initialData.companyName)
+          .single();
+
+        if (companyData) {
+          // Fetch locations
+          const { data: locationData } = await supabase
+            .from("service_locations")
+            .select("location")
+            .eq("company_id", companyData.id);
+
+          // Fetch services
+          const { data: serviceData } = await supabase
+            .from("services")
+            .select("name")
+            .eq("company_id", companyData.id);
+
+          setLocations(locationData?.map(l => l.location) || []);
+          setServices(serviceData?.map(s => s.name) || []);
+        }
+      }
+    };
+
+    fetchCompanyDetails();
+  }, [initialData]);
+
+  useEffect(() => {
     if (initialData) {
       setCompanyName(initialData.companyName);
       setIndustry(initialData.industry);
       setWebsite(initialData.website);
-      setLocations(initialData.locations);
-      setServices(initialData.services);
     }
   }, [initialData]);
 

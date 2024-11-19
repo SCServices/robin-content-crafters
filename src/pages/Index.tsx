@@ -34,6 +34,8 @@ const Index = () => {
     },
   });
 
+  const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
+
   const handleOnboardingComplete = (data: BusinessInfo) => {
     // Calculate total content items
     const servicePages = data.services.length;
@@ -117,8 +119,6 @@ const Index = () => {
       }, index * 100); // Simulate generation time
     });
   };
-
-  const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
 
   return (
     <Layout>
