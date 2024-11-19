@@ -142,7 +142,7 @@ const Index = () => {
                     <SelectTrigger className="mt-2">
                       <SelectValue placeholder="Choose a company" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white">
                       {companies.map((company) => (
                         <SelectItem key={company.id} value={company.id}>
                           {company.name}
