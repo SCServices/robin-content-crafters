@@ -16,10 +16,11 @@ serve(async (req) => {
   }
 
   try {
-    const { contentType, companyInfo } = await req.json();
-    console.log('Received request:', { contentType, companyInfo });
+    const { contentType, companyInfo, serviceId, locationId } = await req.json();
+    console.log('Received request:', { contentType, companyInfo, serviceId, locationId });
 
     if (!contentType || !companyInfo || !companyInfo.companyName || !companyInfo.industry) {
+      console.error('Missing required parameters:', { contentType, companyInfo });
       return new Response(
         JSON.stringify({ error: 'Missing required parameters' }),
         { 
@@ -136,9 +137,14 @@ Write an informative blog post about **${companyInfo.serviceName}** services${co
         throw new Error('Invalid content type specified');
     }
 
-    console.log('Calling OpenAI with prompt:', prompt);
+    console.log('Calling OpenAI with prompt length:', prompt.length);
     
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not found');
+      throw new Error('OpenAI API key not configured');
+    }
+
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -146,7 +152,7 @@ Write an informative blog post about **${companyInfo.serviceName}** services${co
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo', // Changed from gpt-4o-mini to gpt-3.5-turbo
+        model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
@@ -156,17 +162,33 @@ Write an informative blog post about **${companyInfo.serviceName}** services${co
     });
 
     if (!openAIResponse.ok) {
-      console.error('OpenAI API error:', await openAIResponse.text());
-      throw new Error('OpenAI API error');
+      const errorText = await openAIResponse.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${errorText}`);
     }
 
     const completion = await openAIResponse.json();
-    const generatedContent = completion.choices[0].message.content;
+    console.log('OpenAI response received, content length:', completion.choices[0].message.content.length);
 
-    console.log('Generated content length:', generatedContent.length);
+    // Update content in database
+    const { data: contentData, error: contentError } = await supabase
+      .from("generated_content")
+      .update({
+        content: completion.choices[0].message.content,
+        status: "generated",
+      })
+      .eq("id", companyInfo.contentId)
+      .select();
+
+    if (contentError) {
+      console.error('Error updating content in database:', contentError);
+      throw contentError;
+    }
+
+    console.log('Content updated successfully:', contentData);
 
     return new Response(
-      JSON.stringify({ content: generatedContent }),
+      JSON.stringify({ content: completion.choices[0].message.content }),
       { 
         headers: { 
           ...corsHeaders,
