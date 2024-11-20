@@ -2,15 +2,13 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import Dashboard from "@/components/Dashboard";
 import ContentList from "@/components/ContentList";
-import { calculateContentStats } from "@/utils/statsCalculation";
-import { useContentData } from "@/hooks/useContentData";
-import type { ContentStats } from "@/lib/types";
+import type { ContentItem, ContentStats } from "@/lib/types";
 
 interface ContentOverviewProps {
-  companyId?: string;
+  items: ContentItem[];
 }
 
-const ContentOverview = ({ companyId }: ContentOverviewProps) => {
+const ContentOverview = ({ items }: ContentOverviewProps) => {
   const [stats, setStats] = useState<ContentStats>({
     total: 0,
     generated: 0,
@@ -18,21 +16,21 @@ const ContentOverview = ({ companyId }: ContentOverviewProps) => {
     error: 0,
   });
 
-  const { data: items } = useContentData(companyId);
-
   useEffect(() => {
-    if (items) {
-      const newStats = calculateContentStats(items);
-      setStats(newStats);
-    }
+    // Calculate stats based on items
+    const newStats = {
+      total: items.length,
+      generated: items.filter(item => item.status === "generated").length,
+      pending: items.filter(item => item.status === "pending").length,
+      error: items.filter(item => item.status === "error").length,
+    };
+    setStats(newStats);
   }, [items]);
 
   return (
-    <div className="space-y-8 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="animate-fade-in">
-        <Dashboard stats={stats} />
-      </div>
-      <Card className="p-4 sm:p-6 animate-fade-in delay-100">
+    <div className="space-y-8">
+      <Dashboard stats={stats} />
+      <Card className="p-6">
         <ContentList items={items} />
       </Card>
     </div>

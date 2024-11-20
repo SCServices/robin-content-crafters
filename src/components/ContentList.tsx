@@ -8,23 +8,46 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { FileText, MapPin, Briefcase, NewspaperIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { FileText, MapPin, Briefcase, NewspaperIcon, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { useContentData } from "@/hooks/useContentData";
-import type { ContentItem } from "@/lib/types";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContentListProps {
-  items?: ContentItem[];
+  items?: any[];
   companyId?: string;
 }
 
 const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
-  const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
+  const [selectedContent, setSelectedContent] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("all");
 
-  const { data: items, isLoading } = useContentData(companyId, propItems);
+  const { data: items, isLoading } = useQuery({
+    queryKey: ["content", companyId],
+    queryFn: async () => {
+      if (propItems) return propItems;
+      
+      const { data, error } = await supabase
+        .from("generated_content")
+        .select(`
+          *,
+          companies (name),
+          services (name),
+          service_locations (location)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching content:", error);
+        throw error;
+      }
+      return data;
+    },
+    initialData: propItems,
+    enabled: true, // Always fetch to ensure we have the latest data
+  });
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -39,16 +62,25 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "generated":
+        return "bg-success";
+      case "pending":
+        return "bg-primary";
+      case "error":
+        return "bg-secondary";
+      default:
+        return "bg-neutral-400";
+    }
+  };
+
   const filteredItems = activeTab === "all" 
     ? items 
     : items?.filter(item => item.type === activeTab);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <div>Loading content...</div>;
   }
 
   if (!items?.length) {
@@ -88,7 +120,13 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <StatusBadge status={item.status} />
+                <Badge variant="outline" className="capitalize">
+                  {item.type}
+                </Badge>
+                <div
+                  className={`h-2 w-2 rounded-full ${getStatusColor(item.status)}`}
+                  title={`Status: ${item.status}`}
+                />
               </div>
             </div>
           </Card>
@@ -108,14 +146,9 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
                 <ReactMarkdown>{selectedContent.content}</ReactMarkdown>
               </article>
             ) : (
-              <div className="text-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-                <p className="text-neutral-500 italic">
-                  {selectedContent?.status === "error" 
-                    ? "Failed to generate content. Please try again."
-                    : "Content is being generated..."}
-                </p>
-              </div>
+              <p className="text-neutral-500 italic text-center py-8">
+                Content is still being generated...
+              </p>
             )}
           </div>
           <DialogFooter className="mt-6">
