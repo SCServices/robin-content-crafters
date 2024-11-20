@@ -3,16 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import OnboardingForm from "@/components/OnboardingForm";
 import ContentOverview from "@/components/ContentOverview";
 import Layout from "@/components/Layout";
-import type { BusinessInfo, ContentItem } from "@/lib/types";
+import type { BusinessInfo } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { generateTitle } from "@/utils/titleGeneration";
 
 const Index = () => {
   const [isOnboarding, setIsOnboarding] = useState(true);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
-  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
 
   const { data: companies } = useQuery({
     queryKey: ["companies"],
@@ -30,87 +28,6 @@ const Index = () => {
   const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
 
   const handleContentGeneration = async (data: BusinessInfo) => {
-    const servicePages = data.services.length;
-    const locationPages = data.services.length * data.locations.length;
-    const blogPosts = locationPages;
-    const total = servicePages + locationPages + blogPosts;
-
-    const items: ContentItem[] = [];
-
-    // Generate titles using centralized logic
-    for (const service of data.services) {
-      const title = await generateTitle("service", {
-        companyName: data.companyName,
-        industry: data.industry,
-        service,
-      });
-      
-      items.push({
-        id: crypto.randomUUID(),
-        company_id: "",
-        title,
-        content: null,
-        type: "service",
-        status: "pending",
-        service_id: null,
-        location_id: null,
-        parent_content_id: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        meta_description: null,
-      });
-    }
-
-    // Location pages and blog posts
-    for (const location of data.locations) {
-      for (const service of data.services) {
-        const locationTitle = await generateTitle("location", {
-          companyName: data.companyName,
-          industry: data.industry,
-          service,
-          location,
-        });
-
-        items.push({
-          id: crypto.randomUUID(),
-          company_id: "",
-          title: locationTitle,
-          content: null,
-          type: "location",
-          status: "pending",
-          service_id: null,
-          location_id: null,
-          parent_content_id: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          meta_description: null,
-        });
-
-        const blogTitle = await generateTitle("blog", {
-          companyName: data.companyName,
-          industry: data.industry,
-          service,
-          location,
-        });
-
-        items.push({
-          id: crypto.randomUUID(),
-          company_id: "",
-          title: blogTitle,
-          content: null,
-          type: "blog",
-          status: "pending",
-          service_id: null,
-          location_id: null,
-          parent_content_id: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          meta_description: null,
-        });
-      }
-    }
-
-    setContentItems(items);
     setIsOnboarding(false);
   };
 

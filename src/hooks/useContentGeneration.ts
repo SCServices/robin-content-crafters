@@ -99,9 +99,11 @@ export const useContentGeneration = () => {
       // Create content entries for each combination
       const contentEntries = [];
 
-      // Service pages with generated titles
+      // Generate titles for all content types
       for (const service of servicesData) {
         if (!service?.id) continue;
+        
+        // Service page title
         const title = await generateTitle('service', {
           companyName: businessInfo.companyName,
           industry: businessInfo.industry,
@@ -113,12 +115,10 @@ export const useContentGeneration = () => {
           service_id: service.id,
           title,
           type: "service",
+          status: "pending"
         });
-      }
 
-      // Location pages and blog posts with generated titles
-      for (const service of servicesData) {
-        if (!service?.id) continue;
+        // Location pages and blog posts
         for (const location of locationsData) {
           if (!location?.id) continue;
           
@@ -135,6 +135,7 @@ export const useContentGeneration = () => {
             location_id: location.id,
             title: locationTitle,
             type: "location",
+            status: "pending"
           });
 
           const blogTitle = await generateTitle('blog', {
@@ -150,6 +151,7 @@ export const useContentGeneration = () => {
             location_id: location.id,
             title: blogTitle,
             type: "blog",
+            status: "pending"
           });
         }
       }
@@ -162,68 +164,6 @@ export const useContentGeneration = () => {
           .insert(contentEntries);
 
         if (contentError) throw contentError;
-      }
-
-      // Start content generation process
-      toast.loading('Starting AI content generation...', { id: progressToast });
-      const totalItems = servicesData.length * (1 + locationsData.length * 2); // Services + (Locations + Blogs) per service
-      let completedItems = 0;
-
-      for (const service of servicesData) {
-        if (!service?.id) continue;
-        const companyInfo = {
-          companyName: businessInfo.companyName,
-          industry: businessInfo.industry,
-          serviceName: service.name,
-          companyId: companyData.id,
-        };
-
-        // Generate service page
-        await supabase.functions.invoke("generate-content", {
-          body: {
-            contentType: "service",
-            companyInfo,
-            serviceId: service.id,
-          },
-        });
-        completedItems++;
-        setProgress(80 + (completedItems / totalItems) * 20);
-        toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
-
-        // Generate location pages and blog posts
-        for (const location of locationsData) {
-          if (!location?.id) continue;
-          const locationInfo = {
-            ...companyInfo,
-            location: location.location,
-          };
-
-          // Generate location page
-          await supabase.functions.invoke("generate-content", {
-            body: {
-              contentType: "location",
-              companyInfo: locationInfo,
-              serviceId: service.id,
-              locationId: location.id,
-            },
-          });
-          completedItems++;
-          setProgress(80 + (completedItems / totalItems) * 20);
-          toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
-
-          // Generate blog posts
-          await supabase.functions.invoke("generate-content", {
-            body: {
-              contentType: "blog",
-              companyInfo: locationInfo,
-              serviceId: service.id,
-              locationId: location.id,
-            },
-          });
-          completedItems++;
-          setProgress(80 + (completedItems / totalItems) * 20);
-          toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
-        }
       }
 
       toast.success('Content generation completed successfully!', { id: progressToast });
