@@ -28,7 +28,7 @@ export const serviceTitleTemplates = [
   `{service} Services: Innovation That Delivers Results`,
   `{service} Solutions: Professional Excellence Guaranteed`,
   `{service} Specialists: Your Success Story Starts Here`,
-  `{service} Excellence: Where Quality Meets Innovation`
+  `{service} Excellence: Where Quality Meets Innovation`,
   `{service} Services You Can Trust`,
   `Reliable {service} Solutions`,
   `Affordable {service} Services`,
