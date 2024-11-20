@@ -197,7 +197,7 @@ const Index = () => {
             </>
           ) : (
             <div className="space-y-6 animate-fade-in">
-              <ContentOverview items={contentItems} />
+              <ContentOverview companyId={selectedCompanyId} />
             </div>
           )}
         </div>
