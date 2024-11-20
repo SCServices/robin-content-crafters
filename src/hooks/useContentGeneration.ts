@@ -171,7 +171,7 @@ export const useContentGeneration = () => {
 
       // Start content generation process
       toast.loading('Starting AI content generation...', { id: progressToast });
-      const totalItems = servicesData.length * (1 + locationsData.length * 2); // Services + (Locations + Blogs) per service
+      const totalItems = servicesData.length * (1 + locationsData.length * 2);
       let completedItems = 0;
 
       for (const service of servicesData) {
@@ -183,12 +183,32 @@ export const useContentGeneration = () => {
           companyId: companyData.id,
         };
 
-        // Generate service page
+        // Generate service page with enhanced prompt
         await supabase.functions.invoke("generate-content", {
           body: {
             contentType: "service",
             companyInfo,
             serviceId: service.id,
+            prompt: `
+**Task:**
+Write a comprehensive service page for **${businessInfo.companyName}**, a ${businessInfo.industry} company, focusing on their **${service.name}** service.
+
+**Structure:**
+1. **Introduction**: Provide a compelling overview of the service.
+2. **Key Benefits and Features**: Highlight what sets this service apart.
+3. **Why Choose ${businessInfo.companyName}**: Emphasize experience, expertise, and any certifications.
+4. **Our ${service.name} Process**: Describe step-by-step what customers can expect.
+5. **Common Problems We Solve**: Address typical issues and how the service provides solutions.
+6. **Call to Action**: Encourage readers to contact or schedule a service.
+
+**Requirements:**
+- Write in SEO-friendly Markdown format with appropriate headings
+- Use conversational, friendly tone with simple language
+- Keep sentences short (15-20 words)
+- Include bullet points and numbered lists
+- Aim for 800-1000 words
+- Focus on value proposition and customer needs
+`,
           },
         });
         completedItems++;
@@ -203,26 +223,65 @@ export const useContentGeneration = () => {
             location: location.location,
           };
 
-          // Generate location page
+          // Generate location page with enhanced prompt
           await supabase.functions.invoke("generate-content", {
             body: {
               contentType: "location",
               companyInfo: locationInfo,
               serviceId: service.id,
               locationId: location.id,
+              prompt: `
+**Task:**
+Write a location-specific service page for **${businessInfo.companyName}**'s **${service.name}** service in **${location.location}**.
+
+**Structure:**
+1. **Introduction**: Local context overview
+2. **Services in ${location.location}**: Detail offerings
+3. **Why Choose Us**: Local experience and community involvement
+4. **Service Coverage**: Specific areas served
+5. **Location Benefits**: Local conditions and value
+6. **Contact Information**: Clear call to action
+
+**Requirements:**
+- Include local landmarks and community aspects
+- SEO-friendly Markdown format
+- Simple, conversational language
+- 600-800 words
+- Optimize for local keywords
+`,
             },
           });
           completedItems++;
           setProgress(80 + (completedItems / totalItems) * 20);
           toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
 
-          // Generate blog posts
+          // Generate blog post with enhanced prompt
           await supabase.functions.invoke("generate-content", {
             body: {
               contentType: "blog",
               companyInfo: locationInfo,
               serviceId: service.id,
               locationId: location.id,
+              prompt: `
+**Task:**
+Write an informative blog post about **${service.name}** services in **${location.location}** for **${businessInfo.companyName}**.
+
+**Content Type Options:**
+- Listicle
+- How-To Guide
+- Comparison Post
+- Case Study
+- Expert Tips
+- Problem-Solution Post
+
+**Requirements:**
+- SEO-friendly Markdown format
+- Include actionable advice
+- Use local examples
+- 800-1000 words
+- Include relevant statistics
+- Focus on local audience needs
+`,
             },
           });
           completedItems++;
