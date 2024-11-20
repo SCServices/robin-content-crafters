@@ -127,3 +127,6 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
       </Dialog>
     </>
   );
+};
+
+export default ContentList;
