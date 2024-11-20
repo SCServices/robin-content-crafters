@@ -136,72 +136,61 @@ export const useContentGeneration = () => {
       setProgress(80);
       // Insert all content entries
       if (contentEntries.length > 0) {
-        const { error: contentError } = await supabase
+        const { data: insertedContent, error: contentError } = await supabase
           .from("generated_content")
-          .insert(contentEntries);
+          .insert(contentEntries)
+          .select();
 
         if (contentError) throw contentError;
-      }
 
-      // Start content generation process
-      toast.loading('Starting AI content generation...', { id: progressToast });
-      const totalItems = servicesData.length * (1 + locationsData.length * 2); // Services + (Locations + Blogs) per service
-      let completedItems = 0;
+        // Start content generation process
+        toast.loading('Starting AI content generation...', { id: progressToast });
+        const totalItems = insertedContent.length;
+        let completedItems = 0;
 
-      for (const service of servicesData) {
-        if (!service?.id) continue;
-        const companyInfo = {
-          companyName: businessInfo.companyName,
-          industry: businessInfo.industry,
-          serviceName: service.name,
-          companyId: companyData.id,
-        };
-
-        // Generate service page
-        await supabase.functions.invoke("generate-content", {
-          body: {
-            contentType: "service",
-            companyInfo,
-            serviceId: service.id,
-          },
-        });
-        completedItems++;
-        setProgress(80 + (completedItems / totalItems) * 20);
-        toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
-
-        // Generate location pages and blog posts
-        for (const location of locationsData) {
-          if (!location?.id) continue;
-          const locationInfo = {
-            ...companyInfo,
-            location: location.location,
+        for (const content of insertedContent) {
+          const companyInfo = {
+            companyName: businessInfo.companyName,
+            industry: businessInfo.industry,
+            serviceName: servicesData?.find(s => s.id === content.service_id)?.name || '',
+            location: locationsData?.find(l => l.id === content.location_id)?.location || '',
+            companyId: companyData.id,
           };
 
-          // Generate location page
-          await supabase.functions.invoke("generate-content", {
-            body: {
-              contentType: "location",
-              companyInfo: locationInfo,
-              serviceId: service.id,
-              locationId: location.id,
-            },
-          });
-          completedItems++;
-          setProgress(80 + (completedItems / totalItems) * 20);
-          toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
+          try {
+            const { data: functionResponse } = await supabase.functions.invoke("generate-content", {
+              body: {
+                contentType: content.type,
+                companyInfo,
+                serviceId: content.service_id,
+                locationId: content.location_id,
+              },
+            });
 
-          // Generate blog posts
-          await supabase.functions.invoke("generate-content", {
-            body: {
-              contentType: "blog",
-              companyInfo: locationInfo,
-              serviceId: service.id,
-              locationId: location.id,
-            },
-          });
-          completedItems++;
-          setProgress(80 + (completedItems / totalItems) * 20);
-          toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
+            if (functionResponse?.content) {
+              // Update the content in the database
+              await supabase
+                .from("generated_content")
+                .update({
+                  content: functionResponse.content,
+                  status: "generated",
+                })
+                .eq("id", content.id);
+            }
+
+            completedItems++;
+            setProgress(80 + (completedItems / totalItems) * 20);
+            toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
+          } catch (error) {
+            console.error("Error generating content:", error);
+            // Update status to error for this content
+            await supabase
+              .from("generated_content")
+              .update({
+                status: "error",
+              })
+              .eq("id", content.id);
+          }
         }
       }
 
