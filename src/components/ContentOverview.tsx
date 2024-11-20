@@ -3,13 +3,14 @@ import { Card } from "@/components/ui/card";
 import Dashboard from "@/components/Dashboard";
 import ContentList from "@/components/ContentList";
 import { calculateContentStats } from "@/utils/statsCalculation";
-import type { ContentItem, ContentStats } from "@/lib/types";
+import { useContentData } from "@/hooks/useContentData";
+import type { ContentStats } from "@/lib/types";
 
 interface ContentOverviewProps {
-  items: ContentItem[];
+  companyId?: string;
 }
 
-const ContentOverview = ({ items }: ContentOverviewProps) => {
+const ContentOverview = ({ companyId }: ContentOverviewProps) => {
   const [stats, setStats] = useState<ContentStats>({
     total: 0,
     generated: 0,
@@ -17,9 +18,13 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
     error: 0,
   });
 
+  const { data: items } = useContentData(companyId);
+
   useEffect(() => {
-    const newStats = calculateContentStats(items);
-    setStats(newStats);
+    if (items) {
+      const newStats = calculateContentStats(items);
+      setStats(newStats);
+    }
   }, [items]);
 
   return (

@@ -12,42 +12,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { FileText, MapPin, Briefcase, NewspaperIcon, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useContentData } from "@/hooks/useContentData";
+import type { ContentItem } from "@/lib/types";
 
 interface ContentListProps {
-  items?: any[];
+  items?: ContentItem[];
   companyId?: string;
 }
 
 const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
-  const [selectedContent, setSelectedContent] = useState<any | null>(null);
+  const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [activeTab, setActiveTab] = useState("all");
 
-  const { data: items, isLoading } = useQuery({
-    queryKey: ["content", companyId],
-    queryFn: async () => {
-      if (propItems) return propItems;
-      
-      const { data, error } = await supabase
-        .from("generated_content")
-        .select(`
-          *,
-          companies (name),
-          services (name),
-          service_locations (location)
-        `)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        toast.error("Failed to fetch content");
-        throw error;
-      }
-      return data;
-    },
-    initialData: propItems,
-  });
+  const { data: items, isLoading } = useContentData(companyId, propItems);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -150,6 +127,3 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
       </Dialog>
     </>
   );
-};
-
-export default ContentList;
