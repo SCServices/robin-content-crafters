@@ -48,9 +48,9 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
       return data as ContentItem[];
     },
     initialData: propItems,
-    refetchInterval: (data) => {
-      // Stop refetching if all items are either generated or errored
-      const hasPendingItems = data?.some(
+    refetchInterval: (data: ContentItem[] | undefined) => {
+      if (!data) return false;
+      const hasPendingItems = data.some(
         (item) => item.status === "pending"
       );
       return hasPendingItems ? 3000 : false;

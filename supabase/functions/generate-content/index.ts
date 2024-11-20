@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,16 +20,10 @@ serve(async (req) => {
     const { contentType, companyInfo, serviceId, locationId } = await req.json();
     console.log('Received request:', { contentType, companyInfo, serviceId, locationId });
 
-    if (!contentType || !companyInfo || !companyInfo.companyName || !companyInfo.industry) {
-      console.error('Missing required parameters:', { contentType, companyInfo });
-      return new Response(
-        JSON.stringify({ error: 'Missing required parameters' }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
     let prompt;
 
@@ -80,7 +75,6 @@ Write a location-specific service page for **${companyInfo.companyName}**'s **${
 4. **Local Service Coverage**: Mention specific areas or neighborhoods served.
 5. **${companyInfo.location}-Specific Benefits**: Discuss local conditions that make the service valuable.
 6. **Contact Information and Call to Action**: Provide clear instructions on how to get in touch. Do not call it Contact Information and Call to Action, be smart with the headline to keep it engaging.
-
 
 **Requirements:**
 - Write the content in **SEO-friendly Markdown** format.
