@@ -16,8 +16,8 @@ serve(async (req) => {
   }
 
   try {
-    const { contentType, companyInfo, titleOnly } = await req.json();
-    console.log('Received request:', { contentType, companyInfo, titleOnly });
+    const { contentType, companyInfo } = await req.json();
+    console.log('Received request:', { contentType, companyInfo });
 
     if (!contentType || !companyInfo || !companyInfo.companyName || !companyInfo.industry) {
       return new Response(
@@ -153,7 +153,6 @@ Write an informative blog post for **${companyInfo.companyName}**, a ${companyIn
     console.log('Calling OpenAI with prompt:', prompt);
     
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    // Call OpenAI API
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {

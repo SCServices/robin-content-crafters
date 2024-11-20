@@ -29,113 +29,36 @@ const Index = () => {
 
   const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
 
-  const generateInitialTitle = async (type: "service" | "location" | "blog", data: {
-    companyName: string;
-    industry: string;
-    service: string;
-    location?: string;
-    index?: number;
-  }) => {
-    try {
-      const { data: result } = await supabase.functions.invoke("generate-content", {
-        body: {
-          contentType: type,
-          titleOnly: true,
-          companyInfo: {
-            companyName: data.companyName,
-            industry: data.industry,
-            serviceName: data.service,
-            location: data.location,
-            index: data.index
-          },
-        },
-      });
-      return result?.title || getDefaultTitle(type, data);
-    } catch (error) {
-      console.error("Error generating title:", error);
-      return getDefaultTitle(type, data);
-    }
-  };
-
-  const getDefaultTitle = (type: "service" | "location" | "blog", data: {
+  const generateTitle = (type: "service" | "location" | "blog", data: {
     companyName: string;
     service: string;
     location?: string;
-    index?: number;
   }) => {
-    const getRandomTemplate = (templates: string[]) => {
-      return templates[Math.floor(Math.random() * templates.length)];
+    const templates = {
+      service: serviceTitleTemplates,
+      location: locationTitleTemplates,
+      blog: blogTitleTemplates
     };
-
-    switch (type) {
-      case "service": {
-        const templates = [
-          `Get Reliable ${data.service} Services Today`,
-          `Your Trusted Source for ${data.service}`,
-          `Affordable ${data.service} Solutions Near You`,
-          `Expert Help with ${data.service}`,
-          `Top Choice for ${data.service} Needs`,
-          `Professional ${data.service} Services You Can Trust`,
-          `Quality ${data.service} at Great Prices`,
-          `Experienced ${data.service} Specialists Ready to Help`,
-          `Quick and Easy ${data.service} Solutions`,
-          `Dependable ${data.service} Services for Your Home`
-        ];
-        return getRandomTemplate(templates);
-      }
-      case "location": {
-        const templates = [
-          `Expert ${data.service} Services in ${data.location}`,
-          `Your Go-To ${data.service} Experts in ${data.location}`,
-          `Need ${data.service} in ${data.location}? We've Got You Covered`,
-          `Fast and Reliable ${data.service} Services in ${data.location}`,
-          `Top-Rated ${data.service} Solutions in ${data.location}`,
-          `Trusted ${data.service} Professionals Serving ${data.location}`,
-          `Quality ${data.service} Services in ${data.location}`,
-          `Dependable ${data.service} Help in ${data.location} When You Need It`,
-          `Experienced ${data.service} Specialists in ${data.location}`,
-          `Your Local ${data.service} Experts in ${data.location}`
-        ];
-        return getRandomTemplate(templates);
-      }
-      case "blog": {
-        const templates = [
-          `10 Essential Tips for ${data.service} in ${data.location}`,
-          `7 Reasons to Choose Professional ${data.service} Services in ${data.location}`,
-          `5 Common ${data.service} Mistakes and How to Avoid Them`,
-          `How to Get the Best ${data.service} in ${data.location}`,
-          `A Step-by-Step Guide to ${data.service} for ${data.location} Homeowners`,
-          `How to Save Money on ${data.service} Services in ${data.location}`,
-          `${data.service} Options in ${data.location}: DIY vs. Professional Services`,
-          `Comparing Top ${data.service} Providers in ${data.location}`,
-          `Case Study: Successful ${data.service} Projects in ${data.location}`,
-          `Real-Life Examples of ${data.service} Solutions in ${data.location}`
-        ];
-        return getRandomTemplate(templates);
-      }
-    }
+    
+    return getRandomTemplate(templates[type], {
+      service: data.service,
+      location: data.location || '',
+      companyName: data.companyName
+    });
   };
 
   const handleContentGeneration = async (data: BusinessInfo) => {
-    const servicePages = data.services.length;
-    const locationPages = data.services.length * data.locations.length;
-    const blogPosts = locationPages;
-    const total = servicePages + locationPages + blogPosts;
-
     const items: ContentItem[] = [];
 
-    // Generate titles using OpenAI
+    // Generate service page titles
     for (const service of data.services) {
-      const title = await generateInitialTitle("service", {
-        companyName: data.companyName,
-        industry: data.industry,
-        service,
-      });
-      
       items.push({
         id: crypto.randomUUID(),
         company_id: "",
-        title,
+        title: generateTitle("service", {
+          companyName: data.companyName,
+          service,
+        }),
         content: null,
         type: "service",
         status: "pending",
@@ -148,20 +71,17 @@ const Index = () => {
       });
     }
 
-    // Location pages and blog posts
+    // Generate location pages and blog posts titles
     for (const location of data.locations) {
       for (const service of data.services) {
-        const locationTitle = await generateInitialTitle("location", {
-          companyName: data.companyName,
-          industry: data.industry,
-          service,
-          location,
-        });
-
         items.push({
           id: crypto.randomUUID(),
           company_id: "",
-          title: locationTitle,
+          title: generateTitle("location", {
+            companyName: data.companyName,
+            service,
+            location,
+          }),
           content: null,
           type: "location",
           status: "pending",
@@ -173,17 +93,14 @@ const Index = () => {
           meta_description: null,
         });
 
-        const blogTitle = await generateInitialTitle("blog", {
-          companyName: data.companyName,
-          industry: data.industry,
-          service,
-          location,
-        });
-
         items.push({
           id: crypto.randomUUID(),
           company_id: "",
-          title: blogTitle,
+          title: generateTitle("blog", {
+            companyName: data.companyName,
+            service,
+            location,
+          }),
           content: null,
           type: "blog",
           status: "pending",
