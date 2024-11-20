@@ -8,12 +8,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { FileText, MapPin, Briefcase, NewspaperIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { FileText, MapPin, Briefcase, NewspaperIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ContentListProps {
   items?: any[];
@@ -40,13 +41,12 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching content:", error);
+        toast.error("Failed to fetch content");
         throw error;
       }
       return data;
     },
     initialData: propItems,
-    enabled: true, // Always fetch to ensure we have the latest data
   });
 
   const getIcon = (type: string) => {
@@ -62,25 +62,16 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "generated":
-        return "bg-success";
-      case "pending":
-        return "bg-primary";
-      case "error":
-        return "bg-secondary";
-      default:
-        return "bg-neutral-400";
-    }
-  };
-
   const filteredItems = activeTab === "all" 
     ? items 
     : items?.filter(item => item.type === activeTab);
 
   if (isLoading) {
-    return <div>Loading content...</div>;
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   if (!items?.length) {
@@ -120,13 +111,7 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="capitalize">
-                  {item.type}
-                </Badge>
-                <div
-                  className={`h-2 w-2 rounded-full ${getStatusColor(item.status)}`}
-                  title={`Status: ${item.status}`}
-                />
+                <StatusBadge status={item.status} />
               </div>
             </div>
           </Card>
@@ -146,9 +131,14 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
                 <ReactMarkdown>{selectedContent.content}</ReactMarkdown>
               </article>
             ) : (
-              <p className="text-neutral-500 italic text-center py-8">
-                Content is still being generated...
-              </p>
+              <div className="text-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+                <p className="text-neutral-500 italic">
+                  {selectedContent?.status === "error" 
+                    ? "Failed to generate content. Please try again."
+                    : "Content is being generated..."}
+                </p>
+              </div>
             )}
           </div>
           <DialogFooter className="mt-6">
