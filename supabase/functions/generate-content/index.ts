@@ -18,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    const { contentType, companyInfo, serviceId, locationId, model = "gpt-4o mini" } = await req.json();
+    const { contentType, companyInfo, serviceId, locationId, model = "gpt-4o-mini" } = await req.json();
     
     console.log('Received request:', { contentType, companyInfo, serviceId, locationId });
 
@@ -92,7 +92,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: model,
+        model: "gpt-4o-mini",
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
