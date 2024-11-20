@@ -156,12 +156,13 @@ export const useContentGeneration = () => {
           companyId: companyData.id,
         };
 
-        // Generate service page
+        // Generate service page with correct model name
         await supabase.functions.invoke("generate-content", {
           body: {
             contentType: "service",
             companyInfo,
             serviceId: service.id,
+            model: "gpt-4o mini" // Updated model name with correct spacing
           },
         });
         completedItems++;
@@ -176,26 +177,28 @@ export const useContentGeneration = () => {
             location: location.location,
           };
 
-          // Generate location page
+          // Generate location page with correct model name
           await supabase.functions.invoke("generate-content", {
             body: {
               contentType: "location",
               companyInfo: locationInfo,
               serviceId: service.id,
               locationId: location.id,
+              model: "gpt-4o mini" // Updated model name with correct spacing
             },
           });
           completedItems++;
           setProgress(80 + (completedItems / totalItems) * 20);
           toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
 
-          // Generate blog posts
+          // Generate blog posts with correct model name
           await supabase.functions.invoke("generate-content", {
             body: {
               contentType: "blog",
               companyInfo: locationInfo,
               serviceId: service.id,
               locationId: location.id,
+              model: "gpt-4o mini" // Updated model name with correct spacing
             },
           });
           completedItems++;
