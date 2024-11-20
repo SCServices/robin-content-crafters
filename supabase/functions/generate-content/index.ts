@@ -11,6 +11,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const isValidUUID = (uuid: string) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuid && uuidRegex.test(uuid);
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -20,6 +25,26 @@ serve(async (req) => {
     const { contentType, companyInfo, serviceId, locationId, titleOnly } = await req.json();
     
     console.log('Received request:', { contentType, companyInfo, serviceId, locationId, titleOnly });
+
+    // Validate required parameters
+    if (!contentType || !companyInfo) {
+      throw new Error('Missing required parameters: contentType or companyInfo');
+    }
+
+    // Validate UUIDs
+    if (!isValidUUID(companyInfo.companyId)) {
+      throw new Error('Invalid company ID');
+    }
+
+    if (serviceId && !isValidUUID(serviceId)) {
+      throw new Error('Invalid service ID');
+    }
+
+    if (locationId && !isValidUUID(locationId)) {
+      throw new Error('Invalid location ID');
+    }
+
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     let prompt = '';
     const systemPrompt = titleOnly 
@@ -74,14 +99,8 @@ serve(async (req) => {
     }
 
     // Validate required parameters for full content generation
-    if (!contentType || !companyInfo || !serviceId || !companyInfo.companyId) {
+    if (!contentType || !companyInfo || !companyInfo.companyId) {
       throw new Error('Missing required parameters');
-    }
-
-    // Validate UUIDs
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(companyInfo.companyId) || !uuidRegex.test(serviceId) || (locationId && !uuidRegex.test(locationId))) {
-      throw new Error('Invalid UUID format');
     }
 
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
