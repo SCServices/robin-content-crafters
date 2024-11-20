@@ -106,41 +106,27 @@ Write a location-specific service page for **${companyInfo.companyName}**'s **${
       case 'blog':
         prompt = `
 **Task:**
-Write an informative blog post for **${companyInfo.companyName}**, a ${companyInfo.industry} company, about **${companyInfo.serviceName}** services${companyInfo.location ? ` in ${companyInfo.location}` : ''}.
+Write an informative blog post about **${companyInfo.serviceName}** services${companyInfo.location ? ` in ${companyInfo.location}` : ''} for **${companyInfo.companyName}**, a ${companyInfo.industry} company.
 
-**Choose one of the following blog post types that best suits the topic and audience:**
-- **Listicles**: Articles in list format offering tips, reasons, or examples.
-- **How-To Guides**: Step-by-step instructions to accomplish a task or solve a problem.
-- **Comparison Posts**: Analyze and compare options, products, or methods.
-- **Case Studies**: In-depth examinations of real-life projects.
-- **Opinion Pieces**: Share personal views or insights on industry trends.
-- **Interviews**: Q&A sessions with experts, providing unique perspectives.
-- **Checklists**: Practical lists to ensure all steps are covered.
-- **Beginner's Guides**: Comprehensive introductions for those new to the subject.
-- **Problem-Solution Posts**: Identify common problems and offer solutions.
-- **Ultimate Guides**: Extensive resources covering all aspects of a topic.
-- **Resource Lists**: Curated lists of tools, suppliers, or tutorials.
-- **Trend Analysis Posts**: Discuss current or upcoming industry trends.
-- **Reviews**: Detailed evaluations of products or services.
+**Structure:**
+1. **Introduction**: Hook readers with a compelling opening.
+2. **Main Content**: Provide valuable insights and information.
+3. **Expert Tips**: Share professional advice and best practices.
+4. **Local Context**: Include relevant local information when applicable.
+5. **Conclusion**: Summarize key points and include a call to action.
 
 **Requirements:**
 - Write the content in **SEO-friendly Markdown** format.
 - Use appropriate headings (**H1**, **H2**, **H3**, **H4**) to organize the content.
 - Ensure proper spacing and formatting for readability.
-- Demonstrate **Experience**, **Expertise**, **Authoritativeness**, and **Trustworthiness** (EEAT) throughout the content.
-- Structure the content appropriately based on the chosen blog post type.
+- Demonstrate **Experience**, **Expertise**, **Authoritativeness**, and **Trustworthiness** (EEAT).
 - Write in a conversational and friendly tone, using simple language.
-- **Words to Use:** Common everyday words, short and simple words, concrete terms, active verbs, positive language.
-- **Words to Avoid:** Complex or technical terms, unnecessary big words, ambiguous words, figurative language, overly formal language.
 - Keep sentences short and straightforward (15-20 words).
 - Use short paragraphs (2-3 sentences) focusing on a single idea.
 - Incorporate bullet points or numbered lists where appropriate.
-- Include actionable advice and practical tips.
-- Include relevant examples or statistics.
-- Include local context, referencing local landmarks or community aspects where appropriate.
-- Address the needs and pain points of local customers.
-- Emphasize the local expertise of the service provider.
-- Optimize for both local and service-related keywords naturally (avoid keyword stuffing).
+- Include relevant examples or case studies.
+- Focus on providing actionable advice and practical tips.
+- Optimize for both local and service-related keywords naturally.
 - Aim for **800-1000 words**.
 - Before finalizing, review the content to ensure it meets all guidelines and is error-free.
 `;
@@ -160,7 +146,7 @@ Write an informative blog post for **${companyInfo.companyName}**, a ${companyIn
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4-turbo-preview',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
