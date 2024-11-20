@@ -39,13 +39,13 @@ serve(async (req) => {
 Write a comprehensive service page for **${companyInfo.companyName}**, a ${companyInfo.industry} company, focusing on their **${companyInfo.serviceName}** service.
 
 **Structure:**
-1. **Introduction**: Provide a compelling overview of the service.
-2. **Key Benefits and Features**: Highlight what sets this service apart.
+1. **Introduction**: Provide a compelling overview of the service. Do not call it introduction, be smart with the headline to keep it engaging.
+2. **Key Benefits and Features**: Highlight what sets this service apart. Do not call it Key Benefits and Features, be smart with the headline to keep it engaging.
 3. **Why Choose ${companyInfo.companyName}**: Emphasize experience, expertise, and any certifications.
    - Include customer testimonials or success stories if available.
-4. **Our ${companyInfo.serviceName} Process**: Describe step-by-step what customers can expect.
+4. **Our ${companyInfo.serviceName} Process**: Describe step-by-step what customers can expect. Do not call it Our ${companyInfo.serviceName} Process, be smart with the headline to keep it engaging.
 5. **Common Problems We Solve**: Address typical issues and how the service provides solutions.
-6. **Call to Action**: Encourage readers to contact or schedule a service.
+6. **Call to Action**: Encourage readers to contact or schedule a service. Do not call it Call to Action, be smart with the headline to keep it engaging.
 
 **Requirements:**
 - Write the content in **SEO-friendly Markdown** format.
@@ -73,13 +73,14 @@ Write a comprehensive service page for **${companyInfo.companyName}**, a ${compa
 Write a location-specific service page for **${companyInfo.companyName}**'s **${companyInfo.serviceName}** service in **${companyInfo.location}**.
 
 **Structure:**
-1. **Introduction**: Provide a compelling overview with local context.
-2. **Our ${companyInfo.serviceName} Services in ${companyInfo.location}**: Detail the services offered.
+1. **Introduction**: Provide a compelling overview with local context. Do not call it introduction, be smart with the headline to keep it engaging.
+2. **Our ${companyInfo.serviceName} Services in ${companyInfo.location}**: Detail the services offered. Be creative with the headline.
 3. **Why Choose ${companyInfo.companyName} in ${companyInfo.location}**: Highlight local experience and community involvement.
    - Include testimonials from local customers if available.
 4. **Local Service Coverage**: Mention specific areas or neighborhoods served.
 5. **${companyInfo.location}-Specific Benefits**: Discuss local conditions that make the service valuable.
-6. **Contact Information and Call to Action**: Provide clear instructions on how to get in touch.
+6. **Contact Information and Call to Action**: Provide clear instructions on how to get in touch. Do not call it Contact Information and Call to Action, be smart with the headline to keep it engaging.
+
 
 **Requirements:**
 - Write the content in **SEO-friendly Markdown** format.
@@ -109,11 +110,11 @@ Write a location-specific service page for **${companyInfo.companyName}**'s **${
 Write an informative blog post about **${companyInfo.serviceName}** services${companyInfo.location ? ` in ${companyInfo.location}` : ''} for **${companyInfo.companyName}**, a ${companyInfo.industry} company.
 
 **Structure:**
-1. **Introduction**: Hook readers with a compelling opening.
-2. **Main Content**: Provide valuable insights and information.
+1. **Introduction**: Hook readers with a compelling opening. Do not call it introduction, be smart with the headline to keep it engaging.
+2. **Main Content**: Provide valuable insights and information. Do not call the headline main content, be creative and relatable.
 3. **Expert Tips**: Share professional advice and best practices.
-4. **Local Context**: Include relevant local information when applicable.
-5. **Conclusion**: Summarize key points and include a call to action.
+4. **Local Context**: Include relevant local information when applicable. Do not call the headline local context. Be smart.
+5. **Conclusion**: Summarize key points and include a call to action. Do not call it conclusion. 
 
 **Requirements:**
 - Write the content in **SEO-friendly Markdown** format.
