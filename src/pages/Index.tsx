@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { serviceTitleTemplates, locationTitleTemplates, blogTitleTemplates, getRandomTemplate } from "@/utils/titleTemplates";
 
 const Index = () => {
   const [isOnboarding, setIsOnboarding] = useState(true);
@@ -72,11 +73,17 @@ const Index = () => {
   }) => {
     switch (type) {
       case "service":
-        return `${data.service} Services - ${data.companyName}`;
+        return getRandomTemplate(serviceTitleTemplates, { service: data.service });
       case "location":
-        return `${data.service} Services in ${data.location} - ${data.companyName}`;
+        return getRandomTemplate(locationTitleTemplates, { 
+          service: data.service, 
+          location: data.location || "" 
+        });
       case "blog":
-        return `${data.index}. Guide to ${data.service} Services in ${data.location}`;
+        return getRandomTemplate(blogTitleTemplates, { 
+          service: data.service, 
+          location: data.location || "" 
+        });
     }
   };
 
