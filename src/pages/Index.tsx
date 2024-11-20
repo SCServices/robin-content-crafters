@@ -63,19 +63,56 @@ const Index = () => {
     location?: string;
     index?: number;
   }) => {
+    const getRandomTemplate = (templates: string[]) => {
+      return templates[Math.floor(Math.random() * templates.length)];
+    };
+
     switch (type) {
-      case "service":
-        return getRandomTemplate(serviceTitleTemplates, { service: data.service });
-      case "location":
-        return getRandomTemplate(locationTitleTemplates, { 
-          service: data.service, 
-          location: data.location || "" 
-        });
-      case "blog":
-        return getRandomTemplate(blogTitleTemplates, { 
-          service: data.service, 
-          location: data.location || "" 
-        });
+      case "service": {
+        const templates = [
+          `Get Reliable ${data.service} Services Today`,
+          `Your Trusted Source for ${data.service}`,
+          `Affordable ${data.service} Solutions Near You`,
+          `Expert Help with ${data.service}`,
+          `Top Choice for ${data.service} Needs`,
+          `Professional ${data.service} Services You Can Trust`,
+          `Quality ${data.service} at Great Prices`,
+          `Experienced ${data.service} Specialists Ready to Help`,
+          `Quick and Easy ${data.service} Solutions`,
+          `Dependable ${data.service} Services for Your Home`
+        ];
+        return getRandomTemplate(templates);
+      }
+      case "location": {
+        const templates = [
+          `Expert ${data.service} Services in ${data.location}`,
+          `Your Go-To ${data.service} Experts in ${data.location}`,
+          `Need ${data.service} in ${data.location}? We've Got You Covered`,
+          `Fast and Reliable ${data.service} Services in ${data.location}`,
+          `Top-Rated ${data.service} Solutions in ${data.location}`,
+          `Trusted ${data.service} Professionals Serving ${data.location}`,
+          `Quality ${data.service} Services in ${data.location}`,
+          `Dependable ${data.service} Help in ${data.location} When You Need It`,
+          `Experienced ${data.service} Specialists in ${data.location}`,
+          `Your Local ${data.service} Experts in ${data.location}`
+        ];
+        return getRandomTemplate(templates);
+      }
+      case "blog": {
+        const templates = [
+          `10 Essential Tips for ${data.service} in ${data.location}`,
+          `7 Reasons to Choose Professional ${data.service} Services in ${data.location}`,
+          `5 Common ${data.service} Mistakes and How to Avoid Them`,
+          `How to Get the Best ${data.service} in ${data.location}`,
+          `A Step-by-Step Guide to ${data.service} for ${data.location} Homeowners`,
+          `How to Save Money on ${data.service} Services in ${data.location}`,
+          `${data.service} Options in ${data.location}: DIY vs. Professional Services`,
+          `Comparing Top ${data.service} Providers in ${data.location}`,
+          `Case Study: Successful ${data.service} Projects in ${data.location}`,
+          `Real-Life Examples of ${data.service} Solutions in ${data.location}`
+        ];
+        return getRandomTemplate(templates);
+      }
     }
   };
 
