@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { BusinessInfo } from "@/lib/types";
+import { generateTitle } from "@/utils/titleGeneration";
 
 export const useContentGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -94,39 +95,60 @@ export const useContentGeneration = () => {
 
       setProgress(60);
       toast.loading('Preparing content structure...', { id: progressToast });
+      
       // Create content entries for each combination
       const contentEntries = [];
 
-      // Service pages
+      // Service pages with generated titles
       for (const service of servicesData) {
         if (!service?.id) continue;
+        const title = await generateTitle('service', {
+          companyName: businessInfo.companyName,
+          industry: businessInfo.industry,
+          service: service.name
+        });
+        
         contentEntries.push({
           company_id: companyData.id,
           service_id: service.id,
-          title: `${service.name} Services - ${businessInfo.companyName}`,
+          title,
           type: "service",
         });
       }
 
-      // Location pages and blog posts
+      // Location pages and blog posts with generated titles
       for (const service of servicesData) {
         if (!service?.id) continue;
         for (const location of locationsData) {
           if (!location?.id) continue;
+          
+          const locationTitle = await generateTitle('location', {
+            companyName: businessInfo.companyName,
+            industry: businessInfo.industry,
+            service: service.name,
+            location: location.location
+          });
+
           contentEntries.push({
             company_id: companyData.id,
             service_id: service.id,
             location_id: location.id,
-            title: `${service.name} Services in ${location.location} - ${businessInfo.companyName}`,
+            title: locationTitle,
             type: "location",
           });
 
-          // Blog posts for each location page
+          const blogTitle = await generateTitle('blog', {
+            companyName: businessInfo.companyName,
+            industry: businessInfo.industry,
+            service: service.name,
+            location: location.location
+          });
+
           contentEntries.push({
             company_id: companyData.id,
             service_id: service.id,
             location_id: location.id,
-            title: `Guide to ${service.name} Services in ${location.location}`,
+            title: blogTitle,
             type: "blog",
           });
         }
