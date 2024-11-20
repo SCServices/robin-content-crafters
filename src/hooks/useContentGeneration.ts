@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { BusinessInfo } from "@/lib/types";
+import { serviceTitleTemplates, locationTitleTemplates, blogTitleTemplates, getRandomTemplate } from "@/lib/titleTemplates";
 
 export const useContentGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -103,7 +104,7 @@ export const useContentGeneration = () => {
         contentEntries.push({
           company_id: companyData.id,
           service_id: service.id,
-          title: `${service.name} Services - ${businessInfo.companyName}`,
+          title: getRandomTemplate(serviceTitleTemplates, { service: service.name }),
           type: "service",
         });
       }
@@ -117,7 +118,10 @@ export const useContentGeneration = () => {
             company_id: companyData.id,
             service_id: service.id,
             location_id: location.id,
-            title: `${service.name} Services in ${location.location} - ${businessInfo.companyName}`,
+            title: getRandomTemplate(locationTitleTemplates, { 
+              service: service.name,
+              location: location.location 
+            }),
             type: "location",
           });
 
@@ -126,7 +130,10 @@ export const useContentGeneration = () => {
             company_id: companyData.id,
             service_id: service.id,
             location_id: location.id,
-            title: `Guide to ${service.name} Services in ${location.location}`,
+            title: getRandomTemplate(blogTitleTemplates, {
+              service: service.name,
+              location: location.location
+            }),
             type: "blog",
           });
         }
@@ -162,7 +169,7 @@ export const useContentGeneration = () => {
             contentType: "service",
             companyInfo,
             serviceId: service.id,
-            model: "gpt-4o mini" // Updated model name with correct spacing
+            model: "gpt-4o mini"
           },
         });
         completedItems++;
@@ -184,7 +191,7 @@ export const useContentGeneration = () => {
               companyInfo: locationInfo,
               serviceId: service.id,
               locationId: location.id,
-              model: "gpt-4o mini" // Updated model name with correct spacing
+              model: "gpt-4o mini"
             },
           });
           completedItems++;
@@ -198,7 +205,7 @@ export const useContentGeneration = () => {
               companyInfo: locationInfo,
               serviceId: service.id,
               locationId: location.id,
-              model: "gpt-4o mini" // Updated model name with correct spacing
+              model: "gpt-4o mini"
             },
           });
           completedItems++;

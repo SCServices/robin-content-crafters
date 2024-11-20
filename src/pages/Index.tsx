@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { serviceTitleTemplates, locationTitleTemplates, blogTitleTemplates, getRandomTemplate } from "@/lib/titleTemplates";
 
 const Index = () => {
   const [isOnboarding, setIsOnboarding] = useState(true);
@@ -137,14 +138,14 @@ const Index = () => {
                       const items: ContentItem[] = [
                         // Service pages
                         ...data.services.map((service): ContentItem => ({
-                          title: `${service} Services - ${data.companyName}`,
+                          title: getRandomTemplate(serviceTitleTemplates, { service }),
                           type: "service",
                           status: "pending",
                         })),
                         // Location pages
                         ...data.locations.flatMap((location) =>
                           data.services.map((service): ContentItem => ({
-                            title: `${service} Services in ${location} - ${data.companyName}`,
+                            title: getRandomTemplate(locationTitleTemplates, { service, location }),
                             type: "location",
                             status: "pending",
                           }))
@@ -152,8 +153,8 @@ const Index = () => {
                         // Blog posts (5 per location page)
                         ...data.locations.flatMap((location) =>
                           data.services.flatMap((service) =>
-                            Array.from({ length: 5 }, (_, i): ContentItem => ({
-                              title: `${i + 1}. Guide to ${service} Services in ${location}`,
+                            Array.from({ length: 5 }, (): ContentItem => ({
+                              title: getRandomTemplate(blogTitleTemplates, { service, location }),
                               type: "blog",
                               status: "pending",
                             }))
