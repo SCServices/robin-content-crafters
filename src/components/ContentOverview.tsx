@@ -12,18 +12,42 @@ import { Button } from "@/components/ui/button";
 import type { ContentItem } from "@/lib/types";
 import { CheckCircle, Clock, AlertCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContentOverviewProps {
-  items: ContentItem[];
+  items?: ContentItem[];
+  companyId?: string;
 }
 
-const ContentOverview = ({ items }: ContentOverviewProps) => {
+const ContentOverview = ({ items: propItems, companyId }: ContentOverviewProps) => {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
 
+  const { data: items } = useQuery({
+    queryKey: ["content", companyId],
+    queryFn: async () => {
+      if (propItems) return propItems;
+      
+      const { data, error } = await supabase
+        .from("generated_content")
+        .select(`
+          *,
+          companies (name),
+          services (name),
+          service_locations (location)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !propItems,
+  });
+
   const filteredItems = activeTab === "all" 
     ? items 
-    : items.filter(item => item.type === activeTab);
+    : items?.filter(item => item.type === activeTab);
 
   const getStatusIcon = (status: ContentItem["status"]) => {
     switch (status) {
@@ -54,7 +78,7 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
 
           <TabsContent value={activeTab} className="mt-0">
             <div className="space-y-2">
-              {filteredItems.map((item, index) => (
+              {filteredItems?.map((item, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all duration-200 cursor-pointer border-l-2 hover:border-l-primary"

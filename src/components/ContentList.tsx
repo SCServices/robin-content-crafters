@@ -12,14 +12,38 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, MapPin, Briefcase, NewspaperIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContentListProps {
-  items: any[];
+  items?: any[];
+  companyId?: string;
 }
 
-const ContentList = ({ items }: ContentListProps) => {
+const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
   const [selectedContent, setSelectedContent] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+
+  const { data: items } = useQuery({
+    queryKey: ["content", companyId],
+    queryFn: async () => {
+      if (propItems) return propItems;
+      
+      const { data, error } = await supabase
+        .from("generated_content")
+        .select(`
+          *,
+          companies (name),
+          services (name),
+          service_locations (location)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !propItems,
+  });
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -49,7 +73,7 @@ const ContentList = ({ items }: ContentListProps) => {
 
   const filteredItems = activeTab === "all" 
     ? items 
-    : items.filter(item => item.type === activeTab);
+    : items?.filter(item => item.type === activeTab);
 
   return (
     <>
@@ -63,7 +87,7 @@ const ContentList = ({ items }: ContentListProps) => {
       </Tabs>
 
       <div className="space-y-4">
-        {filteredItems.map((item) => (
+        {filteredItems?.map((item) => (
           <Card
             key={item.id}
             className="p-4 hover:shadow-md transition-all duration-200 cursor-pointer border-l-4 hover:border-l-primary animate-fade-in"
