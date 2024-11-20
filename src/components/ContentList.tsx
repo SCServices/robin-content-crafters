@@ -24,7 +24,7 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
   const [selectedContent, setSelectedContent] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("all");
 
-  const { data: items } = useQuery({
+  const { data: items, isLoading } = useQuery({
     queryKey: ["content", companyId],
     queryFn: async () => {
       if (propItems) return propItems;
@@ -39,10 +39,14 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
         `)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching content:", error);
+        throw error;
+      }
       return data;
     },
-    enabled: !propItems,
+    initialData: propItems,
+    enabled: true, // Always fetch to ensure we have the latest data
   });
 
   const getIcon = (type: string) => {
@@ -74,6 +78,18 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
   const filteredItems = activeTab === "all" 
     ? items 
     : items?.filter(item => item.type === activeTab);
+
+  if (isLoading) {
+    return <div>Loading content...</div>;
+  }
+
+  if (!items?.length) {
+    return (
+      <Card className="p-6 text-center text-neutral-500">
+        No content available yet.
+      </Card>
+    );
+  }
 
   return (
     <>
@@ -109,6 +125,7 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
                 </Badge>
                 <div
                   className={`h-2 w-2 rounded-full ${getStatusColor(item.status)}`}
+                  title={`Status: ${item.status}`}
                 />
               </div>
             </div>
