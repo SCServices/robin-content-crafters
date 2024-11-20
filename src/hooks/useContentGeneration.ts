@@ -155,6 +155,7 @@ export const useContentGeneration = () => {
             serviceName: servicesData?.find(s => s.id === content.service_id)?.name || '',
             location: locationsData?.find(l => l.id === content.location_id)?.location || '',
             companyId: companyData.id,
+            contentId: content.id // Add this line to pass the content ID
           };
 
           try {
@@ -166,17 +167,6 @@ export const useContentGeneration = () => {
                 locationId: content.location_id,
               },
             });
-
-            if (functionResponse?.content) {
-              // Update the content in the database
-              await supabase
-                .from("generated_content")
-                .update({
-                  content: functionResponse.content,
-                  status: "generated",
-                })
-                .eq("id", content.id);
-            }
 
             completedItems++;
             setProgress(80 + (completedItems / totalItems) * 20);
