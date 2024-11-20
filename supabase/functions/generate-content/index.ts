@@ -232,7 +232,7 @@ Example: "A Comprehensive Review of the Best Cordless Power Drills for DIY Proje
 
     console.log('Calling OpenAI with prompt:', prompt);
     
-    // Call OpenAI API with gpt-4o-mini model
+    // Call OpenAI API with gpt-4o mini model (correct spacing)
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -240,7 +240,7 @@ Example: "A Comprehensive Review of the Best Cordless Power Drills for DIY Proje
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
@@ -287,7 +287,6 @@ Example: "A Comprehensive Review of the Best Cordless Power Drills for DIY Proje
         } 
       }
     );
-
   } catch (error) {
     console.error('Error in generate-content function:', error);
     return new Response(
