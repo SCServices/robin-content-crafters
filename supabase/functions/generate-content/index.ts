@@ -31,7 +31,6 @@ serve(async (req) => {
 
     let prompt;
 
-    // Construct prompt based on content type
     switch (contentType) {
       case 'service':
         prompt = `
@@ -147,7 +146,7 @@ Write an informative blog post about **${companyInfo.serviceName}** services${co
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-3.5-turbo', // Changed from gpt-4o-mini to gpt-3.5-turbo
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
