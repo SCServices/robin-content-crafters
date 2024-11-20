@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,12 +8,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import type { ContentItem } from "@/lib/types";
-import { CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { FileText, MapPin, Briefcase, NewspaperIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { ContentItem } from "@/lib/types";
 
 interface ContentOverviewProps {
   items?: ContentItem[];
@@ -21,8 +22,8 @@ interface ContentOverviewProps {
 }
 
 const ContentOverview = ({ items: propItems, companyId }: ContentOverviewProps) => {
+  const [selectedContent, setSelectedContent] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("all");
-  const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
 
   const { data: items } = useQuery({
     queryKey: ["content", companyId],
@@ -45,20 +46,35 @@ const ContentOverview = ({ items: propItems, companyId }: ContentOverviewProps) 
     enabled: !propItems,
   });
 
+  const getIcon = (type: string) => {
+    switch (type) {
+      case "service":
+        return <Briefcase className="h-5 w-5 text-primary" />;
+      case "location":
+        return <MapPin className="h-5 w-5 text-secondary" />;
+      case "blog":
+        return <NewspaperIcon className="h-5 w-5 text-success" />;
+      default:
+        return <FileText className="h-5 w-5 text-neutral-500" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "generated":
+        return "bg-success";
+      case "pending":
+        return "bg-primary";
+      case "error":
+        return "bg-secondary";
+      default:
+        return "bg-neutral-400";
+    }
+  };
+
   const filteredItems = activeTab === "all" 
     ? items 
     : items?.filter(item => item.type === activeTab);
-
-  const getStatusIcon = (status: ContentItem["status"]) => {
-    switch (status) {
-      case "generated":
-        return <CheckCircle className="text-success" size={16} />;
-      case "pending":
-        return <Clock className="text-primary" size={16} />;
-      case "error":
-        return <AlertCircle className="text-secondary" size={16} />;
-    }
-  };
 
   return (
     <>
@@ -77,38 +93,50 @@ const ContentOverview = ({ items: propItems, companyId }: ContentOverviewProps) 
           </div>
 
           <TabsContent value={activeTab} className="mt-0">
-            <div className="space-y-2">
-              {filteredItems?.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all duration-200 cursor-pointer border-l-2 hover:border-l-primary"
-                  onClick={() => setSelectedItem(item)}
+            <div className="space-y-4">
+              {filteredItems?.map((item) => (
+                <Card
+                  key={item.id}
+                  className="p-4 hover:shadow-md transition-all duration-200 cursor-pointer border-l-4 hover:border-l-primary animate-fade-in"
+                  onClick={() => setSelectedContent(item)}
                 >
-                  <div className="flex items-center gap-3">
-                    {getStatusIcon(item.status)}
-                    <span className="font-medium">{item.title}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {getIcon(item.type)}
+                      <div>
+                        <h3 className="font-medium text-lg">{item.title}</h3>
+                        <p className="text-sm text-neutral-500">
+                          {item.companies?.name} • {new Date(item.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="capitalize">
+                        {item.type}
+                      </Badge>
+                      <div
+                        className={`h-2 w-2 rounded-full ${getStatusColor(item.status)}`}
+                      />
+                    </div>
                   </div>
-                  <span className="text-sm text-neutral-500 capitalize px-3 py-1 bg-white rounded-full">
-                    {item.type}
-                  </span>
-                </div>
+                </Card>
               ))}
             </div>
           </TabsContent>
         </Tabs>
       </Card>
 
-      <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
+      <Dialog open={!!selectedContent} onOpenChange={() => setSelectedContent(null)}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-primary mb-4">
-              {selectedItem?.title}
+              {selectedContent?.title}
             </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            {selectedItem?.content ? (
+            {selectedContent?.content ? (
               <article className="prose prose-lg prose-primary max-w-none">
-                <ReactMarkdown>{selectedItem.content}</ReactMarkdown>
+                <ReactMarkdown>{selectedContent.content}</ReactMarkdown>
               </article>
             ) : (
               <p className="text-neutral-500 italic text-center py-8">
@@ -117,7 +145,7 @@ const ContentOverview = ({ items: propItems, companyId }: ContentOverviewProps) 
             )}
           </div>
           <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={() => setSelectedItem(null)}>
+            <Button variant="outline" onClick={() => setSelectedContent(null)}>
               Close
             </Button>
           </DialogFooter>
