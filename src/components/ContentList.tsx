@@ -46,7 +46,8 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
       return data;
     },
     initialData: propItems,
-    enabled: true, // Always fetch to ensure we have the latest data
+    refetchInterval: 3000, // Refetch every 3 seconds to check for updates
+    enabled: true,
   });
 
   const getIcon = (type: string) => {
