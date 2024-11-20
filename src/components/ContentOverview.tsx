@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import Dashboard from "@/components/Dashboard";
 import ContentList from "@/components/ContentList";
+import { calculateContentStats } from "@/utils/statsCalculation";
 import type { ContentItem, ContentStats } from "@/lib/types";
 
 interface ContentOverviewProps {
@@ -17,20 +18,16 @@ const ContentOverview = ({ items }: ContentOverviewProps) => {
   });
 
   useEffect(() => {
-    // Calculate stats based on items
-    const newStats = {
-      total: items.length,
-      generated: items.filter(item => item.status === "generated").length,
-      pending: items.filter(item => item.status === "pending").length,
-      error: items.filter(item => item.status === "error").length,
-    };
+    const newStats = calculateContentStats(items);
     setStats(newStats);
   }, [items]);
 
   return (
-    <div className="space-y-8">
-      <Dashboard stats={stats} />
-      <Card className="p-6">
+    <div className="space-y-8 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="animate-fade-in">
+        <Dashboard stats={stats} />
+      </div>
+      <Card className="p-4 sm:p-6 animate-fade-in delay-100">
         <ContentList items={items} />
       </Card>
     </div>
