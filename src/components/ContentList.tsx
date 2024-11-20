@@ -14,14 +14,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { ContentItem } from "@/lib/types";
 
 interface ContentListProps {
-  items?: any[];
+  items?: ContentItem[];
   companyId?: string;
 }
 
 const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
-  const [selectedContent, setSelectedContent] = useState<any | null>(null);
+  const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [activeTab, setActiveTab] = useState("all");
 
   const { data: items, isLoading } = useQuery({
@@ -43,10 +44,12 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
         console.error("Error fetching content:", error);
         throw error;
       }
-      return data;
+
+      // Ensure proper typing of the response
+      return data as ContentItem[];
     },
     initialData: propItems,
-    refetchInterval: 3000, // Refetch every 3 seconds to check for updates
+    refetchInterval: 3000,
     enabled: true,
   });
 
