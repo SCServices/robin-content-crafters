@@ -1,47 +1,14 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const generatePrompt = (contentType: string, companyInfo: any) => {
-  const baseContext = `You are writing content for ${companyInfo.companyName}, a company in the ${companyInfo.industry} industry that provides ${companyInfo.serviceName} services.`;
-  
-  switch (contentType) {
-    case 'service':
-      return `${baseContext}
-Write a comprehensive service page that:
-1. Explains the ${companyInfo.serviceName} service in detail
-2. Highlights the company's expertise and experience
-3. Describes the benefits and value proposition
-4. Includes a clear call to action
-Format the content with proper HTML headings (h2, h3) and paragraphs.`;
-
-    case 'location':
-      return `${baseContext}
-Write a location-specific service page for ${companyInfo.location} that:
-1. Describes ${companyInfo.serviceName} services available in ${companyInfo.location}
-2. Mentions local service coverage and availability
-3. Includes location-specific benefits and considerations
-4. Adds relevant local context and pain points
-Format the content with proper HTML headings (h2, h3) and paragraphs.`;
-
-    case 'blog':
-      return `${baseContext}
-Write an informative blog post about ${companyInfo.serviceName} in ${companyInfo.location} that:
-1. Provides valuable insights and tips
-2. Addresses common questions and concerns
-3. Includes industry best practices
-4. Offers expert advice and recommendations
-Format the content with proper HTML headings (h2, h3) and paragraphs.`;
-
-    default:
-      throw new Error('Invalid content type');
-  }
-};
+const systemPrompt = `You are an expert content writer specializing in creating engaging, SEO-optimized content for business websites. 
+Your content should be informative, well-structured, and optimized for both search engines and human readers.
+Always write in a professional yet approachable tone, focusing on providing value to the reader.`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -49,9 +16,8 @@ serve(async (req) => {
   }
 
   try {
-    const { contentType, companyInfo, serviceId, locationId, titleOnly } = await req.json();
-    
-    console.log('Received request:', { contentType, companyInfo, serviceId, locationId, titleOnly });
+    const { contentType, companyInfo, titleOnly } = await req.json();
+    console.log('Received request:', { contentType, companyInfo, titleOnly });
 
     if (!contentType || !companyInfo || !companyInfo.companyName || !companyInfo.industry) {
       return new Response(
@@ -63,11 +29,132 @@ serve(async (req) => {
       );
     }
 
-    const prompt = generatePrompt(contentType, companyInfo);
-    console.log('Generated prompt:', prompt);
+    let prompt;
 
+    // Construct prompt based on content type
+    switch (contentType) {
+      case 'service':
+        prompt = `
+**Task:**
+Write a comprehensive service page for **${companyInfo.companyName}**, a ${companyInfo.industry} company, focusing on their **${companyInfo.serviceName}** service.
+
+**Structure:**
+1. **Introduction**: Provide a compelling overview of the service.
+2. **Key Benefits and Features**: Highlight what sets this service apart.
+3. **Why Choose ${companyInfo.companyName}**: Emphasize experience, expertise, and any certifications.
+   - Include customer testimonials or success stories if available.
+4. **Our ${companyInfo.serviceName} Process**: Describe step-by-step what customers can expect.
+5. **Common Problems We Solve**: Address typical issues and how the service provides solutions.
+6. **Call to Action**: Encourage readers to contact or schedule a service.
+
+**Requirements:**
+- Write the content in **SEO-friendly Markdown** format.
+- Use appropriate headings (**H1**, **H2**, **H3**, **H4**) to organize the content.
+- Ensure proper spacing and formatting for readability.
+- Demonstrate **Experience**, **Expertise**, **Authoritativeness**, and **Trustworthiness** (EEAT) throughout the content.
+- Write in a conversational and friendly tone, using simple language.
+- **Words to Use:** Common everyday words, short and simple words, concrete terms, active verbs, positive language.
+- **Words to Avoid:** Complex or technical terms, unnecessary big words, ambiguous words, figurative language, overly formal language.
+- Keep sentences short and straightforward (15-20 words).
+- Use short paragraphs (2-3 sentences) focusing on a single idea.
+- Incorporate bullet points or numbered lists where appropriate.
+- Aim for a 6th to 8th-grade reading level.
+- Be direct and to the point.
+- Focus on value proposition and address customer needs and pain points.
+- Include relevant keywords naturally (avoid keyword stuffing).
+- Aim for **800-1000 words**.
+- Before finalizing, review the content to ensure it meets all guidelines and is error-free.
+`;
+        break;
+      
+      case 'location':
+        prompt = `
+**Task:**
+Write a location-specific service page for **${companyInfo.companyName}**'s **${companyInfo.serviceName}** service in **${companyInfo.location}**.
+
+**Structure:**
+1. **Introduction**: Provide a compelling overview with local context.
+2. **Our ${companyInfo.serviceName} Services in ${companyInfo.location}**: Detail the services offered.
+3. **Why Choose ${companyInfo.companyName} in ${companyInfo.location}**: Highlight local experience and community involvement.
+   - Include testimonials from local customers if available.
+4. **Local Service Coverage**: Mention specific areas or neighborhoods served.
+5. **${companyInfo.location}-Specific Benefits**: Discuss local conditions that make the service valuable.
+6. **Contact Information and Call to Action**: Provide clear instructions on how to get in touch.
+
+**Requirements:**
+- Write the content in **SEO-friendly Markdown** format.
+- Use appropriate headings (**H1**, **H2**, **H3**, **H4**) to organize the content.
+- Ensure proper spacing and formatting for readability.
+- Demonstrate **Experience**, **Expertise**, **Authoritativeness**, and **Trustworthiness** (EEAT) throughout the content.
+- Include local landmarks, events, or community initiatives to strengthen local connections.
+- Write in a conversational and friendly tone, using simple language.
+- **Words to Use:** Common everyday words, short and simple words, concrete terms, active verbs, positive language.
+- **Words to Avoid:** Complex or technical terms, unnecessary big words, ambiguous words, figurative language, overly formal language.
+- Keep sentences short and straightforward (15-20 words).
+- Use short paragraphs (2-3 sentences) focusing on a single idea.
+- Incorporate bullet points or numbered lists where appropriate.
+- Aim for a 6th to 8th-grade reading level.
+- Be direct and to the point.
+- Optimize for local SEO with location-specific keywords (avoid keyword stuffing).
+- Address the needs and pain points of local customers.
+- Emphasize the local expertise of the service provider.
+- Aim for **600-800 words**.
+- Before finalizing, review the content to ensure it meets all guidelines and is error-free.
+`;
+        break;
+      
+      case 'blog':
+        prompt = `
+**Task:**
+Write an informative blog post for **${companyInfo.companyName}**, a ${companyInfo.industry} company, about **${companyInfo.serviceName}** services${companyInfo.location ? ` in ${companyInfo.location}` : ''}.
+
+**Choose one of the following blog post types that best suits the topic and audience:**
+- **Listicles**: Articles in list format offering tips, reasons, or examples.
+- **How-To Guides**: Step-by-step instructions to accomplish a task or solve a problem.
+- **Comparison Posts**: Analyze and compare options, products, or methods.
+- **Case Studies**: In-depth examinations of real-life projects.
+- **Opinion Pieces**: Share personal views or insights on industry trends.
+- **Interviews**: Q&A sessions with experts, providing unique perspectives.
+- **Checklists**: Practical lists to ensure all steps are covered.
+- **Beginner's Guides**: Comprehensive introductions for those new to the subject.
+- **Problem-Solution Posts**: Identify common problems and offer solutions.
+- **Ultimate Guides**: Extensive resources covering all aspects of a topic.
+- **Resource Lists**: Curated lists of tools, suppliers, or tutorials.
+- **Trend Analysis Posts**: Discuss current or upcoming industry trends.
+- **Reviews**: Detailed evaluations of products or services.
+
+**Requirements:**
+- Write the content in **SEO-friendly Markdown** format.
+- Use appropriate headings (**H1**, **H2**, **H3**, **H4**) to organize the content.
+- Ensure proper spacing and formatting for readability.
+- Demonstrate **Experience**, **Expertise**, **Authoritativeness**, and **Trustworthiness** (EEAT) throughout the content.
+- Structure the content appropriately based on the chosen blog post type.
+- Write in a conversational and friendly tone, using simple language.
+- **Words to Use:** Common everyday words, short and simple words, concrete terms, active verbs, positive language.
+- **Words to Avoid:** Complex or technical terms, unnecessary big words, ambiguous words, figurative language, overly formal language.
+- Keep sentences short and straightforward (15-20 words).
+- Use short paragraphs (2-3 sentences) focusing on a single idea.
+- Incorporate bullet points or numbered lists where appropriate.
+- Include actionable advice and practical tips.
+- Include relevant examples or statistics.
+- Include local context, referencing local landmarks or community aspects where appropriate.
+- Address the needs and pain points of local customers.
+- Emphasize the local expertise of the service provider.
+- Optimize for both local and service-related keywords naturally (avoid keyword stuffing).
+- Aim for **800-1000 words**.
+- Before finalizing, review the content to ensure it meets all guidelines and is error-free.
+`;
+        break;
+      
+      default:
+        throw new Error('Invalid content type specified');
+    }
+
+    console.log('Calling OpenAI with prompt:', prompt);
+    
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call OpenAI API
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -76,57 +163,22 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { 
-            role: 'system', 
-            content: 'You are an expert content writer specializing in creating engaging, SEO-optimized content for business websites.' 
-          },
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
       }),
     });
 
-    if (!response.ok) {
+    if (!openAIResponse.ok) {
+      console.error('OpenAI API error:', await openAIResponse.text());
       throw new Error('OpenAI API error');
     }
 
-    const completion = await response.json();
+    const completion = await openAIResponse.json();
     const generatedContent = completion.choices[0].message.content;
 
-    // Update the content in the database if not just generating title
-    if (!titleOnly) {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL');
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-      const supabase = createClient(supabaseUrl!, supabaseKey!);
-
-      const { error: updateError } = await supabase
-        .from('generated_content')
-        .update({ 
-          content: generatedContent,
-          status: 'generated',
-          updated_at: new Date().toISOString()
-        })
-        .eq('service_id', serviceId)
-        .eq('type', contentType);
-
-      if (locationId) {
-        await supabase
-          .from('generated_content')
-          .update({ 
-            content: generatedContent,
-            status: 'generated',
-            updated_at: new Date().toISOString()
-          })
-          .eq('service_id', serviceId)
-          .eq('location_id', locationId)
-          .eq('type', contentType);
-      }
-
-      if (updateError) {
-        console.error('Error updating content:', updateError);
-        throw updateError;
-      }
-    }
+    console.log('Generated content length:', generatedContent.length);
 
     return new Response(
       JSON.stringify({ content: generatedContent }),
