@@ -2,27 +2,78 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { contentType, companyInfo, serviceId, locationId } = await req.json();
+    const { contentType, companyInfo, serviceId, locationId, titleOnly } = await req.json();
     
-    console.log('Received request:', { contentType, companyInfo, serviceId, locationId });
+    console.log('Received request:', { contentType, companyInfo, serviceId, locationId, titleOnly });
 
-    // Validate required parameters
+    let prompt = '';
+    const systemPrompt = titleOnly 
+      ? `You are a professional SEO copywriter specializing in creating engaging, SEO-optimized titles and headlines. Your titles are clear, compelling, and optimized for search engines while maintaining readability and appeal to human readers.`
+      : `You are a professional content writer and Local SEO expert specializing in creating high-quality, SEO-optimized content for business websites in blue-collar industries, homeowners' advice, and DIY topics. Your writing demonstrates Experience, Expertise, Authoritativeness, and Trustworthiness (EEAT). You focus on writing engaging, easy-to-read articles that are accessible to a wide audience. Use simple language, avoid technical jargon, and write in a conversational and friendly tone.`;
+
+    if (titleOnly) {
+      switch (contentType) {
+        case 'service':
+          prompt = `Create a compelling, SEO-optimized title for a service page about ${companyInfo.serviceName} services offered by ${companyInfo.companyName}, a ${companyInfo.industry} company. The title should be concise (under 60 characters) and include the main service and company name.`;
+          break;
+        case 'location':
+          prompt = `Create a location-specific, SEO-optimized title for ${companyInfo.serviceName} services offered by ${companyInfo.companyName} in ${companyInfo.location}. The title should be concise (under 60 characters) and include the service, location, and company name.`;
+          break;
+        case 'blog':
+          prompt = `Create an engaging, SEO-optimized blog post title about ${companyInfo.serviceName} services in ${companyInfo.location}. The title should be attention-grabbing and informative, targeting customers looking for ${companyInfo.industry} services. Include numbers or specific benefits if possible.`;
+          break;
+        default:
+          throw new Error('Invalid content type specified');
+      }
+
+      const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 60,
+        }),
+      });
+
+      if (!openAIResponse.ok) {
+        const error = await openAIResponse.json();
+        console.error('OpenAI API error:', error);
+        throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+      }
+
+      const completion = await openAIResponse.json();
+      const generatedTitle = completion.choices[0].message.content.trim();
+
+      return new Response(
+        JSON.stringify({ title: generatedTitle }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate required parameters for full content generation
     if (!contentType || !companyInfo || !serviceId || !companyInfo.companyId) {
       throw new Error('Missing required parameters');
     }
@@ -34,9 +85,6 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
-
-    let prompt = '';
-    const systemPrompt = `You are a professional content writer and Local SEO expert specializing in creating high-quality, SEO-optimized content for business websites in blue-collar industries, homeowners' advice, and DIY topics. Your writing demonstrates Experience, Expertise, Authoritativeness, and Trustworthiness (EEAT). You focus on writing engaging, easy-to-read articles that are accessible to a wide audience. Use simple language, avoid technical jargon, and write in a conversational and friendly tone.`;
 
     // Construct prompt based on content type
     switch (contentType) {

@@ -36,25 +36,114 @@ const Index = () => {
 
   const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
 
-  const handleContentGeneration = (items: ContentItem[]) => {
-    setContentItems(items);
-    // Simulate content generation progress
-    let generated = 0;
-    const interval = setInterval(() => {
-      if (generated < items.length) {
-        const updatedItems = [...items];
-        updatedItems[generated].status = "generated";
-        setContentItems(updatedItems);
-        setContentStats(prev => ({
-          ...prev,
-          generated: prev.generated + 1,
-          pending: prev.pending - 1,
-        }));
-        generated++;
-      } else {
-        clearInterval(interval);
+  const generateInitialTitle = async (type: "service" | "location" | "blog", data: {
+    companyName: string;
+    industry: string;
+    service: string;
+    location?: string;
+    index?: number;
+  }) => {
+    try {
+      const { data: result } = await supabase.functions.invoke("generate-content", {
+        body: {
+          contentType: type,
+          titleOnly: true,
+          companyInfo: {
+            companyName: data.companyName,
+            industry: data.industry,
+            serviceName: data.service,
+            location: data.location,
+            index: data.index
+          },
+        },
+      });
+      return result?.title || getDefaultTitle(type, data);
+    } catch (error) {
+      console.error("Error generating title:", error);
+      return getDefaultTitle(type, data);
+    }
+  };
+
+  const getDefaultTitle = (type: "service" | "location" | "blog", data: {
+    companyName: string;
+    service: string;
+    location?: string;
+    index?: number;
+  }) => {
+    switch (type) {
+      case "service":
+        return `${data.service} Services - ${data.companyName}`;
+      case "location":
+        return `${data.service} Services in ${data.location} - ${data.companyName}`;
+      case "blog":
+        return `${data.index}. Guide to ${data.service} Services in ${data.location}`;
+    }
+  };
+
+  const handleContentGeneration = async (data: BusinessInfo) => {
+    const servicePages = data.services.length;
+    const locationPages = data.services.length * data.locations.length;
+    const blogPosts = locationPages * 5;
+    const total = servicePages + locationPages + blogPosts;
+
+    // Generate titles using OpenAI
+    const items: ContentItem[] = [];
+
+    // Service pages
+    for (const service of data.services) {
+      const title = await generateInitialTitle("service", {
+        companyName: data.companyName,
+        industry: data.industry,
+        service,
+      });
+      items.push({
+        title,
+        type: "service",
+        status: "pending",
+      } as ContentItem);
+    }
+
+    // Location pages
+    for (const location of data.locations) {
+      for (const service of data.services) {
+        const title = await generateInitialTitle("location", {
+          companyName: data.companyName,
+          industry: data.industry,
+          service,
+          location,
+        });
+        items.push({
+          title,
+          type: "location",
+          status: "pending",
+        } as ContentItem);
+
+        // Blog posts
+        for (let i = 1; i <= 5; i++) {
+          const title = await generateInitialTitle("blog", {
+            companyName: data.companyName,
+            industry: data.industry,
+            service,
+            location,
+            index: i,
+          });
+          items.push({
+            title,
+            type: "blog",
+            status: "pending",
+          } as ContentItem);
+        }
       }
-    }, 1000);
+    }
+
+    setContentStats({
+      total,
+      generated: 0,
+      pending: total,
+      error: 0,
+    });
+    setContentItems(items);
+    setIsOnboarding(false);
   };
 
   return (
@@ -126,53 +215,7 @@ const Index = () => {
 
                 <div className="max-w-md mx-auto">
                   <OnboardingForm 
-                    onComplete={(data: BusinessInfo) => {
-                      // Calculate total content items
-                      const servicePages = data.services.length;
-                      const locationPages = data.services.length * data.locations.length;
-                      const blogPosts = locationPages * 5;
-                      const total = servicePages + locationPages + blogPosts;
-
-                      // Initialize content items
-                      const items: ContentItem[] = [
-                        // Service pages
-                        ...data.services.map((service): ContentItem => ({
-                          title: `${service} Services - ${data.companyName}`,
-                          type: "service",
-                          status: "pending",
-                        })),
-                        // Location pages
-                        ...data.locations.flatMap((location) =>
-                          data.services.map((service): ContentItem => ({
-                            title: `${service} Services in ${location} - ${data.companyName}`,
-                            type: "location",
-                            status: "pending",
-                          }))
-                        ),
-                        // Blog posts (5 per location page)
-                        ...data.locations.flatMap((location) =>
-                          data.services.flatMap((service) =>
-                            Array.from({ length: 5 }, (_, i): ContentItem => ({
-                              title: `${i + 1}. Guide to ${service} Services in ${location}`,
-                              type: "blog",
-                              status: "pending",
-                            }))
-                          )
-                        ),
-                      ];
-
-                      setContentStats({
-                        total,
-                        generated: 0,
-                        pending: total,
-                        error: 0,
-                      });
-                      setContentItems(items);
-                      setIsOnboarding(false);
-
-                      // Start content generation simulation
-                      handleContentGeneration(items);
-                    }}
+                    onComplete={handleContentGeneration}
                     initialData={selectedCompany ? {
                       companyName: selectedCompany.name,
                       industry: selectedCompany.industry,
