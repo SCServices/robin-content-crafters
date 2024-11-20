@@ -12,50 +12,14 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, MapPin, Briefcase, NewspaperIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { ContentItem } from "@/lib/types";
 
 interface ContentListProps {
-  items?: ContentItem[];
-  companyId?: string;
+  items: any[];
 }
 
-const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
-  const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
+const ContentList = ({ items }: ContentListProps) => {
+  const [selectedContent, setSelectedContent] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("all");
-
-  const { data: items, isLoading } = useQuery({
-    queryKey: ["content", companyId],
-    queryFn: async () => {
-      if (propItems) return propItems;
-      
-      const { data, error } = await supabase
-        .from("generated_content")
-        .select(`
-          *,
-          companies (name),
-          services (name),
-          service_locations (location)
-        `)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching content:", error);
-        throw error;
-      }
-
-      return data as ContentItem[];
-    },
-    initialData: propItems,
-    refetchInterval: (query) => {
-      const data = query.state.data;
-      if (!data) return false;
-      const hasPendingItems = data.some((item) => item.status === "pending");
-      return hasPendingItems ? 3000 : false;
-    },
-    enabled: true,
-  });
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -85,19 +49,7 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
 
   const filteredItems = activeTab === "all" 
     ? items 
-    : items?.filter(item => item.type === activeTab);
-
-  if (isLoading) {
-    return <div>Loading content...</div>;
-  }
-
-  if (!items?.length) {
-    return (
-      <Card className="p-6 text-center text-neutral-500">
-        No content available yet.
-      </Card>
-    );
-  }
+    : items.filter(item => item.type === activeTab);
 
   return (
     <>
@@ -111,7 +63,7 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
       </Tabs>
 
       <div className="space-y-4">
-        {filteredItems?.map((item) => (
+        {filteredItems.map((item) => (
           <Card
             key={item.id}
             className="p-4 hover:shadow-md transition-all duration-200 cursor-pointer border-l-4 hover:border-l-primary animate-fade-in"
@@ -133,7 +85,6 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
                 </Badge>
                 <div
                   className={`h-2 w-2 rounded-full ${getStatusColor(item.status)}`}
-                  title={`Status: ${item.status}`}
                 />
               </div>
             </div>

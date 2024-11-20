@@ -12,6 +12,6 @@ port = 54322
 enabled = true
 port = 54323
 
-[[fetch.functions]]
-name = "generate-content"
-verify_jwt = false
+[[fetch.services]]
+name = "openai"
+url = "https://api.openai.com"

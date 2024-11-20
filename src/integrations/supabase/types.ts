@@ -43,7 +43,6 @@ export type Database = {
           created_at: string
           id: string
           location_id: string | null
-          meta_description: string | null
           parent_content_id: string | null
           service_id: string | null
           status: Database["public"]["Enums"]["content_status"]
@@ -57,7 +56,6 @@ export type Database = {
           created_at?: string
           id?: string
           location_id?: string | null
-          meta_description?: string | null
           parent_content_id?: string | null
           service_id?: string | null
           status?: Database["public"]["Enums"]["content_status"]
@@ -71,7 +69,6 @@ export type Database = {
           created_at?: string
           id?: string
           location_id?: string | null
-          meta_description?: string | null
           parent_content_id?: string | null
           service_id?: string | null
           status?: Database["public"]["Enums"]["content_status"]
