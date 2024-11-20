@@ -8,7 +8,7 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ stats }: DashboardProps) => {
-  const progress = (stats.generated / stats.total) * 100;
+  const progress = stats.total > 0 ? (stats.generated / stats.total) * 100 : 0;
 
   return (
     <div className="space-y-6 animate-fade-in">

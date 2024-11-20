@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import OnboardingForm from "@/components/OnboardingForm";
-import Dashboard from "@/components/Dashboard";
 import ContentOverview from "@/components/ContentOverview";
 import Layout from "@/components/Layout";
-import type { BusinessInfo, ContentItem, ContentStats } from "@/lib/types";
-import { toast } from "sonner";
+import type { BusinessInfo, ContentItem } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -14,12 +12,6 @@ import { serviceTitleTemplates, locationTitleTemplates, blogTitleTemplates, getR
 const Index = () => {
   const [isOnboarding, setIsOnboarding] = useState(true);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
-  const [contentStats, setContentStats] = useState<ContentStats>({
-    total: 0,
-    generated: 0,
-    pending: 0,
-    error: 0,
-  });
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
 
   const { data: companies } = useQuery({
@@ -90,65 +82,84 @@ const Index = () => {
   const handleContentGeneration = async (data: BusinessInfo) => {
     const servicePages = data.services.length;
     const locationPages = data.services.length * data.locations.length;
-    const blogPosts = locationPages * 5;
+    const blogPosts = locationPages;
     const total = servicePages + locationPages + blogPosts;
 
-    // Generate titles using OpenAI
     const items: ContentItem[] = [];
 
-    // Service pages
+    // Generate titles using OpenAI
     for (const service of data.services) {
       const title = await generateInitialTitle("service", {
         companyName: data.companyName,
         industry: data.industry,
         service,
       });
+      
       items.push({
+        id: crypto.randomUUID(),
+        company_id: "",
         title,
+        content: null,
         type: "service",
         status: "pending",
-      } as ContentItem);
+        service_id: null,
+        location_id: null,
+        parent_content_id: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        meta_description: null,
+      });
     }
 
-    // Location pages
+    // Location pages and blog posts
     for (const location of data.locations) {
       for (const service of data.services) {
-        const title = await generateInitialTitle("location", {
+        const locationTitle = await generateInitialTitle("location", {
           companyName: data.companyName,
           industry: data.industry,
           service,
           location,
         });
+
         items.push({
-          title,
+          id: crypto.randomUUID(),
+          company_id: "",
+          title: locationTitle,
+          content: null,
           type: "location",
           status: "pending",
-        } as ContentItem);
+          service_id: null,
+          location_id: null,
+          parent_content_id: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          meta_description: null,
+        });
 
-        // Blog posts
-        for (let i = 1; i <= 5; i++) {
-          const title = await generateInitialTitle("blog", {
-            companyName: data.companyName,
-            industry: data.industry,
-            service,
-            location,
-            index: i,
-          });
-          items.push({
-            title,
-            type: "blog",
-            status: "pending",
-          } as ContentItem);
-        }
+        const blogTitle = await generateInitialTitle("blog", {
+          companyName: data.companyName,
+          industry: data.industry,
+          service,
+          location,
+        });
+
+        items.push({
+          id: crypto.randomUUID(),
+          company_id: "",
+          title: blogTitle,
+          content: null,
+          type: "blog",
+          status: "pending",
+          service_id: null,
+          location_id: null,
+          parent_content_id: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          meta_description: null,
+        });
       }
     }
 
-    setContentStats({
-      total,
-      generated: 0,
-      pending: total,
-      error: 0,
-    });
     setContentItems(items);
     setIsOnboarding(false);
   };
@@ -236,7 +247,6 @@ const Index = () => {
             </>
           ) : (
             <div className="space-y-6 animate-fade-in">
-              <Dashboard stats={contentStats} />
               <ContentOverview items={contentItems} />
             </div>
           )}
