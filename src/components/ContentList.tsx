@@ -45,11 +45,16 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
         throw error;
       }
 
-      // Ensure proper typing of the response
       return data as ContentItem[];
     },
     initialData: propItems,
-    refetchInterval: 3000,
+    refetchInterval: (data) => {
+      // Stop refetching if all items are either generated or errored
+      const hasPendingItems = data?.some(
+        (item) => item.status === "pending"
+      );
+      return hasPendingItems ? 3000 : false;
+    },
     enabled: true,
   });
 
