@@ -232,7 +232,7 @@ Example: "A Comprehensive Review of the Best Cordless Power Drills for DIY Proje
 
     console.log('Calling OpenAI with prompt:', prompt);
     
-    // Call OpenAI API
+    // Call OpenAI API with gpt-4o-mini model
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
