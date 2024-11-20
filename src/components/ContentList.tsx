@@ -48,11 +48,10 @@ const ContentList = ({ items: propItems, companyId }: ContentListProps) => {
       return data as ContentItem[];
     },
     initialData: propItems,
-    refetchInterval: (data: ContentItem[] | undefined) => {
+    refetchInterval: (query) => {
+      const data = query.state.data;
       if (!data) return false;
-      const hasPendingItems = data.some(
-        (item) => item.status === "pending"
-      );
+      const hasPendingItems = data.some((item) => item.status === "pending");
       return hasPendingItems ? 3000 : false;
     },
     enabled: true,
