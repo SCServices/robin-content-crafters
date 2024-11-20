@@ -94,16 +94,27 @@ export const useContentGeneration = () => {
 
       setProgress(60);
       toast.loading('Preparing content structure...', { id: progressToast });
+      
       // Create content entries for each combination
       const contentEntries = [];
+      const getRandomTemplate = (templates: string[]) => templates[Math.floor(Math.random() * templates.length)];
 
       // Service pages
       for (const service of servicesData) {
         if (!service?.id) continue;
+        
+        const serviceTitleTemplates = [
+          `Professional ${service.name} Services by ${businessInfo.companyName}`,
+          `Expert ${service.name} Solutions | ${businessInfo.companyName}`,
+          `Trusted ${service.name} Services Near You`,
+          `Quality ${service.name} Services - ${businessInfo.companyName}`,
+          `Leading Provider of ${service.name} Services`,
+        ];
+
         contentEntries.push({
           company_id: companyData.id,
           service_id: service.id,
-          title: `${service.name} Services - ${businessInfo.companyName}`,
+          title: getRandomTemplate(serviceTitleTemplates),
           type: "service",
         });
       }
@@ -113,20 +124,36 @@ export const useContentGeneration = () => {
         if (!service?.id) continue;
         for (const location of locationsData) {
           if (!location?.id) continue;
+
+          const locationTitleTemplates = [
+            `${service.name} Services in ${location.location} | ${businessInfo.companyName}`,
+            `Local ${service.name} Experts in ${location.location}`,
+            `Professional ${service.name} Services - ${location.location} Area`,
+            `${location.location}'s Trusted ${service.name} Provider`,
+            `${service.name} Solutions in ${location.location}`,
+          ];
+
+          const blogTitleTemplates = [
+            `${service.name} Guide: Essential Tips for ${location.location} Residents`,
+            `Top ${service.name} Solutions in ${location.location}: Complete Guide`,
+            `How to Choose the Best ${service.name} Service in ${location.location}`,
+            `${location.location} ${service.name} Services: What You Need to Know`,
+            `Expert Tips for ${service.name} in ${location.location}`,
+          ];
+
           contentEntries.push({
             company_id: companyData.id,
             service_id: service.id,
             location_id: location.id,
-            title: `${service.name} Services in ${location.location} - ${businessInfo.companyName}`,
+            title: getRandomTemplate(locationTitleTemplates),
             type: "location",
           });
 
-          // Blog posts for each location page
           contentEntries.push({
             company_id: companyData.id,
             service_id: service.id,
             location_id: location.id,
-            title: `Guide to ${service.name} Services in ${location.location}`,
+            title: getRandomTemplate(blogTitleTemplates),
             type: "blog",
           });
         }
