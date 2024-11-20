@@ -4,7 +4,8 @@ import OnboardingForm from "@/components/OnboardingForm";
 import Dashboard from "@/components/Dashboard";
 import ContentOverview from "@/components/ContentOverview";
 import Layout from "@/components/Layout";
-import type { BusinessInfo, ContentStats } from "@/lib/types";
+import type { BusinessInfo, ContentItem, ContentStats } from "@/lib/types";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ const Index = () => {
     pending: 0,
     error: 0,
   });
+  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
 
   const { data: companies } = useQuery({
     queryKey: ["companies"],
@@ -33,6 +35,27 @@ const Index = () => {
   });
 
   const selectedCompany = companies?.find(company => company.id === selectedCompanyId);
+
+  const handleContentGeneration = (items: ContentItem[]) => {
+    setContentItems(items);
+    // Simulate content generation progress
+    let generated = 0;
+    const interval = setInterval(() => {
+      if (generated < items.length) {
+        const updatedItems = [...items];
+        updatedItems[generated].status = "generated";
+        setContentItems(updatedItems);
+        setContentStats(prev => ({
+          ...prev,
+          generated: prev.generated + 1,
+          pending: prev.pending - 1,
+        }));
+        generated++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 1000);
+  };
 
   return (
     <Layout>
@@ -110,14 +133,45 @@ const Index = () => {
                       const blogPosts = locationPages * 5;
                       const total = servicePages + locationPages + blogPosts;
 
+                      // Initialize content items
+                      const items: ContentItem[] = [
+                        // Service pages
+                        ...data.services.map((service): ContentItem => ({
+                          title: `${service} Services - ${data.companyName}`,
+                          type: "service",
+                          status: "pending",
+                        })),
+                        // Location pages
+                        ...data.locations.flatMap((location) =>
+                          data.services.map((service): ContentItem => ({
+                            title: `${service} Services in ${location} - ${data.companyName}`,
+                            type: "location",
+                            status: "pending",
+                          }))
+                        ),
+                        // Blog posts (5 per location page)
+                        ...data.locations.flatMap((location) =>
+                          data.services.flatMap((service) =>
+                            Array.from({ length: 5 }, (_, i): ContentItem => ({
+                              title: `${i + 1}. Guide to ${service} Services in ${location}`,
+                              type: "blog",
+                              status: "pending",
+                            }))
+                          )
+                        ),
+                      ];
+
                       setContentStats({
                         total,
                         generated: 0,
                         pending: total,
                         error: 0,
                       });
-                      
+                      setContentItems(items);
                       setIsOnboarding(false);
+
+                      // Start content generation simulation
+                      handleContentGeneration(items);
                     }}
                     initialData={selectedCompany ? {
                       companyName: selectedCompany.name,
@@ -133,7 +187,7 @@ const Index = () => {
           ) : (
             <div className="space-y-6 animate-fade-in">
               <Dashboard stats={contentStats} />
-              <ContentOverview />
+              <ContentOverview items={contentItems} />
             </div>
           )}
         </div>

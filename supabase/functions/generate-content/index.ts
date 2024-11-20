@@ -28,7 +28,7 @@ serve(async (req) => {
     }
 
     // Validate UUIDs
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(companyInfo.companyId) || !uuidRegex.test(serviceId) || (locationId && !uuidRegex.test(locationId))) {
       throw new Error('Invalid UUID format');
     }
@@ -36,113 +36,194 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     let prompt = '';
-    const systemPrompt = `You are a professional content writer specializing in creating high-quality, SEO-optimized content for business websites in blue-collar industries, homeowners' advice, and DIY topics. Your writing is engaging, easy to read, and accessible to a wide audience. You use simple language, avoid technical jargon, and write in a conversational and friendly tone.`;
+    const systemPrompt = `You are a Local SEO expert and experienced content writer specializing in creating high-quality, SEO-optimized content for business websites in blue-collar industries, homeowners' advice, and DIY topics. You focus on writing engaging, easy-to-read articles that are accessible to a wide audience. Use simple language, avoid technical jargon, and write in a conversational and friendly tone.
 
+Words to Use:
+Common Everyday Words:
+Use familiar words that most people understand.
+Examples: use (instead of utilize), help (instead of assist), start (instead of commence).
+Short and Simple Words:
+Opt for shorter words when possible.
+Examples: buy (instead of purchase), get (instead of obtain), need (instead of require).
+Concrete Terms:
+Use specific and tangible words rather than abstract concepts.
+Examples: "kitchen sink" (instead of "plumbing fixture"), "leaky faucet" (instead of "water leakage issue").
+Active Verbs:
+Use active voice to make sentences clearer and more direct.
+Example: "Clean the gutters regularly" instead of "The gutters should be cleaned regularly."
+Positive Language:
+Phrase instructions and advice in a positive manner.
+Example: "Ensure the paint is mixed well" instead of "Don't forget to mix the paint."
+Words to Avoid:
+Complex or Technical Terms:
+Avoid jargon or specialized terms that may confuse readers.
+Examples to Avoid: "thermoplastic elastomer," "galvanic corrosion" (unless explained simply).
+Unnecessary Big Words:
+Don't use long words when a short one will do.
+Examples to Avoid: "utilize" (use "use"), "commence" (use "start"), "ameliorate" (use "improve").
+Ambiguous Words:
+Steer clear of words that might have multiple meanings.
+Examples to Avoid: "Service" (be specific about the type of service), "issue" (use "problem" or specify the issue).
+Figurative Language and Idioms:
+Avoid expressions that might not be understood by everyone, including non-native speakers.
+Examples to Avoid: "Kick the bucket," "Break the bank."
+Overly Formal Language:
+Keep the tone friendly and approachable, not stiff or academic.
+Examples to Avoid: "Herein," "Notwithstanding," "Henceforth."
+
+Additional Guidelines:
+Sentence Structure:
+Keep sentences short and straightforward (15-20 words).
+Use simple sentence constructions; avoid complex or compound sentences.
+Paragraphs:
+Use short paragraphs (2-3 sentences) to improve readability.
+Each paragraph should focus on a single idea.
+Headings and Bullet Points:
+Use headings to break up content logically.
+Incorporate bullet points or numbered lists for steps and tips.
+Readability:
+Aim for a reading level appropriate for a 6th to 8th grader.
+Use readability tools to assess and adjust the text if needed.
+Examples and Visuals:
+Provide clear examples to illustrate points.
+Use images or diagrams where appropriate to enhance understanding.
+Consistency:
+Use consistent terminology throughout the article.
+Stick to the same units of measurement (e.g., inches, feet).
+Clarity:
+Be direct and to the point.
+Avoid unnecessary filler words or tangents.
+Tone:
+Write in a conversational and friendly tone.
+Imagine explaining the topic to a neighbor or friend.`;
+    
     // Construct prompt based on content type
     switch (contentType) {
       case 'service':
-        prompt = `
-**Task:**
-Write a comprehensive service page for **${companyInfo.companyName}**, a ${companyInfo.industry} company, focusing on their **${companyInfo.serviceName}** service.
-
-**Structure:**
-1. **Introduction**: Provide a compelling overview of the service.
-2. **Key Benefits and Features**: Highlight what sets this service apart.
-3. **Why Choose ${companyInfo.companyName}**: Emphasize experience, expertise, and any certifications.
-   - Include customer testimonials or success stories if available.
-4. **Our ${companyInfo.serviceName} Process**: Describe step-by-step what customers can expect.
-5. **Common Problems We Solve**: Address typical issues and how the service provides solutions.
-6. **Call to Action**: Encourage readers to contact or schedule a service.
-
-**Writing Guidelines:**
-- Use H2 and H3 headings for sections.
-- Write in a conversational and friendly tone, using simple language.
-- **Words to Use:** Common everyday words, short and simple words, concrete terms, active verbs, positive language.
-- **Words to Avoid:** Complex or technical terms, unnecessary big words, ambiguous words, figurative language, overly formal language.
-- Keep sentences short and straightforward (15-20 words).
-- Use short paragraphs (2-3 sentences) focusing on a single idea.
-- Incorporate bullet points or numbered lists where appropriate.
-- Aim for a 6th to 8th-grade reading level.
-- Be direct and to the point.
-- Focus on value proposition and address customer needs and pain points.
-- Include relevant keywords naturally (avoid keyword stuffing).
-- Aim for 800-1000 words.
-- Before finalizing, review the content to ensure it meets all guidelines and is error-free.
-`;
+        prompt = `Write a comprehensive service page for ${companyInfo.companyName}, a ${companyInfo.industry} company.
+                 Focus on their ${companyInfo.serviceName} service.
+                 
+                 Structure the content with these sections:
+                 1. Introduction (compelling overview of the service)
+                 2. Key Benefits and Features
+                 3. Why Choose ${companyInfo.companyName}
+                 4. Our ${companyInfo.serviceName} Process
+                 5. Common Problems We Solve
+                 6. Call to Action
+                 
+                 Requirements:
+                 - Use H2 and H3 headings for sections
+                 - Keep the tone professional but approachable, ensuring clarity and simplicity
+                 - Write in a conversational and friendly tone, using simple language
+                 - Avoid technical jargon and complex terms; use common everyday words
+                 - Use active voice and positive language
+                 - Include relevant keywords naturally (avoid keyword stuffing)
+                 - Focus on value proposition and address customer needs and pain points
+                 - Make it SEO-friendly, aiming for a keyword density of 1-2%
+                 - Around 800-1000 words
+                 - Before finalizing, review the content to ensure it meets all the above guidelines and is free of errors.`;
         break;
       
       case 'location':
-        prompt = `
-**Task:**
-Write a location-specific service page for **${companyInfo.companyName}**'s **${companyInfo.serviceName}** service in **${companyInfo.location}**.
-
-**Structure:**
-1. **Introduction**: Provide a compelling overview with local context.
-2. **Our ${companyInfo.serviceName} Services in ${companyInfo.location}**: Detail the services offered.
-3. **Why Choose ${companyInfo.companyName} in ${companyInfo.location}**: Highlight local experience and community involvement.
-   - Include testimonials from local customers if available.
-4. **Local Service Coverage**: Mention specific areas or neighborhoods served.
-5. **${companyInfo.location}-Specific Benefits**: Discuss local conditions that make the service valuable.
-6. **Contact Information and Call to Action**: Provide clear instructions on how to get in touch.
-
-**Writing Guidelines:**
-- Use H2 and H3 headings for sections.
-- Include local landmarks, events, or community initiatives to strengthen local connections.
-- Write in a conversational and friendly tone, using simple language.
-- **Words to Use:** Common everyday words, short and simple words, concrete terms, active verbs, positive language.
-- **Words to Avoid:** Complex or technical terms, unnecessary big words, ambiguous words, figurative language, overly formal language.
-- Keep sentences short and straightforward (15-20 words).
-- Use short paragraphs (2-3 sentences) focusing on a single idea.
-- Incorporate bullet points or numbered lists where appropriate.
-- Aim for a 6th to 8th-grade reading level.
-- Be direct and to the point.
-- Optimize for local SEO with location-specific keywords (avoid keyword stuffing).
-- Address the needs and pain points of local customers.
-- Emphasize the local expertise of the service provider.
-- Aim for 600-800 words.
-- Before finalizing, review the content to ensure it meets all guidelines and is error-free.
-`;
+        prompt = `Write a location-specific service page for ${companyInfo.companyName}'s ${companyInfo.serviceName} service in ${companyInfo.location}.
+                 
+                 Structure the content with these sections:
+                 1. Introduction (with local context)
+                 2. Our ${companyInfo.serviceName} Services in ${companyInfo.location}
+                 3. Why Choose ${companyInfo.companyName} in ${companyInfo.location}
+                 4. Local Service Coverage
+                 5. ${companyInfo.location}-Specific Benefits
+                 6. Contact Information and Call to Action
+                 
+                 Requirements:
+                 - Use H2 and H3 headings for sections
+                 - Include local landmarks, events, or community initiatives to strengthen local connections
+                 - Write in a conversational and friendly tone, using simple language
+                 - Avoid technical jargon and complex terms; use common everyday words
+                 - Use active voice and positive language
+                 - Optimize for local SEO, including location-specific keywords naturally (avoid keyword stuffing)
+                 - Address the needs and pain points of local customers
+                 - Emphasize the local expertise of the service provider
+                 - Around 600-800 words
+                 - Before finalizing, review the content to ensure it meets all the above guidelines and is free of errors.`;
         break;
       
       case 'blog':
-        prompt = `
-**Task:**
-Write an informative blog post for **${companyInfo.companyName}**, a ${companyInfo.industry} company, about **${companyInfo.serviceName}** services${companyInfo.location ? ` in ${companyInfo.location}` : ''}.
+        prompt = `Write an informative blog post for ${companyInfo.companyName}, a ${companyInfo.industry} company, about ${companyInfo.serviceName} services in ${companyInfo.location}.
+                 
+                 Choose one of the following blog post types that best suits the topic and audience:
 
-**Choose one of the following blog post types that best suits the topic and audience:**
+Listicles:
+Articles presented in a list format, offering a set number of tips, reasons, or examples on a topic.
+Example: "10 Essential Tools Every Homeowner Should Own"
 
-- **Listicles**: Articles in list format offering tips, reasons, or examples.
-- **How-To Guides**: Step-by-step instructions to accomplish a task or solve a problem.
-- **Comparison Posts**: Analyze and compare options, products, or methods.
-- **Case Studies**: In-depth examinations of real-life projects.
-- **Opinion Pieces**: Share personal views or insights on industry trends.
-- **Interviews**: Q&A sessions with experts, providing unique perspectives.
-- **Checklists**: Practical lists to ensure all steps are covered.
-- **Beginner's Guides**: Comprehensive introductions for those new to the subject.
-- **Problem-Solution Posts**: Identify common problems and offer solutions.
-- **Ultimate Guides**: Extensive resources covering all aspects of a topic.
-- **Resource Lists**: Curated lists of tools, suppliers, or tutorials.
-- **Trend Analysis Posts**: Discuss current or upcoming industry trends.
-- **Reviews**: Detailed evaluations of products or services.
+How-To Guides:
+Step-by-step instructions that help readers accomplish a specific task or solve a problem.
+Example: "How to Unclog a Drain Without Calling a Plumber"
 
-**Writing Guidelines:**
-- Structure the content appropriately based on the chosen blog post type.
-- Use H2 and H3 headings for sections.
-- Write in a conversational and friendly tone, using simple language.
-- **Words to Use:** Common everyday words, short and simple words, concrete terms, active verbs, positive language.
-- **Words to Avoid:** Complex or technical terms, unnecessary big words, ambiguous words, figurative language, overly formal language.
-- Keep sentences short and straightforward (15-20 words).
-- Use short paragraphs (2-3 sentences) focusing on a single idea.
-- Incorporate bullet points or numbered lists where appropriate.
-- Include actionable advice and practical tips.
-- Include relevant examples or statistics.
-- Include local context, referencing local landmarks or community aspects where appropriate.
-- Address the needs and pain points of local customers.
-- Emphasize the local expertise of the service provider.
-- Optimize for both local and service-related keywords naturally (avoid keyword stuffing).
-- Aim for 800-1000 words.
-- Before finalizing, review the content to ensure it meets all guidelines and is error-free.
-`;
+Comparison Posts:
+Analyze and compare two or more options, products, or methods to help readers make informed decisions.
+Example: "Vinyl vs. Wood Siding: Which Is Best for Your Home?"
+
+Case Studies:
+In-depth examinations of real-life projects, showcasing successes, challenges, and lessons learned.
+Example: "Case Study: Transforming a Backyard with DIY Landscaping"
+
+Opinion Pieces:
+Articles where the author shares personal views or insights on industry trends, news, or topics.
+Example: "Why Sustainable Building Materials Are the Future of Construction"
+
+Interviews:
+Q&A sessions with experts, tradespeople, or industry leaders, providing unique perspectives and advice.
+Example: "An Interview with a Veteran Carpenter on Custom Home Builds"
+
+Checklists:
+Practical lists that readers can use to ensure they've covered all necessary steps or considerations.
+Example: "The Ultimate Home Maintenance Checklist for Spring"
+
+Beginner's Guides:
+Comprehensive introductions to a topic, designed to educate readers who are new to the subject.
+Example: "A Beginner's Guide to Basic Car Engine Maintenance"
+
+Infographics:
+Visual representations of information or data, often accompanied by brief explanations.
+Example: "Infographic: The Step-by-Step Process of Home Roof Replacement"
+
+Problem-Solution Posts:
+Identify a common problem faced by the audience and offer practical solutions.
+Example: "How to Fix Uneven Lawn Patches in Your Yard"
+
+Ultimate Guides:
+Extensive, detailed resources covering all aspects of a particular topic.
+Example: "The Ultimate Guide to Remodeling Your Kitchen on a Budget"
+
+Resource Lists:
+Curated lists of tools, suppliers, tutorials, or other resources beneficial to the reader.
+Example: "Top 20 DIY YouTube Channels for Home Improvement Enthusiasts"
+
+Trend Analysis Posts:
+Discuss current or upcoming trends in the industry, providing insights and predictions.
+Example: "2024 Trends in Eco-Friendly Home Renovations"
+
+Reviews:
+Detailed evaluations of products, tools, or materials, highlighting features, benefits, and drawbacks.
+Example: "A Comprehensive Review of the Best Cordless Power Drills for DIY Projects"
+
+                 Structure the content appropriately based on the chosen blog post type.
+
+                 Requirements:
+                 - Use H2 and H3 headings for sections
+                 - Write in a conversational and friendly tone, using simple language
+                 - Avoid technical jargon and complex terms; use common everyday words
+                 - Use active voice and positive language
+                 - Include actionable advice and practical tips
+                 - Include relevant examples or statistics
+                 - Include local context, referencing local landmarks or community aspects where appropriate
+                 - Address the needs and pain points of local customers
+                 - Emphasize the local expertise of the service provider
+                 - Optimize for both local and service-related keywords naturally (avoid keyword stuffing)
+                 - Aim for a length of 800-1000 words
+                 - Before finalizing, review the content to ensure it meets all the above guidelines and is free of errors.`;
         break;
       
       default:
@@ -159,7 +240,7 @@ Write an informative blog post for **${companyInfo.companyName}**, a ${companyIn
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
