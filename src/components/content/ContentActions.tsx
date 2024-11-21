@@ -23,8 +23,8 @@ export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProp
     e.stopPropagation();
     try {
       if (contentRef.current) {
-        // Use parseInline for synchronous parsing
-        const htmlContent = marked.parseInline(content);
+        // Use marked.parse with explicit string return type
+        const htmlContent = String(marked.parseInline(content));
         
         // Create a temporary div to hold the HTML content
         const tempDiv = document.createElement('div');
