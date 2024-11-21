@@ -1,7 +1,6 @@
 import { Copy, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { marked } from 'marked';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,53 +23,32 @@ export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProp
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      // Parse markdown to HTML
-      const htmlContent = await marked.parse(content);
-      
-      // Create a temporary div to hold the HTML content
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = htmlContent;
-      
-      // Process the HTML content to create a clean, formatted text version
-      const formattedText = Array.from(tempDiv.childNodes).map(node => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          const element = node as Element;
-          const tag = element.tagName.toLowerCase();
-          const text = element.textContent?.trim() || '';
-          
-          switch (tag) {
-            case 'h1':
-              return `# ${text}\n\n`;
-            case 'h2':
-              return `## ${text}\n\n`;
-            case 'h3':
-              return `### ${text}\n\n`;
-            case 'p':
-              return `${text}\n\n`;
-            case 'ul':
-              return Array.from(element.children)
-                .map(li => {
-                  const listText = li.textContent?.trim() || '';
-                  return `- ${listText}\n`;
-                })
-                .join('') + '\n';
-            default:
-              return `${text}\n\n`;
+      // Process markdown content directly
+      const formattedText = content
+        .split('\n')
+        .map(line => {
+          // Handle headings
+          if (line.startsWith('# ')) {
+            return line.replace('# ', '') + '\n\n';
           }
-        }
-        return '';
-      }).join('');
+          if (line.startsWith('## ')) {
+            return line.replace('## ', '') + '\n\n';
+          }
+          // Handle bullet points
+          if (line.startsWith('- ')) {
+            return line + '\n';
+          }
+          // Handle regular paragraphs
+          return line ? line + '\n\n' : '\n';
+        })
+        .join('')
+        .trim();
 
-      await navigator.clipboard.writeText(formattedText.trim());
+      await navigator.clipboard.writeText(formattedText);
       toast.success("Content copied to clipboard");
     } catch (error) {
       toast.error("Failed to copy content");
     }
-  };
-
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onEdit(content);
   };
 
   return (
@@ -87,7 +65,10 @@ export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProp
         variant="ghost"
         size="sm"
         className="text-neutral-500 hover:text-secondary hover:bg-secondary/10"
-        onClick={handleEdit}
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit(content);
+        }}
       >
         <Pencil className="h-4 w-4" />
       </Button>
