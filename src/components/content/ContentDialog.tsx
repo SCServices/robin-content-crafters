@@ -42,13 +42,21 @@ export const ContentDialog = ({
         
         // Convert HTML to plain text while preserving formatting
         const formattedText = Array.from(tempDiv.children).map(element => {
-          // Handle headings
-          if (element.tagName.startsWith('H')) {
-            return `${element.textContent}\n`;
-          }
-          // Handle paragraphs
-          if (element.tagName === 'P') {
+          // Handle headings with proper sizing
+          if (element.tagName === 'H1') {
             return `${element.textContent}\n\n`;
+          }
+          if (element.tagName === 'H2') {
+            return `${element.textContent}\n\n`;
+          }
+          // Handle paragraphs with double spacing
+          if (element.tagName === 'P') {
+            let text = element.textContent || '';
+            // Handle bold text
+            element.querySelectorAll('strong').forEach(strong => {
+              text = text.replace(strong.textContent || '', `${strong.textContent}`);
+            });
+            return `${text}\n\n`;
           }
           // Handle lists
           if (element.tagName === 'UL') {
@@ -56,7 +64,7 @@ export const ContentDialog = ({
               .map(li => `• ${li.textContent}\n`)
               .join('') + '\n';
           }
-          return element.textContent;
+          return element.textContent + '\n\n';
         }).join('');
 
         await navigator.clipboard.writeText(formattedText.trim());
