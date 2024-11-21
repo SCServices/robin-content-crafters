@@ -25,13 +25,13 @@ export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProp
         const formattedText = Array.from(tempDiv.children).map(element => {
           // Handle headings with proper sizing and weight
           if (element.tagName === 'H1') {
-            return `${element.textContent}\n\n`;
+            return `# ${element.textContent}\n\n`;
           }
           if (element.tagName === 'H2') {
-            return `${element.textContent}\n\n`;
+            return `## ${element.textContent}\n\n`;
           }
           if (element.tagName === 'H3') {
-            return `${element.textContent}\n\n`;
+            return `### ${element.textContent}\n\n`;
           }
           // Handle paragraphs with 14px normal weight
           if (element.tagName === 'P') {
@@ -47,9 +47,9 @@ export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProp
                 if (colonIndex !== -1) {
                   const header = text.substring(0, colonIndex + 1);
                   const content = text.substring(colonIndex + 1);
-                  return `• ${header}${content}\n`;
+                  return `- **${header}**${content}\n`;
                 }
-                return `• ${text}\n`;
+                return `- ${text}\n`;
               })
               .join('') + '\n';
           }
