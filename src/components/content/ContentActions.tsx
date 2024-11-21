@@ -17,8 +17,31 @@ export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProp
     e.stopPropagation();
     try {
       if (contentRef.current) {
-        const formattedText = contentRef.current.innerText;
-        await navigator.clipboard.writeText(formattedText);
+        // Get the HTML content and clean it
+        const htmlContent = contentRef.current.innerHTML;
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        
+        // Convert HTML to plain text while preserving formatting
+        const formattedText = Array.from(tempDiv.children).map(element => {
+          // Handle headings
+          if (element.tagName.startsWith('H')) {
+            return `${element.textContent}\n`;
+          }
+          // Handle paragraphs
+          if (element.tagName === 'P') {
+            return `${element.textContent}\n\n`;
+          }
+          // Handle lists
+          if (element.tagName === 'UL') {
+            return Array.from(element.children)
+              .map(li => `• ${li.textContent}\n`)
+              .join('') + '\n';
+          }
+          return element.textContent;
+        }).join('');
+
+        await navigator.clipboard.writeText(formattedText.trim());
         toast.success("Content copied to clipboard");
       }
     } catch (error) {
