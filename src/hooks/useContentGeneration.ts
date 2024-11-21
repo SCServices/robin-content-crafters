@@ -136,7 +136,7 @@ export const useContentGeneration = (): ContentGenerationProgress & {
           },
         });
         completedItems++;
-        updateProgress(completedItems, totalItems, setProgress, progressToast);
+        updateProgress(completedItems, totalItems, setProgress, progressToast.toString());
 
         // Generate location pages and blog posts
         for (const location of locationsData) {
@@ -157,7 +157,7 @@ export const useContentGeneration = (): ContentGenerationProgress & {
             },
           });
           completedItems++;
-          updateProgress(completedItems, totalItems, setProgress, progressToast);
+          updateProgress(completedItems, totalItems, setProgress, progressToast.toString());
 
           // Generate 5 blog posts
           for (let i = 0; i < 5; i++) {
@@ -171,7 +171,7 @@ export const useContentGeneration = (): ContentGenerationProgress & {
               },
             });
             completedItems++;
-            updateProgress(completedItems, totalItems, setProgress, progressToast);
+            updateProgress(completedItems, totalItems, setProgress, progressToast.toString());
           }
         }
       }
