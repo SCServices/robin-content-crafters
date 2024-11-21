@@ -23,8 +23,8 @@ export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProp
     e.stopPropagation();
     try {
       if (contentRef.current) {
-        // First convert markdown to HTML using marked
-        const htmlContent = marked.parse(content);
+        // Use parseInline for synchronous parsing
+        const htmlContent = marked.parseInline(content);
         
         // Create a temporary div to hold the HTML content
         const tempDiv = document.createElement('div');
