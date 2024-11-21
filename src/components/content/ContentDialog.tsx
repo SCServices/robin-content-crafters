@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { Check, X, Copy, Pencil, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { useRef } from "react";
+import { ContentEditor } from "./ContentEditor";
 
 interface ContentDialogProps {
   selectedContent: any;
@@ -39,9 +39,7 @@ export const ContentDialog = ({
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = htmlContent;
         
-        // Convert HTML to plain text while preserving formatting
         const formattedText = Array.from(tempDiv.children).map(element => {
-          // Handle headings with proper sizing and weight
           if (element.tagName === 'H1') {
             return `# ${element.textContent}\n\n`;
           }
@@ -51,12 +49,10 @@ export const ContentDialog = ({
           if (element.tagName === 'H3') {
             return `### ${element.textContent}\n\n`;
           }
-          // Handle paragraphs with 14px normal weight
           if (element.tagName === 'P') {
             let text = element.textContent || '';
             return `${text}\n\n`;
           }
-          // Handle lists with bold headers before colons
           if (element.tagName === 'UL') {
             return Array.from(element.children)
               .map(li => {
@@ -93,10 +89,9 @@ export const ContentDialog = ({
         <div className="mt-4">
           {selectedContent?.content ? (
             isEditing ? (
-              <Textarea
-                value={editedContent}
-                onChange={(e) => setEditedContent(e.target.value)}
-                className="min-h-[400px] font-mono text-sm"
+              <ContentEditor
+                content={editedContent}
+                onChange={setEditedContent}
               />
             ) : (
               <>
