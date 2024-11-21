@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Check, X, Copy, Pencil, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
+import { useRef } from "react";
 
 interface ContentDialogProps {
   selectedContent: any;
@@ -28,11 +29,16 @@ export const ContentDialog = ({
   onDelete,
   setEditedContent,
 }: ContentDialogProps) => {
-  const handleCopy = async (content: string, e: React.MouseEvent) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      await navigator.clipboard.writeText(content);
-      toast.success("Content copied to clipboard");
+      if (contentRef.current) {
+        const formattedText = contentRef.current.innerText;
+        await navigator.clipboard.writeText(formattedText);
+        toast.success("Content copied to clipboard");
+      }
     } catch (error) {
       toast.error("Failed to copy content");
     }
@@ -55,9 +61,11 @@ export const ContentDialog = ({
                 className="min-h-[400px] font-mono text-sm"
               />
             ) : (
-              <article className="prose prose-lg prose-primary max-w-none">
-                <ReactMarkdown>{selectedContent.content}</ReactMarkdown>
-              </article>
+              <>
+                <div ref={contentRef} className="prose prose-lg prose-primary max-w-none">
+                  <ReactMarkdown>{selectedContent.content}</ReactMarkdown>
+                </div>
+              </>
             )
           ) : (
             <p className="text-neutral-500 italic text-center py-8">
@@ -90,7 +98,7 @@ export const ContentDialog = ({
               <>
                 <Button
                   variant="outline"
-                  onClick={(e) => handleCopy(selectedContent.content, e)}
+                  onClick={handleCopy}
                   className="text-primary hover:bg-primary/10"
                 >
                   <Copy className="h-4 w-4 mr-2" />
