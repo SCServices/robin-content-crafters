@@ -2,9 +2,13 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { BusinessInfo } from "@/lib/types";
-import { serviceTitleTemplates, locationTitleTemplates, blogTitleTemplates, getRandomTemplate } from "@/lib/titleTemplates";
+import { createContentEntries } from "@/lib/contentGeneration/contentEntries";
+import { calculateTotalItems, updateProgress } from "@/lib/contentGeneration/progressUtils";
+import type { ContentGenerationProgress, ContentGenerationResult, CompanyInfo } from "@/lib/contentGeneration/types";
 
-export const useContentGeneration = () => {
+export const useContentGeneration = (): ContentGenerationProgress & {
+  createCompanyAndContent: (businessInfo: BusinessInfo) => Promise<ContentGenerationResult>;
+} => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -17,19 +21,18 @@ export const useContentGeneration = () => {
     });
 
     try {
-      let companyData;
-      
+      // Check existing company
       toast.loading('Checking existing company data...', { id: progressToast });
-      // Check if company already exists by name
       const { data: existingCompany } = await supabase
         .from("companies")
         .select("*")
         .eq("name", businessInfo.companyName)
         .limit(1);
 
+      // Handle company creation/update
+      let companyData;
       if (existingCompany && existingCompany.length > 0) {
         toast.loading('Updating existing company information...', { id: progressToast });
-        // Update existing company
         const { data: updatedCompany, error: updateError } = await supabase
           .from("companies")
           .update({
@@ -43,12 +46,11 @@ export const useContentGeneration = () => {
         if (updateError) throw updateError;
         companyData = updatedCompany;
 
-        // Delete existing services and locations
+        // Delete existing data
         await supabase.from("services").delete().eq("company_id", companyData.id);
         await supabase.from("service_locations").delete().eq("company_id", companyData.id);
       } else {
         toast.loading('Creating new company profile...', { id: progressToast });
-        // Insert new company
         const { data: newCompany, error: companyError } = await supabase
           .from("companies")
           .insert({
@@ -64,8 +66,9 @@ export const useContentGeneration = () => {
       }
 
       setProgress(20);
+
+      // Insert services and locations
       toast.loading('Setting up service information...', { id: progressToast });
-      // Insert services
       const { data: servicesData, error: servicesError } = await supabase
         .from("services")
         .insert(
@@ -80,7 +83,6 @@ export const useContentGeneration = () => {
 
       setProgress(40);
       toast.loading('Adding location data...', { id: progressToast });
-      // Insert locations
       const { data: locationsData, error: locationsError } = await supabase
         .from("service_locations")
         .insert(
@@ -95,49 +97,9 @@ export const useContentGeneration = () => {
 
       setProgress(60);
       toast.loading('Preparing content structure...', { id: progressToast });
-      // Create content entries for each combination
-      const contentEntries = [];
-
-      // Service pages
-      for (const service of servicesData) {
-        if (!service?.id) continue;
-        contentEntries.push({
-          company_id: companyData.id,
-          service_id: service.id,
-          title: getRandomTemplate(serviceTitleTemplates, { service: service.name }),
-          type: "service",
-        });
-      }
-
-      // Location pages and blog posts
-      for (const service of servicesData) {
-        if (!service?.id) continue;
-        for (const location of locationsData) {
-          if (!location?.id) continue;
-          contentEntries.push({
-            company_id: companyData.id,
-            service_id: service.id,
-            location_id: location.id,
-            title: getRandomTemplate(locationTitleTemplates, { 
-              service: service.name,
-              location: location.location 
-            }),
-            type: "location",
-          });
-
-          // Blog posts for each location page
-          contentEntries.push({
-            company_id: companyData.id,
-            service_id: service.id,
-            location_id: location.id,
-            title: getRandomTemplate(blogTitleTemplates, {
-              service: service.name,
-              location: location.location
-            }),
-            type: "blog",
-          });
-        }
-      }
+      
+      // Create content entries including 5 blog posts per service/location
+      const contentEntries = createContentEntries(companyData.id, servicesData, locationsData);
 
       setProgress(80);
       // Insert all content entries
@@ -151,19 +113,20 @@ export const useContentGeneration = () => {
 
       // Start content generation process
       toast.loading('Starting AI content generation...', { id: progressToast });
-      const totalItems = servicesData.length * (1 + locationsData.length * 2); // Services + (Locations + Blogs) per service
+      const totalItems = calculateTotalItems(servicesData.length, locationsData.length);
       let completedItems = 0;
 
+      // Generate content for each entry
       for (const service of servicesData) {
         if (!service?.id) continue;
-        const companyInfo = {
+        const companyInfo: CompanyInfo = {
           companyName: businessInfo.companyName,
           industry: businessInfo.industry,
           serviceName: service.name,
           companyId: companyData.id,
         };
 
-        // Generate service page with correct model name
+        // Generate service page
         await supabase.functions.invoke("generate-content", {
           body: {
             contentType: "service",
@@ -173,8 +136,7 @@ export const useContentGeneration = () => {
           },
         });
         completedItems++;
-        setProgress(80 + (completedItems / totalItems) * 20);
-        toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
+        updateProgress(completedItems, totalItems, setProgress, progressToast);
 
         // Generate location pages and blog posts
         for (const location of locationsData) {
@@ -184,7 +146,7 @@ export const useContentGeneration = () => {
             location: location.location,
           };
 
-          // Generate location page with correct model name
+          // Generate location page
           await supabase.functions.invoke("generate-content", {
             body: {
               contentType: "location",
@@ -195,22 +157,22 @@ export const useContentGeneration = () => {
             },
           });
           completedItems++;
-          setProgress(80 + (completedItems / totalItems) * 20);
-          toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
+          updateProgress(completedItems, totalItems, setProgress, progressToast);
 
-          // Generate blog posts with correct model name
-          await supabase.functions.invoke("generate-content", {
-            body: {
-              contentType: "blog",
-              companyInfo: locationInfo,
-              serviceId: service.id,
-              locationId: location.id,
-              model: "gpt-4o mini"
-            },
-          });
-          completedItems++;
-          setProgress(80 + (completedItems / totalItems) * 20);
-          toast.loading(`Generating content: ${Math.round((completedItems / totalItems) * 100)}% complete...`, { id: progressToast });
+          // Generate 5 blog posts
+          for (let i = 0; i < 5; i++) {
+            await supabase.functions.invoke("generate-content", {
+              body: {
+                contentType: "blog",
+                companyInfo: locationInfo,
+                serviceId: service.id,
+                locationId: location.id,
+                model: "gpt-4o mini"
+              },
+            });
+            completedItems++;
+            updateProgress(completedItems, totalItems, setProgress, progressToast);
+          }
         }
       }
 
