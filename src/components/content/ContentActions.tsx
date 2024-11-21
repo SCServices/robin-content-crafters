@@ -3,6 +3,8 @@ import { Copy, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { useRef } from "react";
+import { marked } from 'marked';
+import TurndownService from 'turndown';
 
 interface ContentActionsProps {
   content: string;
@@ -12,48 +14,51 @@ interface ContentActionsProps {
 
 export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
+  const turndownService = new TurndownService({
+    headingStyle: 'atx',
+    codeBlockStyle: 'fenced'
+  });
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
       if (contentRef.current) {
-        const htmlContent = contentRef.current.innerHTML;
+        // First convert markdown to HTML using marked
+        const htmlContent = marked.parse(content);
+        
+        // Create a temporary div to hold the HTML content
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = htmlContent;
         
-        // Convert HTML to plain text while preserving formatting
+        // Process the HTML content to create a clean, formatted text version
         const formattedText = Array.from(tempDiv.children).map(element => {
-          // Handle headings with proper sizing and weight
-          if (element.tagName === 'H1') {
-            return `# ${element.textContent}\n\n`;
+          const tag = element.tagName.toLowerCase();
+          const text = element.textContent?.trim() || '';
+          
+          switch (tag) {
+            case 'h1':
+              return `# ${text}\n\n`;
+            case 'h2':
+              return `## ${text}\n\n`;
+            case 'h3':
+              return `### ${text}\n\n`;
+            case 'p':
+              return `${text}\n\n`;
+            case 'ul':
+              return Array.from(element.children)
+                .map(li => {
+                  const listText = li.textContent?.trim() || '';
+                  // Check if the list item contains a bold section (for headers)
+                  const boldMatch = listText.match(/^([^:]+):(.*)/);
+                  if (boldMatch) {
+                    return `- **${boldMatch[1].trim()}:**${boldMatch[2].trim()}\n`;
+                  }
+                  return `- ${listText}\n`;
+                })
+                .join('') + '\n';
+            default:
+              return `${text}\n\n`;
           }
-          if (element.tagName === 'H2') {
-            return `## ${element.textContent}\n\n`;
-          }
-          if (element.tagName === 'H3') {
-            return `### ${element.textContent}\n\n`;
-          }
-          // Handle paragraphs with 14px normal weight
-          if (element.tagName === 'P') {
-            let text = element.textContent || '';
-            return `${text}\n\n`;
-          }
-          // Handle lists with bold headers before colons
-          if (element.tagName === 'UL') {
-            return Array.from(element.children)
-              .map(li => {
-                const text = li.textContent || '';
-                const colonIndex = text.indexOf(':');
-                if (colonIndex !== -1) {
-                  const header = text.substring(0, colonIndex + 1);
-                  const content = text.substring(colonIndex + 1);
-                  return `- **${header}**${content}\n`;
-                }
-                return `- ${text}\n`;
-              })
-              .join('') + '\n';
-          }
-          return element.textContent + '\n\n';
         }).join('');
 
         await navigator.clipboard.writeText(formattedText.trim());
