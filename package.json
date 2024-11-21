@@ -54,6 +54,7 @@
     "embla-carousel-react": "^8.3.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.451.0",
+    "marked": "^15.0.2",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -66,6 +67,7 @@
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
+    "turndown": "^7.2.0",
     "vaul": "^0.9.3",
     "zod": "^3.23.8"
   },
