@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, MapPin, Briefcase, NewspaperIcon } from "lucide-react";
 import { ContentActions } from "./ContentActions";
+import ReactMarkdown from "react-markdown";
 
 interface ContentItemProps {
   item: any;
@@ -61,9 +62,16 @@ export const ContentItem = ({ item, onSelect, onEdit, onDelete }: ContentItemPro
           />
           <ContentActions
             content={item.content}
+            contentId={item.id}
             onEdit={onEdit}
             onDelete={onDelete}
           />
+        </div>
+      </div>
+      {/* Hidden rendered content for copying */}
+      <div className="hidden">
+        <div data-content-id={item.id}>
+          <ReactMarkdown>{item.content}</ReactMarkdown>
         </div>
       </div>
     </Card>

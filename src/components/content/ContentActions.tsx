@@ -15,36 +15,25 @@ import {
 
 interface ContentActionsProps {
   content: string;
+  contentId: string;
   onEdit: (content: string) => void;
   onDelete: (e: React.MouseEvent) => void;
 }
 
-export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProps) => {
+export const ContentActions = ({ content, contentId, onEdit, onDelete }: ContentActionsProps) => {
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      // Process markdown content directly
-      const formattedText = content
-        .split('\n')
-        .map(line => {
-          // Handle headings
-          if (line.startsWith('# ')) {
-            return line.replace('# ', '') + '\n\n';
-          }
-          if (line.startsWith('## ')) {
-            return line.replace('## ', '') + '\n\n';
-          }
-          // Handle bullet points
-          if (line.startsWith('- ')) {
-            return line + '\n';
-          }
-          // Handle regular paragraphs
-          return line ? line + '\n\n' : '\n';
-        })
-        .join('')
-        .trim();
+      // Find the rendered content element using the content ID
+      const contentElement = document.querySelector(`[data-content-id="${contentId}"]`);
+      if (!contentElement) {
+        throw new Error("Content element not found");
+      }
 
-      await navigator.clipboard.writeText(formattedText);
+      // Get the text content as it appears in the UI
+      const textContent = contentElement.textContent || "";
+      
+      await navigator.clipboard.writeText(textContent.trim());
       toast.success("Content copied to clipboard");
     } catch (error) {
       toast.error("Failed to copy content");

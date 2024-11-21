@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Check, X } from "lucide-react";
+import { Check, X, Copy } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { ContentEditor } from "./ContentEditor";
+import { toast } from "sonner";
 
 interface ContentDialogProps {
   selectedContent: any;
@@ -26,6 +27,21 @@ export const ContentDialog = ({
   onCancelEdit,
   setEditedContent,
 }: ContentDialogProps) => {
+  const handleCopy = async () => {
+    try {
+      const contentElement = document.querySelector(`[data-dialog-content-id="${selectedContent?.id}"]`);
+      if (!contentElement) {
+        throw new Error("Content element not found");
+      }
+
+      const textContent = contentElement.textContent || "";
+      await navigator.clipboard.writeText(textContent.trim());
+      toast.success("Content copied to clipboard");
+    } catch (error) {
+      toast.error("Failed to copy content");
+    }
+  };
+
   return (
     <Dialog open={!!selectedContent} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -42,7 +58,7 @@ export const ContentDialog = ({
                 onChange={setEditedContent}
               />
             ) : (
-              <article className="prose prose-lg prose-primary max-w-none">
+              <article className="prose prose-lg prose-primary max-w-none" data-dialog-content-id={selectedContent?.id}>
                 <ReactMarkdown>{selectedContent.content}</ReactMarkdown>
               </article>
             )
@@ -74,13 +90,23 @@ export const ContentDialog = ({
                 </Button>
               </>
             ) : (
-              <Button
-                variant="outline"
-                onClick={() => onEdit(selectedContent.content)}
-                className="text-secondary hover:bg-secondary/10"
-              >
-                Edit
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => onEdit(selectedContent.content)}
+                  className="text-secondary hover:bg-secondary/10"
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCopy}
+                  className="text-primary hover:bg-primary/10"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy
+                </Button>
+              </>
             )}
           </div>
           <Button variant="outline" onClick={onClose}>
