@@ -9,9 +9,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { FileText, MapPin, Briefcase, NewspaperIcon } from "lucide-react";
+import { FileText, MapPin, Briefcase, NewspaperIcon, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ContentListProps {
   items: any[];
@@ -20,6 +23,7 @@ interface ContentListProps {
 const ContentList = ({ items }: ContentListProps) => {
   const [selectedContent, setSelectedContent] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const queryClient = useQueryClient();
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -47,6 +51,25 @@ const ContentList = ({ items }: ContentListProps) => {
     }
   };
 
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the content dialog
+    try {
+      const { error } = await supabase
+        .from("generated_content")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      // Invalidate and refetch the content query
+      await queryClient.invalidateQueries({ queryKey: ["content"] });
+      toast.success("Content deleted successfully");
+    } catch (error) {
+      console.error("Error deleting content:", error);
+      toast.error("Failed to delete content");
+    }
+  };
+
   const filteredItems = activeTab === "all" 
     ? items 
     : items.filter(item => item.type === activeTab);
@@ -66,7 +89,7 @@ const ContentList = ({ items }: ContentListProps) => {
         {filteredItems.map((item) => (
           <Card
             key={item.id}
-            className="p-4 hover:shadow-md transition-all duration-200 cursor-pointer border-l-4 hover:border-l-primary animate-fade-in"
+            className="p-4 hover:shadow-md transition-all duration-200 cursor-pointer border-l-4 hover:border-l-primary animate-fade-in group"
             onClick={() => setSelectedContent(item)}
           >
             <div className="flex items-center justify-between">
@@ -86,6 +109,14 @@ const ContentList = ({ items }: ContentListProps) => {
                 <div
                   className={`h-2 w-2 rounded-full ${getStatusColor(item.status)}`}
                 />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => handleDelete(item.id, e)}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive hover:text-destructive/80" />
+                </Button>
               </div>
             </div>
           </Card>
@@ -111,6 +142,15 @@ const ContentList = ({ items }: ContentListProps) => {
             )}
           </div>
           <DialogFooter className="mt-6">
+            <Button 
+              variant="destructive" 
+              onClick={(e) => {
+                handleDelete(selectedContent.id, e);
+                setSelectedContent(null);
+              }}
+            >
+              Delete
+            </Button>
             <Button variant="outline" onClick={() => setSelectedContent(null)}>
               Close
             </Button>
