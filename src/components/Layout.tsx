@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Building2, FileText, History, BarChart, Share2, Cable, Settings, User } from "lucide-react";
+import { LayoutDashboard, Building2, FileText } from "lucide-react";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -8,12 +8,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { icon: Building2, label: "Companies", path: "/companies" },
     { icon: FileText, label: "Saved Content", path: "/content" },
-    { icon: History, label: "History", path: "/history" },
-    { icon: BarChart, label: "Reporting", path: "/reporting" },
-    { icon: Share2, label: "Backlink Outreach", path: "/backlinks" },
-    { icon: Cable, label: "Integrations", path: "/integrations" },
-    { icon: Settings, label: "Settings", path: "/settings" },
-    { icon: User, label: "Account", path: "/account" },
   ];
 
   return (
