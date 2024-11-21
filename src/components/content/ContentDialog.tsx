@@ -36,42 +36,41 @@ export const ContentDialog = ({
     e.stopPropagation();
     try {
       if (contentRef.current) {
-        // Use marked.parse with explicit string return type
-        const htmlContent = String(marked.parseInline(selectedContent.content));
+        // Parse markdown to HTML
+        const htmlContent = marked.parse(selectedContent.content);
         
         // Create a temporary div to hold the HTML content
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = htmlContent;
         
         // Process the HTML content to create a clean, formatted text version
-        const formattedText = Array.from(tempDiv.children).map(element => {
-          const tag = element.tagName.toLowerCase();
-          const text = element.textContent?.trim() || '';
-          
-          switch (tag) {
-            case 'h1':
-              return `# ${text}\n\n`;
-            case 'h2':
-              return `## ${text}\n\n`;
-            case 'h3':
-              return `### ${text}\n\n`;
-            case 'p':
-              return `${text}\n\n`;
-            case 'ul':
-              return Array.from(element.children)
-                .map(li => {
-                  const listText = li.textContent?.trim() || '';
-                  // Check if the list item contains a bold section (for headers)
-                  const boldMatch = listText.match(/^([^:]+):(.*)/);
-                  if (boldMatch) {
-                    return `- **${boldMatch[1].trim()}:**${boldMatch[2].trim()}\n`;
-                  }
-                  return `- ${listText}\n`;
-                })
-                .join('') + '\n';
-            default:
-              return `${text}\n\n`;
+        const formattedText = Array.from(tempDiv.childNodes).map(node => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as Element;
+            const tag = element.tagName.toLowerCase();
+            const text = element.textContent?.trim() || '';
+            
+            switch (tag) {
+              case 'h1':
+                return `# ${text}\n\n`;
+              case 'h2':
+                return `## ${text}\n\n`;
+              case 'h3':
+                return `### ${text}\n\n`;
+              case 'p':
+                return `${text}\n\n`;
+              case 'ul':
+                return Array.from(element.children)
+                  .map(li => {
+                    const listText = li.textContent?.trim() || '';
+                    return `- ${listText}\n`;
+                  })
+                  .join('') + '\n';
+              default:
+                return `${text}\n\n`;
+            }
           }
+          return '';
         }).join('');
 
         await navigator.clipboard.writeText(formattedText.trim());
