@@ -19,112 +19,119 @@ export default {
     },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "#9b87f5",
-          light: "#e5deff",
-          dark: "#7E69AB",
-        },
-        secondary: {
-          DEFAULT: "#F97316",
-          light: "#FFDEE2",
-        },
-        success: {
-          DEFAULT: "#10B981",
-          light: "#D1FAE5",
-        },
-        neutral: {
-          50: "#F9FAFB",
-          100: "#F3F4F6",
-          200: "#E5E7EB",
-          300: "#D1D5DB",
-          400: "#9CA3AF",
-          500: "#6B7280",
-          600: "#4B5563",
-          700: "#374151",
-          800: "#1F2937",
-          900: "#111827",
-        },
-      },
-      typography: {
-        DEFAULT: {
-          css: {
-            maxWidth: '100%',
-            color: '#374151',
-            fontSize: '14px',
-            h1: {
-              color: '#9b87f5',
-              marginTop: '2rem',
-              marginBottom: '1rem',
-              fontSize: '36px',
-              fontWeight: '700',
-            },
-            h2: {
-              color: '#9b87f5',
-              marginTop: '1.5rem',
-              marginBottom: '0.75rem',
-              fontSize: '24px',
-              fontWeight: '700',
-            },
-            h3: {
-              color: '#9b87f5',
-              marginTop: '1.25rem',
-              marginBottom: '0.5rem',
-              fontSize: '18px',
-              fontWeight: '700',
-            },
-            p: {
-              marginTop: '1rem',
-              marginBottom: '1rem',
-              fontSize: '14px',
-              fontWeight: '400',
-            },
-            ul: {
-              marginTop: '1rem',
-              marginBottom: '1rem',
-              'li': {
-                marginTop: '0.5rem',
-                marginBottom: '0.5rem',
-                fontSize: '14px',
-                fontWeight: '400',
-                strong: {
-                  fontWeight: '700',
-                },
-              },
-            },
-            a: {
-              color: '#9b87f5',
-              '&:hover': {
-                color: '#7E69AB',
-              },
-            },
-          },
-        },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-      keyframes: {
-        "fade-in": {
-          "0%": { opacity: "0", transform: "translateY(10px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
-        "slide-in": {
-          "0%": { transform: "translateX(100%)" },
-          "100%": { transform: "translateX(0)" },
-        },
-      },
-      animation: {
-        "fade-in": "fade-in 0.5s ease-out",
-        "slide-in": "slide-in 0.5s ease-out",
-      },
-    },
-  },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
-} satisfies Config;
+        border: "h
+
+Let me check the codebase for all instances of copy functionality. I can see that there are two components that handle copying:
+
+1. `src/components/content/ContentActions.tsx` (hover buttons in content list)
+2. `src/components/content/ContentDialog.tsx` (copy button in preview modal)
+
+Let's implement the text formatting requirements consistently across both components:
+
+<lov-code>
+First, let's update ContentActions.tsx:
+
+<lov-write file_path="src/components/content/ContentActions.tsx">
+import { Button } from "@/components/ui/button";
+import { Copy, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
+import { useRef } from "react";
+
+interface ContentActionsProps {
+  content: string;
+  onEdit: (content: string) => void;
+  onDelete: (e: React.MouseEvent) => void;
+}
+
+export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProps) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      if (contentRef.current) {
+        const htmlContent = contentRef.current.innerHTML;
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        
+        const formattedText = Array.from(tempDiv.children).map(element => {
+          // Handle headings with proper sizing
+          if (element.tagName === 'H1') {
+            return `${element.textContent}\n\n`;
+          }
+          if (element.tagName === 'H2') {
+            return `${element.textContent}\n\n`;
+          }
+          if (element.tagName === 'H3') {
+            return `${element.textContent}\n\n`;
+          }
+          // Handle paragraphs
+          if (element.tagName === 'P') {
+            let text = element.textContent || '';
+            return `${text}\n\n`;
+          }
+          // Handle lists with bold headers before colons
+          if (element.tagName === 'UL') {
+            return Array.from(element.children)
+              .map(li => {
+                const text = li.textContent || '';
+                const colonIndex = text.indexOf(':');
+                if (colonIndex !== -1) {
+                  const header = text.substring(0, colonIndex + 1);
+                  const content = text.substring(colonIndex + 1);
+                  return `• ${header}${content}\n`;
+                }
+                return `• ${text}\n`;
+              })
+              .join('') + '\n';
+          }
+          return element.textContent + '\n\n';
+        }).join('');
+
+        await navigator.clipboard.writeText(formattedText.trim());
+        toast.success("Content copied to clipboard");
+      }
+    } catch (error) {
+      console.error("Copy error:", error);
+      toast.error("Failed to copy content");
+    }
+  };
+
+  return (
+    <>
+      <div ref={contentRef} className="hidden prose prose-lg prose-primary max-w-none">
+        <ReactMarkdown>{content}</ReactMarkdown>
+      </div>
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hover:bg-primary/10"
+          onClick={handleCopy}
+        >
+          <Copy className="h-4 w-4 text-primary hover:text-primary-dark" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hover:bg-secondary/10"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(content);
+          }}
+        >
+          <Pencil className="h-4 w-4 text-secondary hover:text-secondary-dark" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hover:bg-destructive/10"
+          onClick={onDelete}
+        >
+          <Trash2 className="h-4 w-4 text-destructive hover:text-destructive/80" />
+        </Button>
+      </div>
+    </>
+  );
+};

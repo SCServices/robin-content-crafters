@@ -35,7 +35,7 @@ export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProp
           }
           // Handle paragraphs
           if (element.tagName === 'P') {
-            let text = element.textContent || '';
+            const text = element.textContent || '';
             return `${text}\n\n`;
           }
           // Handle lists with bold headers before colons
@@ -67,7 +67,7 @@ export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProp
 
   return (
     <>
-      <div ref={contentRef} className="hidden">
+      <div ref={contentRef} className="hidden prose prose-lg prose-primary max-w-none">
         <ReactMarkdown>{content}</ReactMarkdown>
       </div>
       <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
