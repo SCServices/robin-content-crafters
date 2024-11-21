@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Copy, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 
 interface ContentActionsProps {
   content: string;
@@ -12,9 +13,26 @@ export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProp
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      await navigator.clipboard.writeText(content);
+      // Create a temporary div to render and extract formatted text
+      const tempDiv = document.createElement('div');
+      const reactMarkdownElement = <ReactMarkdown>{content}</ReactMarkdown>;
+      
+      // Render the markdown content to the temporary div
+      const root = document.createElement('div');
+      require('react-dom').render(reactMarkdownElement, root);
+      tempDiv.appendChild(root);
+      
+      // Get the formatted text content
+      const formattedText = root.textContent || root.innerText || "";
+      
+      // Clean up
+      require('react-dom').unmountComponentAtNode(root);
+      
+      // Copy the formatted text
+      await navigator.clipboard.writeText(formattedText);
       toast.success("Content copied to clipboard");
     } catch (error) {
+      console.error("Copy error:", error);
       toast.error("Failed to copy content");
     }
   };
