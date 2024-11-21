@@ -25,7 +25,7 @@ export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProp
     e.stopPropagation();
     try {
       // Parse markdown to HTML
-      const htmlContent = marked.parse(content);
+      const htmlContent = await marked.parse(content);
       
       // Create a temporary div to hold the HTML content
       const tempDiv = document.createElement('div');

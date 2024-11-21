@@ -37,7 +37,7 @@ export const ContentDialog = ({
     try {
       if (contentRef.current) {
         // Parse markdown to HTML
-        const htmlContent = marked.parse(selectedContent.content);
+        const htmlContent = await marked.parse(selectedContent.content);
         
         // Create a temporary div to hold the HTML content
         const tempDiv = document.createElement('div');
