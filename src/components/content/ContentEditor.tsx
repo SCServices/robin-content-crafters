@@ -65,10 +65,10 @@ export const ContentEditor = ({ content, onChange }: ContentEditorProps) => {
 
   const setLink = () => {
     if (url === '') {
-      editor?.chain().focus().extendMarkRange('link').unsetLink().run();
+      editor?.chain().focus().unsetLink().run();
       return;
     }
-    editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    editor?.chain().focus().setLink({ href: url }).run();
     setUrl('');
   };
 
