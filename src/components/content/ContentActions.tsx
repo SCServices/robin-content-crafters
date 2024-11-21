@@ -17,7 +17,6 @@ export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProp
     e.stopPropagation();
     try {
       if (contentRef.current) {
-        // Get the HTML content and clean it
         const htmlContent = contentRef.current.innerHTML;
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = htmlContent;
@@ -31,19 +30,27 @@ export const ContentActions = ({ content, onEdit, onDelete }: ContentActionsProp
           if (element.tagName === 'H2') {
             return `${element.textContent}\n\n`;
           }
-          // Handle paragraphs with double spacing
+          if (element.tagName === 'H3') {
+            return `${element.textContent}\n\n`;
+          }
+          // Handle paragraphs
           if (element.tagName === 'P') {
             let text = element.textContent || '';
-            // Handle bold text
-            element.querySelectorAll('strong').forEach(strong => {
-              text = text.replace(strong.textContent || '', `${strong.textContent}`);
-            });
             return `${text}\n\n`;
           }
-          // Handle lists
+          // Handle lists with bold headers before colons
           if (element.tagName === 'UL') {
             return Array.from(element.children)
-              .map(li => `• ${li.textContent}\n`)
+              .map(li => {
+                const text = li.textContent || '';
+                const colonIndex = text.indexOf(':');
+                if (colonIndex !== -1) {
+                  const header = text.substring(0, colonIndex + 1);
+                  const content = text.substring(colonIndex + 1);
+                  return `• ${header}${content}\n`;
+                }
+                return `• ${text}\n`;
+              })
               .join('') + '\n';
           }
           return element.textContent + '\n\n';

@@ -55,32 +55,46 @@ export default {
           css: {
             maxWidth: '100%',
             color: '#374151',
+            fontSize: '14px',
             h1: {
               color: '#9b87f5',
               marginTop: '2rem',
               marginBottom: '1rem',
+              fontSize: '36px',
+              fontWeight: '700',
             },
             h2: {
               color: '#9b87f5',
               marginTop: '1.5rem',
               marginBottom: '0.75rem',
+              fontSize: '24px',
+              fontWeight: '700',
             },
             h3: {
               color: '#9b87f5',
               marginTop: '1.25rem',
               marginBottom: '0.5rem',
+              fontSize: '18px',
+              fontWeight: '700',
             },
             p: {
               marginTop: '1rem',
               marginBottom: '1rem',
+              fontSize: '14px',
+              fontWeight: '400',
             },
             ul: {
               marginTop: '1rem',
               marginBottom: '1rem',
-            },
-            li: {
-              marginTop: '0.5rem',
-              marginBottom: '0.5rem',
+              'li': {
+                marginTop: '0.5rem',
+                marginBottom: '0.5rem',
+                fontSize: '14px',
+                fontWeight: '400',
+                strong: {
+                  fontWeight: '700',
+                },
+              },
             },
             a: {
               color: '#9b87f5',
