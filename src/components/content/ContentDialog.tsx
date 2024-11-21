@@ -29,13 +29,22 @@ export const ContentDialog = ({
 }: ContentDialogProps) => {
   const handleCopy = async () => {
     try {
-      const contentElement = document.querySelector(`[data-dialog-content-id="${selectedContent?.id}"]`);
+      const contentElement = document.querySelector(`[data-dialog-rendered-content-id="${selectedContent?.id}"]`);
       if (!contentElement) {
         throw new Error("Content element not found");
       }
 
-      const textContent = contentElement.textContent || "";
-      await navigator.clipboard.writeText(textContent.trim());
+      // Process the text to maintain proper formatting
+      const processText = (text: string) => {
+        return text
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0)
+          .join('\n\n');
+      };
+
+      const textContent = processText(contentElement.textContent || '');
+      await navigator.clipboard.writeText(textContent);
       toast.success("Content copied to clipboard");
     } catch (error) {
       toast.error("Failed to copy content");
@@ -58,8 +67,10 @@ export const ContentDialog = ({
                 onChange={setEditedContent}
               />
             ) : (
-              <article className="prose prose-lg prose-primary max-w-none" data-dialog-content-id={selectedContent?.id}>
-                <ReactMarkdown>{selectedContent.content}</ReactMarkdown>
+              <article className="prose prose-lg prose-primary max-w-none">
+                <div data-dialog-rendered-content-id={selectedContent?.id}>
+                  <ReactMarkdown>{selectedContent.content}</ReactMarkdown>
+                </div>
               </article>
             )
           ) : (

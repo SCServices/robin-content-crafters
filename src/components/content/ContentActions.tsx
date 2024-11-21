@@ -24,16 +24,22 @@ export const ContentActions = ({ content, contentId, onEdit, onDelete }: Content
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      // Find the rendered content element using the content ID
-      const contentElement = document.querySelector(`[data-content-id="${contentId}"]`);
+      const contentElement = document.querySelector(`[data-rendered-content-id="${contentId}"]`);
       if (!contentElement) {
         throw new Error("Content element not found");
       }
 
-      // Get the text content as it appears in the UI
-      const textContent = contentElement.textContent || "";
-      
-      await navigator.clipboard.writeText(textContent.trim());
+      // Process the text to maintain proper formatting
+      const processText = (text: string) => {
+        return text
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0)
+          .join('\n\n');
+      };
+
+      const textContent = processText(contentElement.textContent || '');
+      await navigator.clipboard.writeText(textContent);
       toast.success("Content copied to clipboard");
     } catch (error) {
       toast.error("Failed to copy content");

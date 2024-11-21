@@ -68,9 +68,8 @@ export const ContentItem = ({ item, onSelect, onEdit, onDelete }: ContentItemPro
           />
         </div>
       </div>
-      {/* Hidden rendered content for copying */}
       <div className="hidden">
-        <div data-content-id={item.id}>
+        <div data-rendered-content-id={item.id} className="prose prose-lg prose-primary">
           <ReactMarkdown>{item.content}</ReactMarkdown>
         </div>
       </div>
