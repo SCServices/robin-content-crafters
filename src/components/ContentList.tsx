@@ -37,6 +37,10 @@ const ContentList = ({ items }: ContentListProps) => {
   };
 
   const handleEdit = (content: string) => {
+    setSelectedContent((prev: any) => ({
+      ...prev,
+      content: content
+    }));
     setEditedContent(content);
     setIsEditing(true);
   };
@@ -84,7 +88,11 @@ const ContentList = ({ items }: ContentListProps) => {
             key={item.id}
             item={item}
             onSelect={() => setSelectedContent(item)}
-            onEdit={handleEdit}
+            onEdit={() => {
+              setSelectedContent(item);
+              setEditedContent(item.content);
+              setIsEditing(true);
+            }}
             onDelete={(e) => handleDelete(item.id, e)}
           />
         ))}
