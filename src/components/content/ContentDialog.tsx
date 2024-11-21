@@ -39,6 +39,7 @@ export const ContentDialog = ({
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = htmlContent;
         
+        // Convert HTML to plain text while preserving formatting
         const formattedText = Array.from(tempDiv.children).map(element => {
           // Handle headings with proper sizing
           if (element.tagName === 'H1') {
@@ -99,7 +100,7 @@ export const ContentDialog = ({
               />
             ) : (
               <>
-                <div ref={contentRef} className="hidden prose prose-lg prose-primary max-w-none">
+                <div ref={contentRef} className="hidden">
                   <ReactMarkdown>{selectedContent.content}</ReactMarkdown>
                 </div>
                 <article className="prose prose-lg prose-primary max-w-none">
