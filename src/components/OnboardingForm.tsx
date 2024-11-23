@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import BusinessInfoStep from "./BusinessInfoStep";
 import LocationsStep from "./LocationsStep";
 import ServicesStep from "./ServicesStep";
+import { WaitingRoom } from "./waiting-room/WaitingRoom";
 import type { BusinessInfo } from "@/lib/types";
 import { useContentGeneration } from "@/hooks/useContentGeneration";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +25,6 @@ const OnboardingForm = ({ onComplete, initialData }: OnboardingFormProps) => {
   useEffect(() => {
     const fetchCompanyDetails = async () => {
       if (initialData?.companyName) {
-        // Fetch company ID first, but now handle multiple results
         const { data: companyData } = await supabase
           .from("companies")
           .select("id, website, industry")
@@ -34,17 +34,72 @@ const OnboardingForm = ({ onComplete, initialData }: OnboardingFormProps) => {
         if (companyData && companyData.length > 0) {
           const company = companyData[0];
           
-          // Set website and industry from the company data
           setWebsite(company.website);
           setIndustry(company.industry);
 
-          // Fetch locations
           const { data: locationData } = await supabase
             .from("service_locations")
             .select("location")
             .eq("company_id", company.id);
 
-          // Fetch services
+          const { data: serviceData } = await supabase
+            .from("services")
+            .select("name")
+            .eq("company_id", company.id);
+
+          setLocations(locationData?.map(l => l.location) || []);
+          setServices(serviceData?.map(s => s.name) ||
+
+I'll implement the waiting room integration into the `OnboardingForm.tsx` component, making it appear as an overlay during content generation. This will provide a clean, focused experience while maintaining visibility of the progress.
+
+<lov-code>
+Let's update the OnboardingForm.tsx to properly integrate the WaitingRoom component:
+
+<lov-write file_path="src/components/OnboardingForm.tsx">
+import { useState, useEffect } from "react";
+import BusinessInfoStep from "./BusinessInfoStep";
+import LocationsStep from "./LocationsStep";
+import ServicesStep from "./ServicesStep";
+import { WaitingRoom } from "./waiting-room/WaitingRoom";
+import type { BusinessInfo } from "@/lib/types";
+import { useContentGeneration } from "@/hooks/useContentGeneration";
+import { supabase } from "@/integrations/supabase/client";
+
+interface OnboardingFormProps {
+  onComplete: (data: BusinessInfo) => void;
+  initialData?: BusinessInfo;
+}
+
+const OnboardingForm = ({ onComplete, initialData }: OnboardingFormProps) => {
+  const [step, setStep] = useState(1);
+  const [companyName, setCompanyName] = useState(initialData?.companyName || "");
+  const [industry, setIndustry] = useState(initialData?.industry || "");
+  const [website, setWebsite] = useState(initialData?.website || "");
+  const [locations, setLocations] = useState<string[]>(initialData?.locations || []);
+  const [services, setServices] = useState<string[]>(initialData?.services || []);
+  
+  const { createCompanyAndContent, isGenerating, progress } = useContentGeneration();
+
+  useEffect(() => {
+    const fetchCompanyDetails = async () => {
+      if (initialData?.companyName) {
+        const { data: companyData } = await supabase
+          .from("companies")
+          .select("id, website, industry")
+          .eq("name", initialData.companyName)
+          .limit(1);
+
+        if (companyData && companyData.length > 0) {
+          const company = companyData[0];
+          
+          setWebsite(company.website);
+          setIndustry(company.industry);
+
+          const { data: locationData } = await supabase
+            .from("service_locations")
+            .select("location")
+            .eq("company_id", company.id);
+
           const { data: serviceData } = await supabase
             .from("services")
             .select("name")
@@ -83,60 +138,83 @@ const OnboardingForm = ({ onComplete, initialData }: OnboardingFormProps) => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg">
-      <div className="mb-8">
-        <div className="flex justify-between mb-2">
-          {[1, 2, 3].map((number) => (
+    <div className="relative w-full max-w-md mx-auto">
+      <div className="p-6 bg-white rounded-xl shadow-lg">
+        <div className="mb-8">
+          <div className="flex justify-between mb-2">
+            {[1, 2, 3].map((number) => (
+              <div
+                key={number}
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step >= number
+                    ? "bg-primary text-white"
+                    : "bg-neutral-100 text-neutral-400"
+                }`}
+              >
+                {number}
+              </div>
+            ))}
+          </div>
+          <div className="h-2 bg-neutral-100 rounded-full">
             <div
-              key={number}
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                step >= number
-                  ? "bg-primary text-white"
-                  : "bg-neutral-100 text-neutral-400"
-              }`}
-            >
-              {number}
-            </div>
-          ))}
+              className="h-full bg-primary rounded-full transition-all duration-300"
+              style={{ width: `${((step - 1) / 2) * 100}%` }}
+            />
+          </div>
         </div>
-        <div className="h-2 bg-neutral-100 rounded-full">
-          <div
-            className="h-full bg-primary rounded-full transition-all duration-300"
-            style={{ width: `${((step - 1) / 2) * 100}%` }}
+
+        {step === 1 && (
+          <BusinessInfoStep
+            companyName={companyName}
+            setCompanyName={setCompanyName}
+            industry={industry}
+            setIndustry={setIndustry}
+            website={website}
+            setWebsite={setWebsite}
+            onNext={() => setStep(2)}
           />
-        </div>
+        )}
+
+        {step === 2 && (
+          <LocationsStep
+            locations={locations}
+            setLocations={setLocations}
+            onNext={() => setStep(3)}
+            onBack={() => setStep(1)}
+          />
+        )}
+
+        {step === 3 && (
+          <ServicesStep
+            services={services}
+            setServices={setServices}
+            onSubmit={handleSubmit}
+            onBack={() => setStep(2)}
+            isGenerating={isGenerating}
+            progress={progress}
+          />
+        )}
       </div>
 
-      {step === 1 && (
-        <BusinessInfoStep
-          companyName={companyName}
-          setCompanyName={setCompanyName}
-          industry={industry}
-          setIndustry={setIndustry}
-          website={website}
-          setWebsite={setWebsite}
-          onNext={() => setStep(2)}
-        />
-      )}
-
-      {step === 2 && (
-        <LocationsStep
-          locations={locations}
-          setLocations={setLocations}
-          onNext={() => setStep(3)}
-          onBack={() => setStep(1)}
-        />
-      )}
-
-      {step === 3 && (
-        <ServicesStep
-          services={services}
-          setServices={setServices}
-          onSubmit={handleSubmit}
-          onBack={() => setStep(2)}
-          isGenerating={isGenerating}
-          progress={progress}
-        />
+      {/* Overlay the waiting room when generating */}
+      {isGenerating && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="w-full max-w-lg mx-4">
+            <WaitingRoom
+              isGenerating={isGenerating}
+              progress={progress}
+              onComplete={() => {
+                onComplete({
+                  companyName,
+                  industry,
+                  website,
+                  locations,
+                  services,
+                });
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
