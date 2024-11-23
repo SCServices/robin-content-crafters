@@ -29,17 +29,21 @@ export const ContentActions = ({ content, contentId, onEdit, onDelete }: Content
         throw new Error("Content element not found");
       }
 
-      // Process the text to maintain proper formatting
-      const processText = (text: string) => {
-        return text
-          .split('\n')
-          .map(line => line.trim())
-          .filter(line => line.length > 0)
-          .join('\n\n');
-      };
-
-      const textContent = processText(contentElement.textContent || '');
-      await navigator.clipboard.writeText(textContent);
+      // Create a range and selection
+      const range = document.createRange();
+      const selection = window.getSelection();
+      
+      // Select the content
+      range.selectNodeContents(contentElement);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      
+      // Execute the copy command
+      document.execCommand('copy');
+      
+      // Clear the selection
+      selection?.removeAllRanges();
+      
       toast.success("Content copied to clipboard");
     } catch (error) {
       toast.error("Failed to copy content");
