@@ -36,6 +36,18 @@ const ContentOverview = () => {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["content"],
     queryFn: async () => {
+      // Get the latest company_id first
+      const { data: latestCompany } = await supabase
+        .from("companies")
+        .select("id")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (!latestCompany?.length) return [];
+
+      const latestCompanyId = latestCompany[0].id;
+
+      // Then get content only for this company
       const { data, error } = await supabase
         .from("generated_content")
         .select(`
@@ -44,6 +56,7 @@ const ContentOverview = () => {
           services (name),
           service_locations (location)
         `)
+        .eq("company_id", latestCompanyId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
