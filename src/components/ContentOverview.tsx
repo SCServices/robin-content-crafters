@@ -1,53 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { CheckCircle, Clock, AlertCircle, Copy, Pencil, Trash2 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import { CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { WaitingRoom } from "./waiting-room/WaitingRoom";
+import { ContentDialog } from "./content/ContentDialog";
 
 const ContentOverview = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
+  const [generationProgress, setGenerationProgress] = useState(0);
   const queryClient = useQueryClient();
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["content"],
     queryFn: async () => {
-      // Get the latest company_id first
-      const { data: latestCompany } = await supabase
-        .from("companies")
-        .select("id")
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (!latestCompany?.length) return [];
-
-      const latestCompanyId = latestCompany[0].id;
-
-      // Then get content only for this company
       const { data, error } = await supabase
         .from("generated_content")
         .select(`
@@ -56,7 +27,6 @@ const ContentOverview = () => {
           services (name),
           service_locations (location)
         `)
-        .eq("company_id", latestCompanyId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -108,44 +78,28 @@ const ContentOverview = () => {
     }
   };
 
-  const handleCopy = async () => {
-    try {
-      const contentElement = document.querySelector(`[data-dialog-rendered-content-id="${selectedItem?.id}"]`);
-      if (!contentElement) {
-        throw new Error("Content element not found");
-      }
-
-      const range = document.createRange();
-      const selection = window.getSelection();
-      
-      range.selectNodeContents(contentElement);
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-      
-      document.execCommand('copy');
-      selection?.removeAllRanges();
-      
-      toast.success("Content copied to clipboard");
-    } catch (error) {
-      toast.error("Failed to copy content");
-    }
-  };
-
   const filteredItems = activeTab === "all" 
     ? items 
     : items.filter(item => item.type === activeTab);
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "generated":
-        return <CheckCircle className="text-success" size={16} />;
-      case "pending":
-        return <Clock className="text-primary" size={16} />;
-      case "error":
-        return <AlertCircle className="text-secondary" size={16} />;
-      default:
-        return <Clock className="text-primary" size={16} />;
+  // Simulate progress
+  useEffect(() => {
+    if (items?.some(item => item.status === 'pending')) {
+      const interval = setInterval(() => {
+        setGenerationProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + 1;
+        });
+      }, 100);
+      return () => clearInterval(interval);
     }
+  }, [items]);
+
+  const handleGenerationComplete = () => {
+    queryClient.invalidateQueries({ queryKey: ["content"] });
   };
 
   if (isLoading) {
@@ -183,7 +137,7 @@ const ContentOverview = () => {
                   onClick={() => setSelectedItem(item)}
                 >
                   <div className="flex items-center gap-3">
-                    {getStatusIcon(item.status)}
+                    <CheckCircle className={`text-${item.status === "generated" ? "success" : "primary"}`} size={16} />
                     <span className="font-medium">{item.title}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -198,79 +152,26 @@ const ContentOverview = () => {
         </Tabs>
       </Card>
 
-      <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-primary mb-4">
-              {selectedItem?.title}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="mt-4">
-            {selectedItem?.content ? (
-              <article className="prose prose-lg prose-primary max-w-none">
-                <div data-dialog-rendered-content-id={selectedItem?.id}>
-                  <ReactMarkdown>{selectedItem.content}</ReactMarkdown>
-                </div>
-              </article>
-            ) : (
-              <p className="text-neutral-500 italic text-center py-8">
-                Content is still being generated...
-              </p>
-            )}
-          </div>
-          <DialogFooter className="mt-6 flex justify-between">
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => handleEdit(selectedItem.content)}
-                className="text-secondary hover:bg-secondary/10"
-              >
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleCopy}
-                className="text-primary hover:bg-primary/10"
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                Copy
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete this content from our servers.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => handleDelete(selectedItem.id)}
-                      className="bg-destructive hover:bg-destructive/90"
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-            <Button variant="outline" onClick={() => setSelectedItem(null)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ContentDialog
+        selectedContent={selectedItem}
+        isEditing={isEditing}
+        editedContent={editedContent}
+        onClose={() => setSelectedItem(null)}
+        onEdit={(content) => {
+          setEditedContent(content);
+          setIsEditing(true);
+        }}
+        onSave={handleSave}
+        onCancelEdit={() => setIsEditing(false)}
+        onDelete={handleDelete}
+        setEditedContent={setEditedContent}
+      />
+
+      <WaitingRoom
+        isGenerating={items?.some(item => item.status === 'pending')}
+        progress={generationProgress}
+        onComplete={handleGenerationComplete}
+      />
     </>
   );
 };
