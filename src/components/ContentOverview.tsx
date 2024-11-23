@@ -161,27 +161,28 @@ const ContentOverview = () => {
             </TabsList>
           </div>
 
-        <TabsContent value={activeTab} className="mt-0">
-          <div className="space-y-2">
-            {filteredItems.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all duration-200 cursor-pointer border-l-2 hover:border-l-primary"
-                onClick={() => setSelectedItem(item)}
-              >
-                <div className="flex items-center gap-3">
-                  {getStatusIcon(item.status)}
-                  <span className="font-medium">{item.title}</span>
+          <TabsContent value={activeTab} className="mt-0">
+            <div className="space-y-2">
+              {filteredItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all duration-200 cursor-pointer border-l-2 hover:border-l-primary"
+                  onClick={() => setSelectedItem(item)}
+                >
+                  <div className="flex items-center gap-3">
+                    {getStatusIcon(item.status)}
+                    <span className="font-medium">{item.title}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-neutral-500 capitalize px-3 py-1 bg-white rounded-full">
+                      {item.type}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-neutral-500 capitalize px-3 py-1 bg-white rounded-full">
-                    {item.type}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </TabsContent>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
       </Card>
 
       <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
