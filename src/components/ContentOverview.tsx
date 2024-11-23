@@ -108,9 +108,6 @@ const ContentOverview = () => {
             <DialogTitle className="text-2xl font-bold text-primary mb-4">
               {selectedItem?.title}
             </DialogTitle>
-            <DialogDescription>
-              View and edit your generated content
-            </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
             {selectedItem?.content ? (
