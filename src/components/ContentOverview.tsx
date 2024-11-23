@@ -19,6 +19,17 @@ const ContentOverview = () => {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["content"],
     queryFn: async () => {
+      // First, get the latest created_at timestamp
+      const { data: latestTimestamp, error: timestampError } = await supabase
+        .from("generated_content")
+        .select('created_at')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (timestampError) throw timestampError;
+
+      // Then get all content from that timestamp
       const { data, error } = await supabase
         .from("generated_content")
         .select(`
@@ -27,6 +38,7 @@ const ContentOverview = () => {
           services (name),
           service_locations (location)
         `)
+        .eq('created_at', latestTimestamp.created_at)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -118,7 +130,7 @@ const ContentOverview = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
-              Content Overview
+              Latest Generated Content
             </h2>
             <TabsList className="bg-neutral-50">
               <TabsTrigger value="all">All</TabsTrigger>
