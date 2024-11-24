@@ -76,14 +76,6 @@ export const WordPuzzle = ({ word, onComplete, onSkip, timeLimit }: WordPuzzlePr
         <span className="text-sm text-neutral-500">
           Time left: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
         </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-neutral-400 hover:text-neutral-600"
-          onClick={onSkip}
-        >
-          <X className="h-4 w-4" />
-        </Button>
       </div>
       <p className="text-lg font-bold text-primary mb-2">{scrambledWord}</p>
       <form onSubmit={handleSubmit} className="space-y-2">
@@ -96,6 +88,14 @@ export const WordPuzzle = ({ word, onComplete, onSkip, timeLimit }: WordPuzzlePr
         />
         <Button type="submit" variant="outline" className="w-full">
           Submit
+        </Button>
+        <Button 
+          type="button" 
+          variant="ghost" 
+          className="w-full text-neutral-500 hover:text-neutral-700"
+          onClick={onSkip}
+        >
+          Skip this word
         </Button>
       </form>
     </div>
