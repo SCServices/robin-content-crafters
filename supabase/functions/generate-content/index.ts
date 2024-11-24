@@ -1,15 +1,14 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
+
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -27,62 +26,95 @@ serve(async (req) => {
       throw new Error('Missing required parameters');
     }
 
-    // Validate UUIDs
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(companyInfo.companyId) || !uuidRegex.test(serviceId) || (locationId && !uuidRegex.test(locationId))) {
-      throw new Error('Invalid UUID format');
-    }
-
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
-
     let prompt = '';
-    const systemPrompt = `You are a Local SEO expert and experienced content writer specializing in creating high-quality, SEO-optimized content for business websites in blue-collar industries, homeowners' advice, and DIY topics. You focus on writing engaging, easy-to-read articles that are accessible to a wide audience. Use simple language, avoid technical jargon, and write in a conversational and friendly tone.`;
+    const systemPrompt = `You are an expert content writer and SEO specialist with deep experience in creating engaging, conversion-focused content for local businesses. Your writing style is professional yet approachable, using clear language that resonates with both consumers and business clients. Focus on creating content that:
+    - Demonstrates deep understanding of the industry and local market
+    - Builds trust through expertise and credibility
+    - Includes natural, contextual calls-to-action
+    - Optimizes for local SEO without compromising readability
+    - Uses a warm, professional tone that connects with readers`;
     
-    // Construct prompt based on content type
     switch (contentType) {
       case 'service':
         prompt = `
-          Write a service page for ${companyInfo.companyName}, a ${companyInfo.industry} company, focusing on their ${companyInfo.serviceName} service.
-          Create content that feels like a helpful guide, blending essential information with persuasive elements, while maintaining an approachable tone.
-          
-          Focus on the following:
-          - Introduce the service in a way that highlights what makes it stand out from competitors. Make sure the introduction is engaging and speaks to customer needs. Do not call the section "introduction".
-          - Provide a brief overview of the key benefits of the service, but don't just list them—explain why they matter and how they improve the customer's life or business.
-          - Share real-world applications or examples of the service in action. Help the reader imagine how it will solve their specific problems.
-          - Include customer testimonials or success stories if available, or use a conversational tone to build trust by showcasing the company's strengths (years of experience, certifications, etc.).
-          - Keep the CTA simple and natural. Rather than a hard sell, encourage the reader to take the next step when they're ready (e.g., "Contact us to get started today"). Do not call it "conclusion" or "CTA" or mention "call to action".
-          
-          Avoid a cookie-cutter structure, and instead focus on making the content engaging and customer-focused with a personal touch.`;
+          Create a comprehensive service page for ${companyInfo.companyName}, a respected ${companyInfo.industry} company, focusing on their ${companyInfo.serviceName} service.
+
+          Structure the content to:
+          1. Open with a compelling introduction that immediately addresses the reader's needs and pain points
+          2. Highlight the unique benefits and features of ${companyInfo.serviceName}, explaining why they matter to the customer
+          3. Include specific details about:
+             - The service process and what customers can expect
+             - Quality standards and professional certifications
+             - Typical problems solved and outcomes achieved
+             - Relevant experience and expertise in this service area
+          4. Address common customer questions and concerns
+          5. End with a clear, compelling call to action
+
+          Key requirements:
+          - Use a professional yet conversational tone
+          - Include specific details about ${companyInfo.serviceName} that set it apart
+          - Focus on value and benefits rather than just features
+          - Incorporate natural SEO keywords without keyword stuffing
+          - Keep paragraphs short and scannable
+          - Use subheadings to break up content
+          - End with a natural call to action that encourages contact
+
+          Write the content in Markdown format.`;
         break;
 
       case 'location':
         prompt = `
-          Write a location-based service page for ${companyInfo.companyName}'s ${companyInfo.serviceName} service in ${companyInfo.location}.
-          Craft the content with a focus on how this service specifically benefits people in this location, making the content feel authentic and locally relevant.
+          Create a location-specific service page for ${companyInfo.companyName}'s ${companyInfo.serviceName} service in ${companyInfo.location}.
+
+          Structure the content to:
+          1. Open with a locally-focused introduction that connects with the ${companyInfo.location} community
+          2. Explain how ${companyInfo.serviceName} is specifically tailored to:
+             - Local needs and preferences in ${companyInfo.location}
+             - Regional challenges or requirements
+             - Area-specific regulations or standards
+          3. Include details about:
+             - Local service coverage and response times
+             - Experience serving the ${companyInfo.location} area
+             - Understanding of local market conditions
+          4. Highlight any community involvement or local partnerships
+          5. End with a location-specific call to action
+
+          Key requirements:
+          - Incorporate local landmarks or area-specific references naturally
+          - Address specific needs of ${companyInfo.location} customers
+          - Include local SEO elements without forcing them
+          - Maintain a neighborly yet professional tone
+          - Use clear subheadings and scannable format
+          - Keep content focused on local relevance
           
-          Points to cover:
-          - Begin with a warm, friendly introduction that connects with the local community. Discuss the unique needs of customers in ${companyInfo.location} and why this service is the perfect fit. Do not call the section "introduction".
-          - Talk about how ${companyInfo.serviceName} is tailored to local conditions, needs, or regulations. How does this service solve problems that are unique to ${companyInfo.location}?
-          - If possible, mention any specific local landmarks, events, or partnerships that tie the service to the area. 
-          - Reassure the reader of the company's local expertise and presence, without making it sound like a marketing pitch—just speak naturally about the company's commitment to the area.
-          - Close with a casual, approachable CTA. Encourage potential customers to reach out when they're ready, emphasizing convenience and ease. Do not call it "conclusion" or "CTA" or mention "call to action".
-          
-          The tone should be warm and conversational, ensuring the content speaks directly to the reader in ${companyInfo.location}, without being overly formal.`;
+          Write the content in Markdown format.`;
         break;
 
       case 'blog':
         prompt = `
-          Write an engaging blog post for ${companyInfo.companyName}, a ${companyInfo.industry} company, about ${companyInfo.serviceName} services in ${companyInfo.location}.
-          The blog should be informative but also relatable, using real-world examples, tips, and solutions that readers can easily apply.
-          
-          Structure the post to feel like a conversation, making it approachable for readers:
-          - Start with an interesting hook that addresses a common question, challenge, or curiosity that the reader might have about ${companyInfo.serviceName}. Do not call the section "introduction".
-          - Offer valuable insights into how ${companyInfo.serviceName} works, including tips and best practices that can help the reader get the most out of the service. 
-          - Discuss common mistakes or challenges people encounter when considering or using this service, and provide simple, actionable solutions.
-          - Weave in subtle points about why professional help can make a difference—without sounding like an advertisement. Focus on the value of experience and expertise.
-          - End with a CTA that feels natural—suggest that the reader reach out for more information or assistance, but don't force it. Do not call it "conclusion" or "CTA" or mention "call to action".
+          Create an informative blog post about ${companyInfo.serviceName} for ${companyInfo.companyName}'s audience in ${companyInfo.location}.
 
-          Keep the tone friendly and down-to-earth. Avoid generic headlines and instead, focus on making the content feel fresh, engaging, and personal. This blog should feel like a helpful conversation, not a sales pitch.`;
+          Structure the content to:
+          1. Start with an engaging hook that relates to ${companyInfo.location} readers
+          2. Include practical information about:
+             - Common challenges or questions about ${companyInfo.serviceName}
+             - Professional insights and expert tips
+             - Industry best practices
+             - Cost-saving or efficiency-improving strategies
+          3. Provide actionable advice readers can use
+          4. Include relevant examples or case studies
+          5. End with a subtle call to action
+
+          Key requirements:
+          - Use a helpful, conversational tone
+          - Include practical tips and actionable advice
+          - Reference local context when relevant
+          - Break up text with subheadings and bullet points
+          - Focus on providing genuine value
+          - Keep the promotional aspect subtle
+          - Include relevant statistics or data points when possible
+
+          Write the content in Markdown format.`;
         break;
       
       default:
@@ -123,18 +155,18 @@ serve(async (req) => {
 
     // Update the content in the database
     console.log('Updating content in database for:', { serviceId, locationId });
-    const { error: updateError } = await supabase
-      .from('generated_content')
-      .update({ 
+    const { error: updateError } = await fetch(`${supabaseUrl}/rest/v1/generated_content`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ 
         content: generatedContent,
         status: 'generated'
-      })
-      .match({ 
-        company_id: companyInfo.companyId,
-        service_id: serviceId,
-        ...(locationId ? { location_id: locationId } : {}),
-        type: contentType
-      });
+      }),
+    });
 
     if (updateError) {
       console.error('Database update error:', updateError);
