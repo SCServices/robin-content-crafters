@@ -121,7 +121,8 @@ export const useContentGeneration = (): ContentGenerationProgress & {
             contentType: "service",
             companyInfo,
             serviceId: service.id,
-            model: "gpt-4o mini"
+            model: "gpt-4o mini",
+            prompt: businessInfo.servicePrompt // Add custom prompt if provided
           },
         });
         completedItems++;
@@ -142,7 +143,8 @@ export const useContentGeneration = (): ContentGenerationProgress & {
               companyInfo: locationInfo,
               serviceId: service.id,
               locationId: location.id,
-              model: "gpt-4o mini"
+              model: "gpt-4o mini",
+              prompt: businessInfo.locationPrompt // Add custom prompt if provided
             },
           });
           completedItems++;
@@ -156,7 +158,8 @@ export const useContentGeneration = (): ContentGenerationProgress & {
                 companyInfo: locationInfo,
                 serviceId: service.id,
                 locationId: location.id,
-                model: "gpt-4o mini"
+                model: "gpt-4o mini",
+                prompt: businessInfo.blogPrompt // Add custom prompt if provided
               },
             });
             completedItems++;
