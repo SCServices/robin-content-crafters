@@ -81,7 +81,7 @@ serve(async (req) => {
             - Offer valuable insights into how ${companyInfo.serviceName} works, including tips and best practices that can help the reader get the most out of the service. 
             - Discuss common mistakes or challenges people encounter when considering or using this service, and provide simple, actionable solutions.
             - Weave in subtle points about why professional help can make a difference—without sounding like an advertisement. Focus on the value of experience and expertise.
-            - End with a CTA that feels natural—suggest that the reader reach out for more information or assistance, but don't force it. Do not call it "conclusion" or "CTA" or mention "call to action".`;
+            - End with a CTA that feels natural—suggest that the reader reach out for more information or assistance, but don't force it. Do not call it "conclusion" or "CTA" or mention "call to action".`
 
         Since you will create a total of 5 blog posts for each ${companyInfo.serviceName} services in ${companyInfo.location}, randomljy choose one of the following content styles for each blog post: 
         // Listicles
