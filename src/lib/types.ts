@@ -4,6 +4,9 @@ export interface BusinessInfo {
   website: string;
   locations: string[];
   services: string[];
+  servicePrompt?: string;
+  locationPrompt?: string;
+  blogPrompt?: string;
 }
 
 export interface ContentItem {
