@@ -54,10 +54,6 @@ export const WaitingRoom = ({ isGenerating, progress, onComplete }: WaitingRoomP
     setCurrentWord(words[Math.floor(Math.random() * words.length)]);
   };
 
-  const handleClose = () => {
-    setShowGame(false);
-  };
-
   if (!isGenerating || progress === 100 || !showGame) return null;
 
   return (
@@ -69,7 +65,7 @@ export const WaitingRoom = ({ isGenerating, progress, onComplete }: WaitingRoomP
               variant="ghost"
               size="icon"
               className="absolute right-2 top-2"
-              onClick={handleClose}
+              onClick={() => setShowGame(false)}
             >
               <X className="h-4 w-4" />
             </Button>

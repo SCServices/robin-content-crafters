@@ -13,11 +13,23 @@ const ContentOverview = () => {
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
+  const [generationProgress, setGenerationProgress] = useState(0);
   const queryClient = useQueryClient();
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["content"],
     queryFn: async () => {
+      // First, get the latest created_at timestamp
+      const { data: latestTimestamp, error: timestampError } = await supabase
+        .from("generated_content")
+        .select('created_at')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (timestampError) throw timestampError;
+
+      // Then get all content from that timestamp
       const { data, error } = await supabase
         .from("generated_content")
         .select(`
@@ -26,10 +38,11 @@ const ContentOverview = () => {
           services (name),
           service_locations (location)
         `)
+        .eq('created_at', latestTimestamp.created_at)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return data;
     },
   });
 
@@ -81,13 +94,21 @@ const ContentOverview = () => {
     ? items 
     : items.filter(item => item.type === activeTab);
 
-  // Calculate real progress based on generated vs pending items
-  const calculateProgress = () => {
-    if (!items?.length) return 0;
-    const totalItems = items.length;
-    const generatedItems = items.filter(item => item.status === 'generated').length;
-    return Math.round((generatedItems / totalItems) * 100);
-  };
+  // Simulate progress
+  useEffect(() => {
+    if (items?.some(item => item.status === 'pending')) {
+      const interval = setInterval(() => {
+        setGenerationProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + 1;
+        });
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [items]);
 
   const handleGenerationComplete = () => {
     queryClient.invalidateQueries({ queryKey: ["content"] });
@@ -121,29 +142,23 @@ const ContentOverview = () => {
 
           <TabsContent value={activeTab} className="mt-0">
             <div className="space-y-2">
-              {filteredItems.length === 0 ? (
-                <div className="text-center py-8 text-neutral-500">
-                  No content generated yet
-                </div>
-              ) : (
-                filteredItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all duration-200 cursor-pointer border-l-2 hover:border-l-primary"
-                    onClick={() => setSelectedItem(item)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className={`text-${item.status === "generated" ? "success" : "primary"}`} size={16} />
-                      <span className="font-medium">{item.title}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-neutral-500 capitalize px-3 py-1 bg-white rounded-full">
-                        {item.type}
-                      </span>
-                    </div>
+              {filteredItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all duration-200 cursor-pointer border-l-2 hover:border-l-primary"
+                  onClick={() => setSelectedItem(item)}
+                >
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className={`text-${item.status === "generated" ? "success" : "primary"}`} size={16} />
+                    <span className="font-medium">{item.title}</span>
                   </div>
-                ))
-              )}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-neutral-500 capitalize px-3 py-1 bg-white rounded-full">
+                      {item.type}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </TabsContent>
         </Tabs>
@@ -166,7 +181,7 @@ const ContentOverview = () => {
 
       <WaitingRoom
         isGenerating={items?.some(item => item.status === 'pending')}
-        progress={calculateProgress()}
+        progress={generationProgress}
         onComplete={handleGenerationComplete}
       />
     </>
