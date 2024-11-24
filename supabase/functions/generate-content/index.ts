@@ -44,6 +44,7 @@ serve(async (req) => {
         prompt = `
           Write a service page for ${companyInfo.companyName}, a ${companyInfo.industry} company, focusing on their ${companyInfo.serviceName} service.
           Create content that feels like a helpful guide, blending essential information with persuasive elements, while maintaining an approachable tone.
+          The page should have 3-5 naturally created H2 or H3 headlines that blend into the content structure and narrative and are SEO relevant according to EEAT.
           
           Focus on the following:
           - Introduce the service in a way that highlights what makes it stand out from competitors. Make sure the introduction is engaging and speaks to customer needs. Do not call the section "introduction".
@@ -59,6 +60,7 @@ serve(async (req) => {
         prompt = `
           Write a location-based service page for ${companyInfo.companyName}'s ${companyInfo.serviceName} service in ${companyInfo.location}.
           Craft the content with a focus on how this service specifically benefits people in this location, making the content feel authentic and locally relevant.
+          The page should have 3-5 naturally created H2 or H3 headlines that blend into the content structure and narrative and are SEO relevant according to EEAT.
           
           Points to cover:
           - Begin with a warm, friendly introduction that connects with the local community. Discuss the unique needs of customers in ${companyInfo.location} and why this service is the perfect fit. Do not call the section "introduction".
@@ -74,6 +76,7 @@ serve(async (req) => {
         prompt = `
           Write an engaging blog post for ${companyInfo.companyName}, a ${companyInfo.industry} company, about ${companyInfo.serviceName} services in ${companyInfo.location}.
           The blog should be informative but also relatable, using real-world examples, tips, and solutions that readers can easily apply.
+          The page should have 3-5 naturally created H2 or H3 headlines that blend into the content structure and narrative and are SEO relevant according to EEAT.
           
           Structure the post to feel like a conversation, making it approachable for readers:
           - Start with an interesting hook that addresses a common question, challenge, or curiosity that the reader might have about ${companyInfo.serviceName}. Do not call the section "introduction".
