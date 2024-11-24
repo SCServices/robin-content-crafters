@@ -48,64 +48,6 @@ const OnboardingForm = ({ onComplete, initialData }: OnboardingFormProps) => {
             .eq("company_id", company.id);
 
           setLocations(locationData?.map(l => l.location) || []);
-          setServices(serviceData?.map(s => s.name) ||
-
-I'll implement the waiting room integration into the `OnboardingForm.tsx` component, making it appear as an overlay during content generation. This will provide a clean, focused experience while maintaining visibility of the progress.
-
-<lov-code>
-Let's update the OnboardingForm.tsx to properly integrate the WaitingRoom component:
-
-<lov-write file_path="src/components/OnboardingForm.tsx">
-import { useState, useEffect } from "react";
-import BusinessInfoStep from "./BusinessInfoStep";
-import LocationsStep from "./LocationsStep";
-import ServicesStep from "./ServicesStep";
-import { WaitingRoom } from "./waiting-room/WaitingRoom";
-import type { BusinessInfo } from "@/lib/types";
-import { useContentGeneration } from "@/hooks/useContentGeneration";
-import { supabase } from "@/integrations/supabase/client";
-
-interface OnboardingFormProps {
-  onComplete: (data: BusinessInfo) => void;
-  initialData?: BusinessInfo;
-}
-
-const OnboardingForm = ({ onComplete, initialData }: OnboardingFormProps) => {
-  const [step, setStep] = useState(1);
-  const [companyName, setCompanyName] = useState(initialData?.companyName || "");
-  const [industry, setIndustry] = useState(initialData?.industry || "");
-  const [website, setWebsite] = useState(initialData?.website || "");
-  const [locations, setLocations] = useState<string[]>(initialData?.locations || []);
-  const [services, setServices] = useState<string[]>(initialData?.services || []);
-  
-  const { createCompanyAndContent, isGenerating, progress } = useContentGeneration();
-
-  useEffect(() => {
-    const fetchCompanyDetails = async () => {
-      if (initialData?.companyName) {
-        const { data: companyData } = await supabase
-          .from("companies")
-          .select("id, website, industry")
-          .eq("name", initialData.companyName)
-          .limit(1);
-
-        if (companyData && companyData.length > 0) {
-          const company = companyData[0];
-          
-          setWebsite(company.website);
-          setIndustry(company.industry);
-
-          const { data: locationData } = await supabase
-            .from("service_locations")
-            .select("location")
-            .eq("company_id", company.id);
-
-          const { data: serviceData } = await supabase
-            .from("services")
-            .select("name")
-            .eq("company_id", company.id);
-
-          setLocations(locationData?.map(l => l.location) || []);
           setServices(serviceData?.map(s => s.name) || []);
         }
       }
