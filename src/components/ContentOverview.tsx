@@ -13,13 +13,11 @@ const ContentOverview = () => {
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
-  const [generationProgress, setGenerationProgress] = useState(0);
   const queryClient = useQueryClient();
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["content"],
     queryFn: async () => {
-      // First, get all content ordered by created_at
       const { data, error } = await supabase
         .from("generated_content")
         .select(`
@@ -83,20 +81,13 @@ const ContentOverview = () => {
     ? items 
     : items.filter(item => item.type === activeTab);
 
-  useEffect(() => {
-    if (items?.some(item => item.status === 'pending')) {
-      const interval = setInterval(() => {
-        setGenerationProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          return prev + 1;
-        });
-      }, 100);
-      return () => clearInterval(interval);
-    }
-  }, [items]);
+  // Calculate real progress based on generated vs pending items
+  const calculateProgress = () => {
+    if (!items?.length) return 0;
+    const totalItems = items.length;
+    const generatedItems = items.filter(item => item.status === 'generated').length;
+    return Math.round((generatedItems / totalItems) * 100);
+  };
 
   const handleGenerationComplete = () => {
     queryClient.invalidateQueries({ queryKey: ["content"] });
@@ -175,7 +166,7 @@ const ContentOverview = () => {
 
       <WaitingRoom
         isGenerating={items?.some(item => item.status === 'pending')}
-        progress={generationProgress}
+        progress={calculateProgress()}
         onComplete={handleGenerationComplete}
       />
     </>
