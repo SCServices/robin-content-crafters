@@ -56,7 +56,6 @@ export const WaitingRoom = ({ isGenerating, progress, onComplete }: WaitingRoomP
 
   const handleClose = () => {
     setShowGame(false);
-    onComplete();
   };
 
   if (!isGenerating || progress === 100 || !showGame) return null;
