@@ -50,7 +50,7 @@ switch (contentType) {
       - Provide a brief overview of the key benefits of the service, but don’t just list them—explain why they matter and how they improve the customer’s life or business.
       - Share real-world applications or examples of the service in action. Help the reader imagine how it will solve their specific problems.
       - Include customer testimonials or success stories if available, or use a conversational tone to build trust by showcasing the company’s strengths (years of experience, certifications, etc.).
-      - Keep the CTA simple and natural. Rather than a hard sell, encourage the reader to take the next step when they're ready (e.g., "Contact us to get started today"). Do not call it "conclusion" or "CTA"
+      - Keep the CTA simple and natural. Rather than a hard sell, encourage the reader to take the next step when they're ready (e.g., "Contact us to get started today"). Do not call it "conclusion" or "CTA" or mention "call to action".
       
       Avoid a cookie-cutter structure, and instead focus on making the content engaging and customer-focused with a personal touch.`;
     break;
@@ -65,7 +65,7 @@ switch (contentType) {
       - Talk about how ${companyInfo.serviceName} is tailored to local conditions, needs, or regulations. How does this service solve problems that are unique to ${companyInfo.location}?
       - If possible, mention any specific local landmarks, events, or partnerships that tie the service to the area. 
       - Reassure the reader of the company’s local expertise and presence, without making it sound like a marketing pitch—just speak naturally about the company’s commitment to the area.
-      - Close with a casual, approachable CTA. Encourage potential customers to reach out when they’re ready, emphasizing convenience and ease. Do not call it "conclusion" or "CTA"
+      - Close with a casual, approachable CTA. Encourage potential customers to reach out when they’re ready, emphasizing convenience and ease.Do not call it "conclusion" or "CTA" or mention "call to action".
       
       The tone should be warm and conversational, ensuring the content speaks directly to the reader in ${companyInfo.location}, without being overly formal.`;
     break;
@@ -80,7 +80,7 @@ switch (contentType) {
       - Offer valuable insights into how ${companyInfo.serviceName} works, including tips and best practices that can help the reader get the most out of the service. 
       - Discuss common mistakes or challenges people encounter when considering or using this service, and provide simple, actionable solutions.
       - Weave in subtle points about why professional help can make a difference—without sounding like an advertisement. Focus on the value of experience and expertise.
-      - End with a CTA that feels natural—suggest that the reader reach out for more information or assistance, but don’t force it. Do not call it "conclusion" or "CTA"
+      - End with a CTA that feels natural—suggest that the reader reach out for more information or assistance, but don’t force it. Do not call it "conclusion" or "CTA" or mention "call to action".
 
       Keep the tone friendly and down-to-earth. Avoid generic headlines and instead, focus on making the content feel fresh, engaging, and personal. This blog should feel like a helpful conversation, not a sales pitch.`;
     break;
