@@ -19,17 +19,7 @@ const ContentOverview = () => {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["content"],
     queryFn: async () => {
-      // First, get the latest created_at timestamp
-      const { data: latestTimestamp, error: timestampError } = await supabase
-        .from("generated_content")
-        .select('created_at')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (timestampError) throw timestampError;
-
-      // Then get all content from that timestamp
+      // First, get all content ordered by created_at
       const { data, error } = await supabase
         .from("generated_content")
         .select(`
@@ -38,11 +28,10 @@ const ContentOverview = () => {
           services (name),
           service_locations (location)
         `)
-        .eq('created_at', latestTimestamp.created_at)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
@@ -94,7 +83,6 @@ const ContentOverview = () => {
     ? items 
     : items.filter(item => item.type === activeTab);
 
-  // Simulate progress
   useEffect(() => {
     if (items?.some(item => item.status === 'pending')) {
       const interval = setInterval(() => {
@@ -142,23 +130,29 @@ const ContentOverview = () => {
 
           <TabsContent value={activeTab} className="mt-0">
             <div className="space-y-2">
-              {filteredItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all duration-200 cursor-pointer border-l-2 hover:border-l-primary"
-                  onClick={() => setSelectedItem(item)}
-                >
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className={`text-${item.status === "generated" ? "success" : "primary"}`} size={16} />
-                    <span className="font-medium">{item.title}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-neutral-500 capitalize px-3 py-1 bg-white rounded-full">
-                      {item.type}
-                    </span>
-                  </div>
+              {filteredItems.length === 0 ? (
+                <div className="text-center py-8 text-neutral-500">
+                  No content generated yet
                 </div>
-              ))}
+              ) : (
+                filteredItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all duration-200 cursor-pointer border-l-2 hover:border-l-primary"
+                    onClick={() => setSelectedItem(item)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className={`text-${item.status === "generated" ? "success" : "primary"}`} size={16} />
+                      <span className="font-medium">{item.title}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-neutral-500 capitalize px-3 py-1 bg-white rounded-full">
+                        {item.type}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </TabsContent>
         </Tabs>
