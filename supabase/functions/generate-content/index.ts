@@ -137,9 +137,9 @@ serve(async (req) => {
         ];
 
         prompt = `
-          Create an informative blog post about ${companyInfo.serviceName} for ${companyInfo.companyName}'s audience in ${companyInfo.location}. There are 5 different blog posts to create so make sure they are all diffent.
+          Create an informative blog post about ${companyInfo.serviceName} for ${companyInfo.companyName}'s audience in ${companyInfo.location}.
 
-          Use one of these titles for each of the 5 blog posts, make sure they do not repeat:
+          Use one of these titles:
           ${blogTitles.join('\n')}
 
           Structure the content to:
