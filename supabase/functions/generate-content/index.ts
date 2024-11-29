@@ -201,7 +201,8 @@ serve(async (req) => {
     const generatedContent = completion.choices[0].message.content;
     console.log('Generated content:', generatedContent.substring(0, 100) + '...');
 
-    const { error: updateError } = await supabase
+    // Update the query to properly handle locationId
+    const query = supabase
       .from('generated_content')
       .update({ 
         content: generatedContent,
@@ -209,8 +210,16 @@ serve(async (req) => {
       })
       .eq('company_id', companyInfo.companyId)
       .eq('service_id', serviceId)
-      .eq('type', contentType)
-      .is('location_id', locationId || null);
+      .eq('type', contentType);
+
+    // Add locationId condition only if it exists
+    if (locationId) {
+      query.eq('location_id', locationId);
+    } else {
+      query.is('location_id', null);
+    }
+
+    const { error: updateError } = await query;
 
     if (updateError) {
       console.error('Database update error:', updateError);
