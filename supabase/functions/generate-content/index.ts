@@ -117,7 +117,7 @@ serve(async (req) => {
           - Keep the promotional aspect subtle
           - Include relevant statistics or data points when possible
 
-          Write the content in Markdown format.`
+          Write the content in Markdown format.
           
           For each blog post, randomly choose one of the following headline styles and narratives:
           // Listicles
