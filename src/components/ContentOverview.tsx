@@ -59,8 +59,8 @@ const ContentOverview = () => {
       if (error) throw error;
       return data as GeneratedContent[];
     },
-    refetchInterval: (data: GeneratedContent[] | undefined) => {
-      return data?.some(item => item.status === 'pending') ? 2000 : false;
+    refetchInterval: (query) => {
+      return query.state.data?.some(item => item.status === 'pending') ? 2000 : false;
     },
   });
 
