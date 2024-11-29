@@ -12,7 +12,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -21,12 +20,10 @@ serve(async (req) => {
     const { contentType, companyInfo, serviceId, locationId } = await req.json();
     console.log('Received request:', { contentType, companyInfo, serviceId, locationId });
 
-    // Validate required parameters
     if (!contentType || !companyInfo || !serviceId || !companyInfo.companyId) {
       throw new Error('Missing required parameters');
     }
 
-    // Initialize Supabase client
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     let prompt = '';
@@ -94,8 +91,22 @@ serve(async (req) => {
         break;
 
       case 'blog':
+        const blogTitles = [
+          `10 Essential Tips for ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `7 Reasons to Choose Professional ${companyInfo.serviceName} Services in ${companyInfo.location}`,
+          `5 Common ${companyInfo.serviceName} Mistakes and How to Avoid Them`,
+          `How to Get the Best ${companyInfo.serviceName} Results in ${companyInfo.location}`,
+          `A Step-by-Step Guide to ${companyInfo.serviceName} for ${companyInfo.location} Residents`,
+          `Expert Advice on ${companyInfo.serviceName} for ${companyInfo.location} Homeowners`,
+          `The Ultimate Guide to ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `Understanding the Costs of ${companyInfo.serviceName} in ${companyInfo.location}`
+        ];
+
         prompt = `
           Create an informative blog post about ${companyInfo.serviceName} for ${companyInfo.companyName}'s audience in ${companyInfo.location}.
+
+          Use one of these titles:
+          ${blogTitles.join('\n')}
 
           Structure the content to:
           1. Start with an engaging hook that relates to ${companyInfo.location} readers
@@ -117,58 +128,7 @@ serve(async (req) => {
           - Keep the promotional aspect subtle
           - Include relevant statistics or data points when possible
 
-          Write the content in Markdown format.
-          
-          For each blog post, randomly choose one of the following headline styles and narratives:
-          // Listicles
-        `10 Essential Tips for ${service.name} in ${location.location}`,
-        `7 Reasons to Choose Professional ${service.name} Services in ${location.location}`,
-        `5 Common ${service.name} Mistakes and How to Avoid Them`,
-        // How-To Guides
-        `How to Get the Best ${service.name} in ${location.location}`,
-        `A Step-by-Step Guide to ${service.name} for ${location.location} Homeowners`,
-        `How to Save Money on ${service.name} Services in ${location.location}`,
-        // Comparison Posts
-        `${service.name} Options in ${location.location}: DIY vs. Professional Services`,
-        `Comparing Top ${service.name} Providers in ${location.location}`,
-        // Case Studies
-        `Case Study: Successful ${service.name} Projects in ${location.location}`,
-        `Real-Life Examples of ${service.name} Solutions in ${location.location}`,
-        // Opinion Pieces
-        `Why ${service.name} is Essential for ${location.location} Residents`,
-        `The Importance of Quality ${service.name} in ${location.location}`,
-        // Checklists
-        `The Ultimate ${service.name} Checklist for ${location.location} Homeowners`,
-        `Don't Miss These Steps for Effective ${service.name} in ${location.location}`,
-        // Beginner's Guides
-        `A Beginner's Guide to ${service.name} in ${location.location}`,
-        `Everything You Need to Know About ${service.name} in ${location.location}`,
-        // Problem-Solution Posts
-        `Common ${service.name} Problems in ${location.location} and How to Fix Them`,
-        `How to Overcome ${service.name} Challenges in ${location.location}`,
-        // Ultimate Guides
-        `The Ultimate Guide to ${service.name} in ${location.location}`,
-        `Comprehensive Resource for ${service.name} Services in ${location.location}`,
-        // Resource Lists
-        `Top 10 Resources for ${service.name} in ${location.location}`,
-        `Best Tools and Services for ${service.name} in ${location.location}`,
-        // Trend Analysis Posts
-        `Latest Trends in ${service.name} for ${location.location}`,
-        `What’s New in ${service.name}: ${location.location} Edition`,
-        // Reviews
-        `An Honest Review of ${service.name} Services in ${location.location}`,
-        `Comparing the Best ${service.name} Products for ${location.location} Homes`,
-        // Additional Titles
-        `Tips for Choosing the Right ${service.name} in ${location.location}`,
-        `Why Invest in Professional ${service.name} Services in ${location.location}`,
-        `How Weather in ${location.location} Affects Your ${service.name} Needs`,
-        `Expert Advice on ${service.name} for ${location.location} Residents`,
-        `Avoid These ${service.name} Pitfalls in ${location.location}`,
-        `Maximizing the Benefits of ${service.name} in ${location.location}`,
-        `Seasonal Guide to ${service.name} in ${location.location}`,
-        `Environmental Impact of ${service.name} Choices in ${location.location}`,
-        `Frequently Asked Questions About ${service.name} in ${location.location}`,
-        `Understanding the Costs of ${service.name} in ${location.location}`,;
+          Write the content in Markdown format.`;
         break;
       
       default:
@@ -177,7 +137,6 @@ serve(async (req) => {
 
     console.log('Calling OpenAI with prompt:', prompt);
     
-    // Call OpenAI API
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -185,7 +144,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-4",
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
@@ -208,7 +167,6 @@ serve(async (req) => {
     const generatedContent = completion.choices[0].message.content;
     console.log('Generated content:', generatedContent.substring(0, 100) + '...');
 
-    // Update the content in the database
     const { error: updateError } = await supabase
       .from('generated_content')
       .update({ 
