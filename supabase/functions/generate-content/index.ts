@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -17,14 +18,16 @@ serve(async (req) => {
   }
 
   try {
-    const { contentType, companyInfo, serviceId, locationId, model = "gpt-4o-mini" } = await req.json();
-    
+    const { contentType, companyInfo, serviceId, locationId } = await req.json();
     console.log('Received request:', { contentType, companyInfo, serviceId, locationId });
 
     // Validate required parameters
     if (!contentType || !companyInfo || !serviceId || !companyInfo.companyId) {
       throw new Error('Missing required parameters');
     }
+
+    // Initialize Supabase client
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     let prompt = '';
     const systemPrompt = `You are an expert content writer and SEO specialist with deep experience in creating engaging, conversion-focused content for local businesses. Your writing style is professional yet approachable, using clear language that resonates with both consumers and business clients. Focus on creating content that:
@@ -203,29 +206,31 @@ serve(async (req) => {
     }
 
     const generatedContent = completion.choices[0].message.content;
+    console.log('Generated content:', generatedContent.substring(0, 100) + '...');
 
     // Update the content in the database
-    console.log('Updating content in database for:', { serviceId, locationId });
-    const { error: updateError } = await fetch(`${supabaseUrl}/rest/v1/generated_content`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${supabaseServiceKey}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ 
+    const { error: updateError } = await supabase
+      .from('generated_content')
+      .update({ 
         content: generatedContent,
         status: 'generated'
-      }),
-    });
+      })
+      .eq('service_id', serviceId)
+      .eq('company_id', companyInfo.companyId)
+      .is('location_id', locationId || null);
 
     if (updateError) {
       console.error('Database update error:', updateError);
       throw updateError;
     }
 
+    console.log('Content successfully updated in database');
+
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ 
+        success: true,
+        content: generatedContent 
+      }),
       { 
         headers: { 
           ...corsHeaders,
