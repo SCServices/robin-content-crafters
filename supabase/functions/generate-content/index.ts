@@ -57,7 +57,7 @@ serve(async (req) => {
           - Incorporate natural SEO keywords without keyword stuffing
           - Keep paragraphs short and scannable
           - Use subheadings to break up content
-          - End with a natural call to action that encourages contact
+          - End with a natural call to action
 
           Write the content in Markdown format.`;
         break;
@@ -93,47 +93,13 @@ serve(async (req) => {
       case 'blog':
         const blogTitles = [
           `10 Essential Tips for ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `7 Reasons to Choose Professional ${companyInfo.serviceName} Services in ${companyInfo.location}`,
-          `5 Common ${companyInfo.serviceName} Mistakes and How to Avoid Them`,
-          `How to Get the Best ${companyInfo.serviceName} Results in ${companyInfo.location}`,
-          `A Step-by-Step Guide to ${companyInfo.serviceName} for ${companyInfo.location} Residents`,
-          `Expert Advice on ${companyInfo.serviceName} for ${companyInfo.location} Homeowners`,
+          `How to Choose the Right ${companyInfo.serviceName} Provider in ${companyInfo.location}`,
+          `Common ${companyInfo.serviceName} Mistakes to Avoid in ${companyInfo.location}`,
           `The Ultimate Guide to ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Understanding the Costs of ${companyInfo.serviceName} in ${companyInfo.location}`
-          `10 Essential Tips for ${service.name} in ${location.location}`,
-        `7 Reasons to Choose Professional ${service.name} Services in ${location.location}`,
-        `5 Common ${service.name} Mistakes and How to Avoid Them`,
-        `How to Get the Best ${service.name} in ${location.location}`,
-        `A Step-by-Step Guide to ${service.name} for ${location.location} Homeowners`,
-        `How to Save Money on ${service.name} Services in ${location.location}`,
-        `${service.name} Options in ${location.location}: DIY vs. Professional Services`,
-        `Comparing Top ${service.name} Providers in ${location.location}`,
-        `Why ${service.name} is Essential for ${location.location} Residents`,
-        `The Importance of Quality ${service.name} in ${location.location}`,
-        `The Ultimate ${service.name} Checklist for ${location.location} Homeowners`,
-        `Don't Miss These Steps for Effective ${service.name} in ${location.location}`,
-        `A Beginner's Guide to ${service.name} in ${location.location}`,
-        `Everything You Need to Know About ${service.name} in ${location.location}`,
-        `Common ${service.name} Problems in ${location.location} and How to Fix Them`,
-        `How to Overcome ${service.name} Challenges in ${location.location}`,
-        `The Ultimate Guide to ${service.name} in ${location.location}`,
-        `Comprehensive Resource for ${service.name} Services in ${location.location}`,
-        `Top 10 Resources for ${service.name} in ${location.location}`,
-        `Best Tools and Services for ${service.name} in ${location.location}`,
-        `Latest Trends in ${service.name} for ${location.location}`,
-        `What’s New in ${service.name}: ${location.location} Edition`,
-        `An Honest Review of ${service.name} Services in ${location.location}`,
-        `Comparing the Best ${service.name} Products for ${location.location} Homes`,
-        `Tips for Choosing the Right ${service.name} in ${location.location}`,
-        `Why Invest in Professional ${service.name} Services in ${location.location}`,
-        `How Weather in ${location.location} Affects Your ${service.name} Needs`,
-        `Expert Advice on ${service.name} for ${location.location} Residents`,
-        `Avoid These ${service.name} Pitfalls in ${location.location}`,
-        `Maximizing the Benefits of ${service.name} in ${location.location}`,
-        `Seasonal Guide to ${service.name} in ${location.location}`,
-        `Environmental Impact of ${service.name} Choices in ${location.location}`,
-        `Frequently Asked Questions About ${service.name} in ${location.location}`,
-        `Understanding the Costs of ${service.name} in ${location.location}`,;
+          `Why Professional ${companyInfo.serviceName} Matters in ${companyInfo.location}`,
+          `${companyInfo.serviceName} Best Practices for ${companyInfo.location} Residents`,
+          `Maximizing Value from Your ${companyInfo.serviceName} Investment in ${companyInfo.location}`,
+          `Expert ${companyInfo.serviceName} Tips for ${companyInfo.location} Property Owners`
         ];
 
         prompt = `
@@ -201,14 +167,16 @@ serve(async (req) => {
     const generatedContent = completion.choices[0].message.content;
     console.log('Generated content:', generatedContent.substring(0, 100) + '...');
 
+    // Fixed query to properly update the content
     const { error: updateError } = await supabase
       .from('generated_content')
       .update({ 
         content: generatedContent,
         status: 'generated'
       })
-      .eq('service_id', serviceId)
       .eq('company_id', companyInfo.companyId)
+      .eq('service_id', serviceId)
+      .eq('type', contentType)
       .is('location_id', locationId || null);
 
     if (updateError) {
