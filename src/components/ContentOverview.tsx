@@ -13,13 +13,12 @@ const ContentOverview = () => {
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
-  const [generationProgress, setGenerationProgress] = useState(0);
   const queryClient = useQueryClient();
 
+  // Query to get content and calculate progress
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["content"],
     queryFn: async () => {
-      // First, get the latest created_at timestamp
       const { data: latestTimestamp, error: timestampError } = await supabase
         .from("generated_content")
         .select('created_at')
@@ -29,7 +28,6 @@ const ContentOverview = () => {
 
       if (timestampError) throw timestampError;
 
-      // Then get all content from that timestamp
       const { data, error } = await supabase
         .from("generated_content")
         .select(`
@@ -44,7 +42,18 @@ const ContentOverview = () => {
       if (error) throw error;
       return data;
     },
+    refetchInterval: (data) => {
+      // Refetch every 2 seconds if there are pending items
+      return data?.some(item => item.status === 'pending') ? 2000 : false;
+    },
   });
+
+  // Calculate actual progress based on content generation status
+  const progress = items?.length ? 
+    (items.filter(item => item.status === 'generated').length / items.length) * 100 
+    : 0;
+
+  const isGenerating = items?.some(item => item.status === 'pending');
 
   const handleDelete = async (id: string) => {
     try {
@@ -93,22 +102,6 @@ const ContentOverview = () => {
   const filteredItems = activeTab === "all" 
     ? items 
     : items.filter(item => item.type === activeTab);
-
-  // Simulate progress
-  useEffect(() => {
-    if (items?.some(item => item.status === 'pending')) {
-      const interval = setInterval(() => {
-        setGenerationProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          return prev + 1;
-        });
-      }, 100);
-      return () => clearInterval(interval);
-    }
-  }, [items]);
 
   const handleGenerationComplete = () => {
     queryClient.invalidateQueries({ queryKey: ["content"] });
@@ -180,8 +173,8 @@ const ContentOverview = () => {
       />
 
       <WaitingRoom
-        isGenerating={items?.some(item => item.status === 'pending')}
-        progress={generationProgress}
+        isGenerating={isGenerating}
+        progress={progress}
         onComplete={handleGenerationComplete}
       />
     </>
