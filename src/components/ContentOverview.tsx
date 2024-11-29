@@ -8,6 +8,23 @@ import { toast } from "sonner";
 import { WaitingRoom } from "./waiting-room/WaitingRoom";
 import { ContentDialog } from "./content/ContentDialog";
 
+type GeneratedContent = {
+  id: string;
+  company_id: string;
+  content: string | null;
+  created_at: string;
+  location_id: string | null;
+  meta_description: string | null;
+  parent_content_id: string | null;
+  service_id: string | null;
+  status: "pending" | "generated" | "error";
+  title: string;
+  type: "service" | "location" | "blog";
+  companies: { name: string };
+  services: { name: string };
+  service_locations: { location: string };
+}
+
 const ContentOverview = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
@@ -40,10 +57,9 @@ const ContentOverview = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as GeneratedContent[];
     },
-    refetchInterval: (data) => {
-      // Refetch every 2 seconds if there are pending items
+    refetchInterval: (data: GeneratedContent[] | undefined) => {
       return data?.some(item => item.status === 'pending') ? 2000 : false;
     },
   });
