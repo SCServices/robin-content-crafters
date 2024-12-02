@@ -126,7 +126,6 @@ serve(async (req) => {
         break;
 
       case 'blog':
-        // Get the blog type based on the content index (0-4 for our 5 different types)
         const blogTypeIndex = Math.floor(Math.random() * blogTypes.length);
         const blogType = blogTypes[blogTypeIndex];
         
@@ -134,12 +133,25 @@ serve(async (req) => {
           .replace('{service}', companyInfo.serviceName)
           .replace('{location}', companyInfo.location);
 
+        let basePrompt = '';
+        
+        // IFTTT approach for different blog types
+        if (blogType.type === 'how-to') {
+          basePrompt = `Create a comprehensive step-by-step tutorial that teaches readers exactly how to handle ${companyInfo.serviceName}. Focus on practical, hands-on instructions that a beginner could follow. Include common mistakes to avoid, required tools or preparations, and expert tips for each step.`;
+        } else if (blogType.type === 'comparison') {
+          basePrompt = `Create an in-depth comparison between professional and DIY approaches to ${companyInfo.serviceName}. Analyze costs, time investment, skill requirements, and potential risks. Use real scenarios to illustrate when each approach makes more sense.`;
+        } else if (blogType.type === 'tips') {
+          basePrompt = `Share insider knowledge and professional secrets about ${companyInfo.serviceName}. Focus on unexpected tips that even experienced property owners might not know. Each tip should provide immediate, actionable value.`;
+        } else if (blogType.type === 'seasonal') {
+          basePrompt = `Create a seasonal guide that explains how weather and timing affect ${companyInfo.serviceName}. Include specific preparations needed for each season, timing considerations, and how to adapt service approaches based on weather conditions.`;
+        } else if (blogType.type === 'cost') {
+          basePrompt = `Develop a detailed cost analysis of ${companyInfo.serviceName}. Break down pricing factors, explain hidden costs, analyze long-term vs. short-term investments, and provide money-saving strategies without compromising quality.`;
+        }
+
         prompt = `
-          Create a unique and informative blog post titled "${title}" for ${companyInfo.companyName}'s audience in ${companyInfo.location}.
+          ${basePrompt}
 
-          ${blogType.systemPromptAddition}
-
-          ${blogType.contentStructure}
+          Create this as a unique and informative blog post titled "${title}" for ${companyInfo.companyName}'s audience in ${companyInfo.location}.
 
           Structure the content to:
           1. Start with an engaging hook that relates to ${companyInfo.location} readers
@@ -164,7 +176,7 @@ serve(async (req) => {
 
           Write the content in Markdown format.`;
         break;
-      
+
       default:
         throw new Error('Invalid content type specified');
     }
