@@ -36,15 +36,6 @@ const ContentOverview = () => {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["content"],
     queryFn: async () => {
-      const { data: latestTimestamp, error: timestampError } = await supabase
-        .from("generated_content")
-        .select('created_at')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (timestampError) throw timestampError;
-
       const { data, error } = await supabase
         .from("generated_content")
         .select(`
@@ -53,7 +44,6 @@ const ContentOverview = () => {
           services (name),
           service_locations (location)
         `)
-        .eq('created_at', latestTimestamp.created_at)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
