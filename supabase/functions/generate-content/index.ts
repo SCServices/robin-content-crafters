@@ -140,8 +140,6 @@ serve(async (req) => {
         Write the content in Markdown format.`;
     }
 
-    console.log('Calling OpenAI with prompt:', prompt);
-    
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
