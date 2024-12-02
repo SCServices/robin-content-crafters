@@ -11,6 +11,40 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Blog post types with their specific prompting strategies
+const blogTypes = [
+  {
+    type: 'how-to',
+    titleTemplate: 'The Complete Step-by-Step Guide to {service} in {location}',
+    systemPromptAddition: 'Focus on creating a detailed, step-by-step guide that walks readers through the process. Break down complex procedures into manageable steps.',
+    contentStructure: 'Structure the content with clear, numbered steps, prerequisites, and expected outcomes.'
+  },
+  {
+    type: 'comparison',
+    titleTemplate: 'Professional vs DIY {service}: A Complete Guide for {location} Residents',
+    systemPromptAddition: 'Focus on providing an objective comparison between different approaches or solutions, highlighting pros and cons.',
+    contentStructure: 'Structure the content with clear comparison points, cost analysis, and specific scenarios where each option works best.'
+  },
+  {
+    type: 'tips',
+    titleTemplate: 'Essential {service} Tips and Best Practices for {location} Property Owners',
+    systemPromptAddition: 'Focus on providing actionable, practical tips that readers can implement immediately.',
+    contentStructure: 'Structure the content as a collection of valuable tips, each with clear implementation guidance.'
+  },
+  {
+    type: 'seasonal',
+    titleTemplate: 'Seasonal Guide to {service} in {location}: What You Need to Know',
+    systemPromptAddition: 'Focus on how seasonal changes affect service delivery and maintenance requirements.',
+    contentStructure: 'Structure the content around seasonal considerations, timing, and environmental factors.'
+  },
+  {
+    type: 'cost',
+    titleTemplate: '{service} Costs in {location}: A Comprehensive Price Guide',
+    systemPromptAddition: 'Focus on providing detailed cost information, budget considerations, and value analysis.',
+    contentStructure: 'Structure the content with clear price breakdowns, cost factors, and ROI analysis.'
+  }
+];
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -91,56 +125,20 @@ serve(async (req) => {
         break;
 
       case 'blog':
-        const blogTitles = [
-          `10 Essential Tips for ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `7 Reasons to Choose Professional ${companyInfo.serviceName} Services in ${companyInfo.location}`,
-          `How to Choose the Right ${companyInfo.serviceName} Provider in ${companyInfo.location}`,
-          `5 Common ${companyInfo.serviceName} Mistakes and How to Avoid Them`,
-          `Common ${companyInfo.serviceName} Mistakes to Avoid in ${companyInfo.location}`,
-          `How to Get the Best ${companyInfo.serviceName} Results in ${companyInfo.location}`,
-          `A Step-by-Step Guide to ${companyInfo.serviceName} for ${companyInfo.location} Residents`,
-          `Expert Advice on ${companyInfo.serviceName} for ${companyInfo.location} Homeowners`,
-          `The Ultimate Guide to ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Understanding the Costs of ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Why Professional ${companyInfo.serviceName} Matters in ${companyInfo.location}`,
-          `${companyInfo.serviceName} Best Practices for ${companyInfo.location} Residents`,
-          `Maximizing Value from Your ${companyInfo.serviceName} Investment in ${companyInfo.location}`,
-          `Expert ${companyInfo.serviceName} Tips for ${companyInfo.location} Property Owners`,
-          `How to Save Money on ${companyInfo.serviceName} Services in ${companyInfo.location}`,
-          `${companyInfo.serviceName} Options in ${companyInfo.location}: DIY vs. Professional Services`,
-          `Comparing Top ${companyInfo.serviceName} Providers in ${companyInfo.location}`,
-          `Why ${companyInfo.serviceName} is Essential for ${companyInfo.location} Residents`,
-          `The Importance of Quality ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `The Ultimate ${companyInfo.serviceName} Checklist for ${companyInfo.location} Homeowners`,
-          `Don't Miss These Steps for Effective ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `A Beginner's Guide to ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Everything You Need to Know About ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Common ${companyInfo.serviceName} Problems in ${companyInfo.location} and How to Fix Them`,
-          `How to Overcome ${companyInfo.serviceName} Challenges in ${companyInfo.location}`,
-          `Comprehensive Resource for ${companyInfo.serviceName} Services in ${companyInfo.location}`,
-          `Top 10 Resources for ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Best Tools and Services for ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Latest Trends in ${companyInfo.serviceName} for ${companyInfo.location}`,
-          `What's New in ${companyInfo.serviceName}: ${companyInfo.location} Edition`,
-          `An Honest Review of ${companyInfo.serviceName} Services in ${companyInfo.location}`,
-          `Comparing the Best ${companyInfo.serviceName} Products for ${companyInfo.location} Homes`,
-          `Tips for Choosing the Right ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Why Invest in Professional ${companyInfo.serviceName} Services in ${companyInfo.location}`,
-          `How Weather in ${companyInfo.location} Affects Your ${companyInfo.serviceName} Needs`,
-          `Expert Advice on ${companyInfo.serviceName} for ${companyInfo.location} Residents`,
-          `Avoid These ${companyInfo.serviceName} Pitfalls in ${companyInfo.location}`,
-          `Maximizing the Benefits of ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Seasonal Guide to ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Environmental Impact of ${companyInfo.serviceName} Choices in ${companyInfo.location}`,
-          `Frequently Asked Questions About ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Understanding the Costs of ${companyInfo.serviceName} in ${companyInfo.location}`
-        ];
+        // Get the blog type based on the content index (0-4 for our 5 different types)
+        const blogTypeIndex = Math.floor(Math.random() * blogTypes.length);
+        const blogType = blogTypes[blogTypeIndex];
+        
+        const title = blogType.titleTemplate
+          .replace('{service}', companyInfo.serviceName)
+          .replace('{location}', companyInfo.location);
 
         prompt = `
-          Create an informative blog post about ${companyInfo.serviceName} for ${companyInfo.companyName}'s audience in ${companyInfo.location}.
+          Create a unique and informative blog post titled "${title}" for ${companyInfo.companyName}'s audience in ${companyInfo.location}.
 
-          Use one of these titles:
-          ${blogTitles.join('\n')}
+          ${blogType.systemPromptAddition}
+
+          ${blogType.contentStructure}
 
           Structure the content to:
           1. Start with an engaging hook that relates to ${companyInfo.location} readers
