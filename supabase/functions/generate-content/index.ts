@@ -71,7 +71,7 @@ serve(async (req) => {
     switch (contentType) {
       case 'service':
         prompt = `
-          Create a comprehensive service page for ${companyInfo.companyName}, a respected ${companyInfo.industry} company, focusing on their ${companyInfo.serviceName} service.
+          Create a comprehensive service page for ${companyInfo.companyName}, a respected ${companyInfo.industry} company, focusing on their ${companyInfo.serviceName} service. 
 
           Structure the content to:
           1. Open with a compelling introduction that immediately addresses the reader's needs and pain points
@@ -82,16 +82,16 @@ serve(async (req) => {
              - Typical problems solved and outcomes achieved
              - Relevant experience and expertise in this service area
           4. Address common customer questions and concerns
-          5. End with a clear, compelling call to action
+          5. End with a clear, compelling call to action. Do not call this headline "Call to action" or "conclusion" make it natural.
 
           Key requirements:
           - Use a professional yet conversational tone
+          - Use natural headlines and headings, that are relevant to the content
           - Include specific details about ${companyInfo.serviceName} that set it apart
           - Focus on value and benefits rather than just features
           - Incorporate natural SEO keywords without keyword stuffing
           - Keep paragraphs short and scannable
           - Use subheadings to break up content
-          - End with a natural call to action
 
           Write the content in Markdown format.`;
         break;
@@ -111,11 +111,12 @@ serve(async (req) => {
              - Experience serving the ${companyInfo.location} area
              - Understanding of local market conditions
           4. Highlight any community involvement or local partnerships
-          5. End with a location-specific call to action
+          5. End with a location-specific call to action. Do not call this headline "Call to action" or "conclusion" make it natural.
 
           Key requirements:
           - Incorporate local landmarks or area-specific references naturally
           - Address specific needs of ${companyInfo.location} customers
+          - Use natural headlines and headings, that are relevant to the content
           - Include local SEO elements without forcing them
           - Maintain a neighborly yet professional tone
           - Use clear subheadings and scannable format
@@ -149,9 +150,10 @@ serve(async (req) => {
              - Cost-saving or efficiency-improving strategies
           3. Provide actionable advice readers can use
           4. Include relevant examples or case studies
-          5. End with a subtle call to action
+          5. End with a subtle call to action. Do not call this headline "Call to action" or "conclusion" make it natural.
 
           Key requirements:
+          - Use natural headlines and headings, that are relevant to the content
           - Use a helpful, conversational tone
           - Include practical tips and actionable advice
           - Reference local context when relevant
