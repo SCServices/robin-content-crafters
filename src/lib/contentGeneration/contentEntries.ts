@@ -1,4 +1,4 @@
-import { titleTemplates } from "../titleTemplates";
+import { getRandomTemplate, serviceTitleTemplates, locationTitleTemplates, blogTitleTemplates } from "../titleTemplates";
 
 export const createContentEntries = (
   companyId: string,
@@ -12,7 +12,7 @@ export const createContentEntries = (
     entries.push({
       company_id: companyId,
       service_id: service.id,
-      title: titleTemplates.service(service.name),
+      title: getRandomTemplate(serviceTitleTemplates, { service: service.name }),
       type: "service",
       status: "pending",
     });
@@ -24,7 +24,10 @@ export const createContentEntries = (
         company_id: companyId,
         service_id: service.id,
         location_id: location.id,
-        title: titleTemplates.location(service.name, location.location),
+        title: getRandomTemplate(locationTitleTemplates, { 
+          service: service.name,
+          location: location.location 
+        }),
         type: "location",
         status: "pending",
       });
@@ -35,7 +38,10 @@ export const createContentEntries = (
           company_id: companyId,
           service_id: service.id,
           location_id: location.id,
-          title: titleTemplates.blog(service.name, location.location),
+          title: getRandomTemplate(blogTitleTemplates, {
+            service: service.name,
+            location: location.location
+          }),
           type: "blog",
           status: "pending",
           blog_index: i, // Add the blog_index for blog posts
