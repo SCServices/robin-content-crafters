@@ -1,6 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -9,6 +8,137 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+// Base system prompt for all content types
+const baseSystemPrompt = `You are an expert content writer and SEO specialist who:
+- Creates engaging, conversion-focused content
+- Uses professional yet approachable language
+- Excels at creating unique content across multiple pieces
+- Understands local business needs and markets
+
+When generating multiple pieces:
+- Use different examples and case studies
+- Draw from different industry aspects
+- Vary perspectives while maintaining brand voice
+- Use distinct data points and statistics`;
+
+// Shared requirements across all content types
+const sharedRequirements = {
+  format: 'Write the content in Markdown format.',
+  style: {
+    tone: 'professional yet conversational',
+    structure: 'use clear subheadings and scannable format',
+    seo: 'incorporate natural keywords without forcing them',
+  },
+  elements: {
+    cta: 'end with a natural call to action',
+    value: 'focus on providing genuine value',
+  }
+};
+
+// Content templates for different types
+const contentTemplates = {
+  service: {
+    sections: [
+      'compelling introduction',
+      'unique benefits and features',
+      'service process',
+      'quality standards',
+      'experience and expertise'
+    ],
+    focus: 'service-specific value proposition'
+  },
+  location: {
+    sections: [
+      'local introduction',
+      'area-specific solutions',
+      'local experience',
+      'community involvement',
+      'location-specific benefits'
+    ],
+    focus: 'local market understanding'
+  },
+  blog: {
+    sections: [
+      'engaging hook',
+      'practical information',
+      'actionable advice',
+      'relevant examples',
+      'conclusion with CTA'
+    ],
+    focus: 'educational value'
+  }
+};
+
+// Reduced set of blog title patterns
+const blogTitlePatterns = [
+  '{number} Essential Tips for {service} in {location}',
+  'How to Choose the Right {service} Provider in {location}',
+  'The Ultimate Guide to {service} in {location}',
+  '{service} Best Practices for {location} Residents',
+  'Expert {service} Tips for {location} Property Owners',
+  'Maximizing Value from Your {service} Investment in {location}',
+  'Common {service} Problems in {location} and How to Fix Them',
+  'Latest Trends in {service} for {location}',
+  'Seasonal Guide to {service} in {location}',
+  'Environmental Impact of {service} Choices in {location}'
+];
+
+// Function to build content-specific prompts
+const buildPrompt = (type: string, companyInfo: any) => {
+  const template = contentTemplates[type as keyof typeof contentTemplates];
+  let prompt = '';
+
+  switch (type) {
+    case 'service':
+      prompt = `
+        Create a comprehensive service page for ${companyInfo.companyName}, focusing on their ${companyInfo.serviceName} service.
+
+        Structure the content to include:
+        ${template.sections.map(section => `- ${section}`).join('\n')}
+        
+        ${sharedRequirements.format}
+        Focus on: ${template.focus}
+        ${Object.values(sharedRequirements.style).join('\n')}
+        ${Object.values(sharedRequirements.elements).join('\n')}`;
+      break;
+
+    case 'location':
+      prompt = `
+        Create a location-specific service page for ${companyInfo.companyName}'s ${companyInfo.serviceName} service in ${companyInfo.location}.
+
+        Structure the content to include:
+        ${template.sections.map(section => `- ${section}`).join('\n')}
+        
+        ${sharedRequirements.format}
+        Focus on: ${template.focus}
+        ${Object.values(sharedRequirements.style).join('\n')}
+        ${Object.values(sharedRequirements.elements).join('\n')}`;
+      break;
+
+    case 'blog':
+      prompt = `
+        Create a UNIQUE and original blog post (one of a series of 5 different articles) about ${companyInfo.serviceName} in ${companyInfo.location}.
+        
+        Choose one of these title patterns:
+        ${blogTitlePatterns.join('\n')}
+
+        Important: This article should be completely different from other articles in the series.
+        Structure the content to include:
+        ${template.sections.map(section => `- ${section}`).join('\n')}
+        
+        ${sharedRequirements.format}
+        Focus on: ${template.focus}
+        ${Object.values(sharedRequirements.style).join('\n')}
+        ${Object.values(sharedRequirements.elements).join('\n')}`;
+      break;
+    
+    default:
+      throw new Error('Invalid content type specified');
+  }
+
+  return prompt;
 };
 
 serve(async (req) => {
@@ -26,162 +156,8 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-    let prompt = '';
-    const systemPrompt = `You are an expert content writer and SEO specialist with deep experience in creating engaging, conversion-focused content for local businesses. Your writing style is professional yet approachable, using clear language that resonates with both consumers and business clients. Focus on creating content that:
-    - Demonstrates deep understanding of the industry and local market
-    - Builds trust through expertise and credibility
-    - Includes natural, contextual calls-to-action
-    - Optimizes for local SEO without compromising readability
-    - Uses a warm, professional tone that connects with readers
-
-    You excel at creating UNIQUE, diverse content even when writing multiple articles about the same topic. When generating a series of articles:
-- Never repeat the same examples or case studies
-- Use different perspectives and angles for each piece
-- Vary your writing style while maintaining professionalism
-- Draw from different aspects of the industry
-- Use distinct data points and statistics
-Your writing should be original for each piece while maintaining consistent quality and brand voice.`;
-
-    switch (contentType) {
-      case 'service':
-        prompt = `
-          Create a comprehensive service page for ${companyInfo.companyName}, a respected ${companyInfo.industry} company, focusing on their ${companyInfo.serviceName} service.
-
-          Structure the content to:
-          1. Open with a compelling introduction that immediately addresses the reader's needs and pain points
-          2. Highlight the unique benefits and features of ${companyInfo.serviceName}, explaining why they matter to the customer
-          3. Include specific details about:
-             - The service process and what customers can expect
-             - Quality standards and professional certifications
-             - Typical problems solved and outcomes achieved
-             - Relevant experience and expertise in this service area
-          4. Address common customer questions and concerns
-          5. End with a clear, compelling call to action
-
-          Key requirements:
-          - Use a professional yet conversational tone
-          - Include specific details about ${companyInfo.serviceName} that set it apart
-          - Focus on value and benefits rather than just features
-          - Incorporate natural SEO keywords without keyword stuffing
-          - Keep paragraphs short and scannable
-          - Use subheadings to break up content
-          - End with a natural call to action
-
-          Write the content in Markdown format.`;
-        break;
-
-      case 'location':
-        prompt = `
-          Create a location-specific service page for ${companyInfo.companyName}'s ${companyInfo.serviceName} service in ${companyInfo.location}.
-
-          Structure the content to:
-          1. Open with a locally-focused introduction that connects with the ${companyInfo.location} community
-          2. Explain how ${companyInfo.serviceName} is specifically tailored to:
-             - Local needs and preferences in ${companyInfo.location}
-             - Regional challenges or requirements
-             - Area-specific regulations or standards
-          3. Include details about:
-             - Local service coverage and response times
-             - Experience serving the ${companyInfo.location} area
-             - Understanding of local market conditions
-          4. Highlight any community involvement or local partnerships
-          5. End with a location-specific call to action
-
-          Key requirements:
-          - Incorporate local landmarks or area-specific references naturally
-          - Address specific needs of ${companyInfo.location} customers
-          - Include local SEO elements without forcing them
-          - Maintain a neighborly yet professional tone
-          - Use clear subheadings and scannable format
-          - Keep content focused on local relevance
-          
-          Write the content in Markdown format.`;
-        break;
-
-      case 'blog':
-        const blogTitles = [
-          `10 Essential Tips for ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `7 Reasons to Choose Professional ${companyInfo.serviceName} Services in ${companyInfo.location}`,
-          `How to Choose the Right ${companyInfo.serviceName} Provider in ${companyInfo.location}`,
-          `5 Common ${companyInfo.serviceName} Mistakes and How to Avoid Them`,
-          `Common ${companyInfo.serviceName} Mistakes to Avoid in ${companyInfo.location}`,
-          `How to Get the Best ${companyInfo.serviceName} Results in ${companyInfo.location}`,
-          `A Step-by-Step Guide to ${companyInfo.serviceName} for ${companyInfo.location} Residents`,
-          `Expert Advice on ${companyInfo.serviceName} for ${companyInfo.location} Homeowners`,
-          `The Ultimate Guide to ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Understanding the Costs of ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Why Professional ${companyInfo.serviceName} Matters in ${companyInfo.location}`,
-          `${companyInfo.serviceName} Best Practices for ${companyInfo.location} Residents`,
-          `Maximizing Value from Your ${companyInfo.serviceName} Investment in ${companyInfo.location}`,
-          `Expert ${companyInfo.serviceName} Tips for ${companyInfo.location} Property Owners`,
-          `How to Save Money on ${companyInfo.serviceName} Services in ${companyInfo.location}`,
-          `${companyInfo.serviceName} Options in ${companyInfo.location}: DIY vs. Professional Services`,
-          `Comparing Top ${companyInfo.serviceName} Providers in ${companyInfo.location}`,
-          `Why ${companyInfo.serviceName} is Essential for ${companyInfo.location} Residents`,
-          `The Importance of Quality ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `The Ultimate ${companyInfo.serviceName} Checklist for ${companyInfo.location} Homeowners`,
-          `Don't Miss These Steps for Effective ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `A Beginner's Guide to ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Everything You Need to Know About ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Common ${companyInfo.serviceName} Problems in ${companyInfo.location} and How to Fix Them`,
-          `How to Overcome ${companyInfo.serviceName} Challenges in ${companyInfo.location}`,
-          `Comprehensive Resource for ${companyInfo.serviceName} Services in ${companyInfo.location}`,
-          `Top 10 Resources for ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Best Tools and Services for ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Latest Trends in ${companyInfo.serviceName} for ${companyInfo.location}`,
-          `What's New in ${companyInfo.serviceName}: ${companyInfo.location} Edition`,
-          `An Honest Review of ${companyInfo.serviceName} Services in ${companyInfo.location}`,
-          `Comparing the Best ${companyInfo.serviceName} Products for ${companyInfo.location} Homes`,
-          `Tips for Choosing the Right ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Why Invest in Professional ${companyInfo.serviceName} Services in ${companyInfo.location}`,
-          `How Weather in ${companyInfo.location} Affects Your ${companyInfo.serviceName} Needs`,
-          `Expert Advice on ${companyInfo.serviceName} for ${companyInfo.location} Residents`,
-          `Avoid These ${companyInfo.serviceName} Pitfalls in ${companyInfo.location}`,
-          `Maximizing the Benefits of ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Seasonal Guide to ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Environmental Impact of ${companyInfo.serviceName} Choices in ${companyInfo.location}`,
-          `Frequently Asked Questions About ${companyInfo.serviceName} in ${companyInfo.location}`,
-          `Understanding the Costs of ${companyInfo.serviceName} in ${companyInfo.location}`
-        ];
-
-        prompt = `
-         Create a UNIQUE and original blog post (one of a series of 5 different articles) about ${companyInfo.serviceName}. Use one of these titles: ${blogTitles.join('\n')}
-
-Important: 
-This article should be completely different from other articles in the series. To ensure uniqueness:
-- Choose a specific angle or perspective from the title options
-- Focus on a distinct subset of challenges or solutions
-- Use unique examples and case studies
-- Draw from different aspects of ${companyInfo.location}'s context
-- Include different statistics and data points
-
-Your chosen angle: [AI should pick one distinct aspect to focus on]
-
-Structure:
-- Ensure content is completely unique from other articles in the series
-- Choose different subheadings and section topics
-- Use distinct examples
-- Reference different local contexts and scenarios
-- Include unique statistics and data points
-- Maintain consistent brand voice and quality while varying the approach
-
-          Key requirements:
-          - Use a helpful, conversational tone
-          - Include practical tips and actionable advice
-          - Reference local context when relevant
-          - Break up text with subheadings and bullet points
-          - Focus on providing genuine value
-          - Keep the promotional aspect subtle
-          - Include relevant statistics or data points when possible
-
-          Write the content in Markdown format.`;
-        break;
-      
-      default:
-        throw new Error('Invalid content type specified');
-    }
-
-    console.log('Calling OpenAI with prompt:', prompt);
+    const prompt = buildPrompt(contentType, companyInfo);
+    console.log('Using prompt:', prompt);
     
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -192,7 +168,7 @@ Structure:
       body: JSON.stringify({
         model: "gpt-4",
         messages: [
-          { role: 'system', content: systemPrompt },
+          { role: 'system', content: baseSystemPrompt },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
