@@ -1,18 +1,35 @@
 import { getRandomTemplate, serviceTitleTemplates, locationTitleTemplates, blogTitleTemplates } from "../titleTemplates";
 
+const getUniqueTemplate = (templates: string[], usedTemplates: Set<string>, replacements: Record<string, string>): string => {
+  const availableTemplates = templates.filter(template => !usedTemplates.has(template));
+  
+  if (availableTemplates.length === 0) {
+    // If all templates have been used, clear the set and start over
+    usedTemplates.clear();
+    return getRandomTemplate(templates, replacements);
+  }
+  
+  const template = availableTemplates[Math.floor(Math.random() * availableTemplates.length)];
+  usedTemplates.add(template);
+  return getRandomTemplate([template], replacements);
+};
+
 export const createContentEntries = (
   companyId: string,
   services: { id: string; name: string }[],
   locations: { id: string; location: string }[]
 ) => {
   const entries = [];
+  const usedServiceTemplates = new Set<string>();
+  const usedLocationTemplates = new Set<string>();
+  const usedBlogTemplates = new Set<string>();
 
   for (const service of services) {
     // Service page
     entries.push({
       company_id: companyId,
       service_id: service.id,
-      title: getRandomTemplate(serviceTitleTemplates, { service: service.name }),
+      title: getUniqueTemplate(serviceTitleTemplates, usedServiceTemplates, { service: service.name }),
       type: "service",
       status: "pending",
     });
@@ -24,7 +41,7 @@ export const createContentEntries = (
         company_id: companyId,
         service_id: service.id,
         location_id: location.id,
-        title: getRandomTemplate(locationTitleTemplates, { 
+        title: getUniqueTemplate(locationTitleTemplates, usedLocationTemplates, { 
           service: service.name,
           location: location.location 
         }),
@@ -38,13 +55,13 @@ export const createContentEntries = (
           company_id: companyId,
           service_id: service.id,
           location_id: location.id,
-          title: getRandomTemplate(blogTitleTemplates, {
+          title: getUniqueTemplate(blogTitleTemplates, usedBlogTemplates, {
             service: service.name,
             location: location.location
           }),
           type: "blog",
           status: "pending",
-          blog_index: i, // Add the blog_index for blog posts
+          blog_index: i,
         });
       }
     }
