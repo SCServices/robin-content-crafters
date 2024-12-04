@@ -75,25 +75,25 @@ const contentTemplates = {
 const getBlogTopics = (service: string) => [
   {
     topic: "Tips and Best Practices",
-    prompt: `Create a comprehensive guide with essential tips and best practices for ${service}.`
+    prompt: `Create a comprehensive guide with essential tips and best practices for ${service}.`,
   },
   {
     topic: "Common Problems and Solutions",
-    prompt: `Address the most common problems people face with ${service} and provide expert solutions.`
+    prompt: `Address the most common problems people face with ${service} and provide expert solutions.`,
   },
   {
     topic: "Cost and Value Guide",
-    prompt: `Create an in-depth analysis of costs, value, and return on investment for ${service}.`
+    prompt: `Create an in-depth analysis of costs, value, and return on investment for ${service}.`,
   },
   {
     topic: "Seasonal Considerations",
-    prompt: `Discuss how different seasons affect ${service} and provide season-specific advice.`
+    prompt: `Discuss how different seasons affect ${service} and provide season-specific advice.`,
   },
   {
     topic: "Latest Trends and Innovations",
-    prompt: `Explore current trends, innovations, and future developments in ${service}.`
-  }
-};
+    prompt: `Explore current trends, innovations, and future developments in ${service}.`,
+  },
+];
 
 const buildPrompt = (type: string, companyInfo: any, blogIndex?: number) => {
   const template = contentTemplates[type as keyof typeof contentTemplates];
