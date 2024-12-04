@@ -75,9 +75,9 @@ export const ContentDialog = ({
               </div>
             </div>
           ) : (
-            <article className="prose prose-neutral prose-headings:text-primary prose-a:text-primary max-w-none">
+            <div className="prose prose-sm max-w-none">
               <ReactMarkdown>{selectedContent.content}</ReactMarkdown>
-            </article>
+            </div>
           )}
         </ScrollArea>
       </DialogContent>
