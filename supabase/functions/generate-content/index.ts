@@ -11,39 +11,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const blogTypes = [
-  {
-    type: 'how-to',
-    titleTemplate: 'The Complete Step-by-Step Guide to {service} in {location}',
-    systemPromptAddition: 'You are a professional instructor creating a detailed, step-by-step tutorial. Focus on practical instructions, common pitfalls, and expert tips.',
-    contentStructure: 'Structure as a comprehensive tutorial with clear steps, prerequisites, and expected outcomes.'
-  },
-  {
-    type: 'comparison',
-    titleTemplate: 'Professional vs DIY {service}: A Complete Guide for {location} Residents',
-    systemPromptAddition: 'You are an expert analyst comparing different approaches. Focus on objective comparisons, highlighting pros, cons, and specific scenarios.',
-    contentStructure: 'Structure as a detailed comparison with clear points of difference, cost analysis, and specific recommendations.'
-  },
-  {
-    type: 'tips',
-    titleTemplate: 'Essential {service} Tips and Best Practices for {location} Property Owners',
-    systemPromptAddition: 'You are an industry insider sharing valuable tips and secrets. Focus on practical, actionable advice that readers can implement immediately.',
-    contentStructure: 'Structure as a collection of expert tips, each with clear implementation guidance and expected benefits.'
-  },
-  {
-    type: 'seasonal',
-    titleTemplate: 'Seasonal Guide to {service} in {location}: What You Need to Know',
-    systemPromptAddition: 'You are a seasonal planning expert. Focus on how weather and timing affect service delivery and maintenance requirements.',
-    contentStructure: 'Structure around seasonal considerations, timing, and environmental factors specific to the location.'
-  },
-  {
-    type: 'cost',
-    titleTemplate: '{service} Costs in {location}: A Comprehensive Price Guide',
-    systemPromptAddition: 'You are a cost analysis expert. Focus on providing detailed pricing information, budget considerations, and value analysis.',
-    contentStructure: 'Structure with clear price breakdowns, cost factors, and ROI analysis specific to the location.'
-  }
-];
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -60,84 +27,146 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     let prompt = '';
-    const systemPrompt = `You are an expert content writer and SEO specialist with deep experience in creating engaging, conversion-focused content for local businesses. Your writing style is professional yet approachable, using clear language that resonates with both consumers and business clients.`;
+    const systemPrompt = `You are an expert content writer and SEO specialist with deep experience in creating engaging, conversion-focused content for local businesses. Your writing style is professional yet approachable, using clear language that resonates with both consumers and business clients. Focus on creating content that:
+    - Demonstrates deep understanding of the industry and local market
+    - Builds trust through expertise and credibility
+    - Includes natural, contextual calls-to-action
+    - Optimizes for local SEO without compromising readability
+    - Uses a warm, professional tone that connects with readers`;
 
-    if (contentType === 'blog') {
-      const blogTypeIndex = Math.floor(Math.random() * blogTypes.length);
-      const blogType = blogTypes[blogTypeIndex];
+    switch (contentType) {
+      case 'service':
+        prompt = `
+          Create a comprehensive service page for ${companyInfo.companyName}, a respected ${companyInfo.industry} company, focusing on their ${companyInfo.serviceName} service.
+
+          Structure the content to:
+          1. Open with a compelling introduction that immediately addresses the reader's needs and pain points
+          2. Highlight the unique benefits and features of ${companyInfo.serviceName}, explaining why they matter to the customer
+          3. Include specific details about:
+             - The service process and what customers can expect
+             - Quality standards and professional certifications
+             - Typical problems solved and outcomes achieved
+             - Relevant experience and expertise in this service area
+          4. Address common customer questions and concerns
+          5. End with a clear, compelling call to action
+
+          Key requirements:
+          - Use a professional yet conversational tone
+          - Include specific details about ${companyInfo.serviceName} that set it apart
+          - Focus on value and benefits rather than just features
+          - Incorporate natural SEO keywords without keyword stuffing
+          - Keep paragraphs short and scannable
+          - Use subheadings to break up content
+          - End with a natural call to action
+
+          Write the content in Markdown format.`;
+        break;
+
+      case 'location':
+        prompt = `
+          Create a location-specific service page for ${companyInfo.companyName}'s ${companyInfo.serviceName} service in ${companyInfo.location}.
+
+          Structure the content to:
+          1. Open with a locally-focused introduction that connects with the ${companyInfo.location} community
+          2. Explain how ${companyInfo.serviceName} is specifically tailored to:
+             - Local needs and preferences in ${companyInfo.location}
+             - Regional challenges or requirements
+             - Area-specific regulations or standards
+          3. Include details about:
+             - Local service coverage and response times
+             - Experience serving the ${companyInfo.location} area
+             - Understanding of local market conditions
+          4. Highlight any community involvement or local partnerships
+          5. End with a location-specific call to action
+
+          Key requirements:
+          - Incorporate local landmarks or area-specific references naturally
+          - Address specific needs of ${companyInfo.location} customers
+          - Include local SEO elements without forcing them
+          - Maintain a neighborly yet professional tone
+          - Use clear subheadings and scannable format
+          - Keep content focused on local relevance
+          
+          Write the content in Markdown format.`;
+        break;
+
+      case 'blog':
+        const blogTitles = [
+          `10 Essential Tips for ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `7 Reasons to Choose Professional ${companyInfo.serviceName} Services in ${companyInfo.location}`,
+          `How to Choose the Right ${companyInfo.serviceName} Provider in ${companyInfo.location}`,
+          `5 Common ${companyInfo.serviceName} Mistakes and How to Avoid Them`,
+          `Common ${companyInfo.serviceName} Mistakes to Avoid in ${companyInfo.location}`,
+          `How to Get the Best ${companyInfo.serviceName} Results in ${companyInfo.location}`,
+          `A Step-by-Step Guide to ${companyInfo.serviceName} for ${companyInfo.location} Residents`,
+          `Expert Advice on ${companyInfo.serviceName} for ${companyInfo.location} Homeowners`,
+          `The Ultimate Guide to ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `Understanding the Costs of ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `Why Professional ${companyInfo.serviceName} Matters in ${companyInfo.location}`,
+          `${companyInfo.serviceName} Best Practices for ${companyInfo.location} Residents`,
+          `Maximizing Value from Your ${companyInfo.serviceName} Investment in ${companyInfo.location}`,
+          `Expert ${companyInfo.serviceName} Tips for ${companyInfo.location} Property Owners`,
+          `How to Save Money on ${companyInfo.serviceName} Services in ${companyInfo.location}`,
+          `${companyInfo.serviceName} Options in ${companyInfo.location}: DIY vs. Professional Services`,
+          `Comparing Top ${companyInfo.serviceName} Providers in ${companyInfo.location}`,
+          `Why ${companyInfo.serviceName} is Essential for ${companyInfo.location} Residents`,
+          `The Importance of Quality ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `The Ultimate ${companyInfo.serviceName} Checklist for ${companyInfo.location} Homeowners`,
+          `Don't Miss These Steps for Effective ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `A Beginner's Guide to ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `Everything You Need to Know About ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `Common ${companyInfo.serviceName} Problems in ${companyInfo.location} and How to Fix Them`,
+          `How to Overcome ${companyInfo.serviceName} Challenges in ${companyInfo.location}`,
+          `Comprehensive Resource for ${companyInfo.serviceName} Services in ${companyInfo.location}`,
+          `Top 10 Resources for ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `Best Tools and Services for ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `Latest Trends in ${companyInfo.serviceName} for ${companyInfo.location}`,
+          `What's New in ${companyInfo.serviceName}: ${companyInfo.location} Edition`,
+          `An Honest Review of ${companyInfo.serviceName} Services in ${companyInfo.location}`,
+          `Comparing the Best ${companyInfo.serviceName} Products for ${companyInfo.location} Homes`,
+          `Tips for Choosing the Right ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `Why Invest in Professional ${companyInfo.serviceName} Services in ${companyInfo.location}`,
+          `How Weather in ${companyInfo.location} Affects Your ${companyInfo.serviceName} Needs`,
+          `Expert Advice on ${companyInfo.serviceName} for ${companyInfo.location} Residents`,
+          `Avoid These ${companyInfo.serviceName} Pitfalls in ${companyInfo.location}`,
+          `Maximizing the Benefits of ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `Seasonal Guide to ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `Environmental Impact of ${companyInfo.serviceName} Choices in ${companyInfo.location}`,
+          `Frequently Asked Questions About ${companyInfo.serviceName} in ${companyInfo.location}`,
+          `Understanding the Costs of ${companyInfo.serviceName} in ${companyInfo.location}`
+        ];
+
+        prompt = `
+          Create an informative blog post about ${companyInfo.serviceName} for ${companyInfo.companyName}'s audience in ${companyInfo.location}.
+
+          Use one of these titles:
+          ${blogTitles.join('\n')}
+
+          Structure the content to:
+          1. Start with an engaging hook that relates to ${companyInfo.location} readers
+          2. Include practical information about:
+             - Common challenges or questions about ${companyInfo.serviceName}
+             - Professional insights and expert tips
+             - Industry best practices
+             - Cost-saving or efficiency-improving strategies
+          3. Provide actionable advice readers can use
+          4. Include relevant examples or case studies
+          5. End with a subtle call to action
+
+          Key requirements:
+          - Use a helpful, conversational tone
+          - Include practical tips and actionable advice
+          - Reference local context when relevant
+          - Break up text with subheadings and bullet points
+          - Focus on providing genuine value
+          - Keep the promotional aspect subtle
+          - Include relevant statistics or data points when possible
+
+          Write the content in Markdown format.`;
+        break;
       
-      const title = blogType.titleTemplate
-        .replace('{service}', companyInfo.serviceName)
-        .replace('{location}', companyInfo.location);
-
-      const customSystemPrompt = `${systemPrompt} ${blogType.systemPromptAddition}`;
-      
-      prompt = `
-        Create a unique and informative blog post titled "${title}" for ${companyInfo.companyName}'s audience in ${companyInfo.location}.
-        
-        ${blogType.contentStructure}
-        
-        Key requirements:
-        - Write in a professional yet conversational tone
-        - Include specific examples relevant to ${companyInfo.location}
-        - Focus on providing actionable value to readers
-        - Include relevant statistics or data points when possible
-        - Maintain SEO-friendly structure without keyword stuffing
-        - Keep paragraphs short and scannable
-        
-        Write the content in Markdown format.`;
-    } else if (contentType === 'service') {
-      prompt = `
-        Create a comprehensive service page for ${companyInfo.companyName}, a respected ${companyInfo.industry} company, focusing on their ${companyInfo.serviceName} service. 
-
-        Structure the content to:
-        1. Open with a compelling introduction that immediately addresses the reader's needs and pain points
-        2. Highlight the unique benefits and features of ${companyInfo.serviceName}, explaining why they matter to the customer
-        3. Include specific details about:
-           - The service process and what customers can expect
-           - Quality standards and professional certifications
-           - Typical problems solved and outcomes achieved
-           - Relevant experience and expertise in this service area
-        4. Address common customer questions and concerns
-        5. End with a clear, compelling call to action. Do not call this headline "Call to action" or "conclusion" make it natural.
-
-        Key requirements:
-        - Use a professional yet conversational tone
-        - Use natural headlines and headings, that are relevant to the content
-        - Include specific details about ${companyInfo.serviceName} that set it apart
-        - Focus on value and benefits rather than just features
-        - Incorporate natural SEO keywords without keyword stuffing
-        - Keep paragraphs short and scannable
-        - Use subheadings to break up content
-
-        Write the content in Markdown format.`;
-    } else if (contentType === 'location') {
-      prompt = `
-        Create a location-specific service page for ${companyInfo.companyName}'s ${companyInfo.serviceName} service in ${companyInfo.location}.
-
-        Structure the content to:
-        1. Open with a locally-focused introduction that connects with the ${companyInfo.location} community
-        2. Explain how ${companyInfo.serviceName} is specifically tailored to:
-           - Local needs and preferences in ${companyInfo.location}
-           - Regional challenges or requirements
-           - Area-specific regulations or standards
-        3. Include details about:
-           - Local service coverage and response times
-           - Experience serving the ${companyInfo.location} area
-           - Understanding of local market conditions
-        4. Highlight any community involvement or local partnerships
-        5. End with a location-specific call to action. Do not call this headline "Call to action" or "conclusion" make it natural.
-
-        Key requirements:
-        - Incorporate local landmarks or area-specific references naturally
-        - Address specific needs of ${companyInfo.location} customers
-        - Use natural headlines and headings, that are relevant to the content
-        - Include local SEO elements without forcing them
-        - Maintain a neighborly yet professional tone
-        - Use clear subheadings and scannable format
-        - Keep content focused on local relevance
-        
-        Write the content in Markdown format.`;
+      default:
+        throw new Error('Invalid content type specified');
     }
 
     console.log('Calling OpenAI with prompt:', prompt);
@@ -149,7 +178,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-4",
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
@@ -172,6 +201,7 @@ serve(async (req) => {
     const generatedContent = completion.choices[0].message.content;
     console.log('Generated content:', generatedContent.substring(0, 100) + '...');
 
+    // Update the query to properly handle locationId
     const query = supabase
       .from('generated_content')
       .update({ 
@@ -182,6 +212,7 @@ serve(async (req) => {
       .eq('service_id', serviceId)
       .eq('type', contentType);
 
+    // Add locationId condition only if it exists
     if (locationId) {
       query.eq('location_id', locationId);
     } else {
@@ -209,7 +240,6 @@ serve(async (req) => {
         } 
       }
     );
-
   } catch (error) {
     console.error('Error in generate-content function:', error);
     return new Response(
