@@ -32,7 +32,15 @@ serve(async (req) => {
     - Builds trust through expertise and credibility
     - Includes natural, contextual calls-to-action
     - Optimizes for local SEO without compromising readability
-    - Uses a warm, professional tone that connects with readers`;
+    - Uses a warm, professional tone that connects with readers
+
+    You excel at creating UNIQUE, diverse content even when writing multiple articles about the same topic. When generating a series of articles:
+- Never repeat the same examples or case studies
+- Use different perspectives and angles for each piece
+- Vary your writing style while maintaining professionalism
+- Draw from different aspects of the industry
+- Use distinct data points and statistics
+Your writing should be original for each piece while maintaining consistent quality and brand voice.`;
 
     switch (contentType) {
       case 'service':
@@ -137,21 +145,25 @@ serve(async (req) => {
         ];
 
         prompt = `
-          Create an informative blog post about ${companyInfo.serviceName} for ${companyInfo.companyName}'s audience in ${companyInfo.location}.
+         Create a UNIQUE and original blog post (one of a series of 5 different articles) about ${companyInfo.serviceName}. Use one of these titles: ${blogTitles.join('\n')}
 
-          Use one of these titles:
-          ${blogTitles.join('\n')}
+Important: 
+This article should be completely different from other articles in the series. To ensure uniqueness:
+- Choose a specific angle or perspective from the title options
+- Focus on a distinct subset of challenges or solutions
+- Use unique examples and case studies
+- Draw from different aspects of ${companyInfo.location}'s context
+- Include different statistics and data points
 
-          Structure the content to:
-          1. Start with an engaging hook that relates to ${companyInfo.location} readers
-          2. Include practical information about:
-             - Common challenges or questions about ${companyInfo.serviceName}
-             - Professional insights and expert tips
-             - Industry best practices
-             - Cost-saving or efficiency-improving strategies
-          3. Provide actionable advice readers can use
-          4. Include relevant examples or case studies
-          5. End with a subtle call to action
+Your chosen angle: [AI should pick one distinct aspect to focus on]
+
+Structure:
+- Ensure content is completely unique from other articles in the series
+- Choose different subheadings and section topics
+- Use distinct examples
+- Reference different local contexts and scenarios
+- Include unique statistics and data points
+- Maintain consistent brand voice and quality while varying the approach
 
           Key requirements:
           - Use a helpful, conversational tone
