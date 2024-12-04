@@ -11,7 +11,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Base system prompt for all content types
 const baseSystemPrompt = `You are an expert content writer and SEO specialist who:
 - Creates engaging, conversion-focused content
 - Uses professional yet approachable language
@@ -24,7 +23,6 @@ When generating multiple pieces:
 - Vary perspectives while maintaining brand voice
 - Use distinct data points and statistics`;
 
-// Shared requirements across all content types
 const sharedRequirements = {
   format: 'Write the content in Markdown format.',
   style: {
@@ -38,7 +36,6 @@ const sharedRequirements = {
   }
 };
 
-// Content templates for different types
 const contentTemplates = {
   service: {
     sections: [
@@ -198,13 +195,12 @@ serve(async (req) => {
       throw new Error('Invalid response from OpenAI API');
     }
 
-    // Clean up the content by removing any markdown code block indicators
     let generatedContent = completion.choices[0].message.content;
     generatedContent = generatedContent.replace(/^```markdown\n|^```\n|```$/gm, '').trim();
     
     console.log('Generated content:', generatedContent.substring(0, 100) + '...');
 
-    // Update the query to properly handle locationId
+    // Update the query to include blog_index for blog posts
     const query = supabase
       .from('generated_content')
       .update({ 
@@ -215,7 +211,10 @@ serve(async (req) => {
       .eq('service_id', serviceId)
       .eq('type', contentType);
 
-    // Add locationId condition only if it exists
+    // Add conditions based on content type
+    if (contentType === 'blog') {
+      query.eq('blog_index', blogIndex);
+    }
     if (locationId) {
       query.eq('location_id', locationId);
     } else {

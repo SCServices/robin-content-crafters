@@ -38,6 +38,7 @@ export type Database = {
       }
       generated_content: {
         Row: {
+          blog_index: number | null
           company_id: string
           content: string | null
           created_at: string
@@ -52,6 +53,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          blog_index?: number | null
           company_id: string
           content?: string | null
           created_at?: string
@@ -66,6 +68,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          blog_index?: number | null
           company_id?: string
           content?: string | null
           created_at?: string
