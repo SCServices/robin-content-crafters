@@ -131,7 +131,9 @@ const buildPrompt = (type: string, companyInfo: any) => {
         ${sharedRequirements.format}
         Focus on: ${template.focus}
         ${Object.values(sharedRequirements.style).join('\n')}
-        ${Object.values(sharedRequirements.elements).join('\n')}`;
+        ${Object.values(sharedRequirements.elements).join('\n')}
+
+        Note: Do not wrap the content in markdown code blocks or add any formatting indicators.`;
       break;
     
     default:
@@ -186,7 +188,10 @@ serve(async (req) => {
       throw new Error('Invalid response from OpenAI API');
     }
 
-    const generatedContent = completion.choices[0].message.content;
+    // Clean up the content by removing any markdown code block indicators
+    let generatedContent = completion.choices[0].message.content;
+    generatedContent = generatedContent.replace(/^```markdown\n|^```\n|```$/gm, '').trim();
+    
     console.log('Generated content:', generatedContent.substring(0, 100) + '...');
 
     // Update the query to properly handle locationId
