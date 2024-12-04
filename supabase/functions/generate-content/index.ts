@@ -72,7 +72,30 @@ const contentTemplates = {
   }
 };
 
-const buildPrompt = (type: string, companyInfo: any) => {
+const getBlogTopics = (service: string) => [
+  {
+    topic: "Tips and Best Practices",
+    prompt: `Create a comprehensive guide with essential tips and best practices for ${service}.`
+  },
+  {
+    topic: "Common Problems and Solutions",
+    prompt: `Address the most common problems people face with ${service} and provide expert solutions.`
+  },
+  {
+    topic: "Cost and Value Guide",
+    prompt: `Create an in-depth analysis of costs, value, and return on investment for ${service}.`
+  },
+  {
+    topic: "Seasonal Considerations",
+    prompt: `Discuss how different seasons affect ${service} and provide season-specific advice.`
+  },
+  {
+    topic: "Latest Trends and Innovations",
+    prompt: `Explore current trends, innovations, and future developments in ${service}.`
+  }
+};
+
+const buildPrompt = (type: string, companyInfo: any, blogIndex?: number) => {
   const template = contentTemplates[type as keyof typeof contentTemplates];
   let prompt = '';
 
@@ -104,10 +127,14 @@ const buildPrompt = (type: string, companyInfo: any) => {
       break;
 
     case 'blog':
+      const topics = getBlogTopics(companyInfo.serviceName);
+      const topicInfo = topics[blogIndex || 0];
+      
       prompt = `
-        Create a UNIQUE and original blog post (one of a series of 5 different articles) about ${companyInfo.serviceName} in ${companyInfo.location}.
+        ${topicInfo.prompt} This article will focus on ${companyInfo.location}.
+        
+        Make this a comprehensive, unique article about ${topicInfo.topic.toLowerCase()} for ${companyInfo.serviceName}.
     
-        Important: This article should be completely different from other articles in the series.
         Structure the content to include:
         ${template.sections.map(section => `- ${section}`).join('\n')}
         
@@ -132,8 +159,8 @@ serve(async (req) => {
   }
 
   try {
-    const { contentType, companyInfo, serviceId, locationId } = await req.json();
-    console.log('Received request:', { contentType, companyInfo, serviceId, locationId });
+    const { contentType, companyInfo, serviceId, locationId, blogIndex } = await req.json();
+    console.log('Received request:', { contentType, companyInfo, serviceId, locationId, blogIndex });
 
     if (!contentType || !companyInfo || !serviceId || !companyInfo.companyId) {
       throw new Error('Missing required parameters');
@@ -141,7 +168,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-    const prompt = buildPrompt(contentType, companyInfo);
+    const prompt = buildPrompt(contentType, companyInfo, blogIndex);
     console.log('Using prompt:', prompt);
     
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {

@@ -148,7 +148,7 @@ export const useContentGeneration = (): ContentGenerationProgress & {
           completedItems++;
           updateProgress(completedItems, totalItems, setProgress);
 
-          // Generate 5 blog posts
+          // Generate 5 blog posts with different topics
           for (let i = 0; i < 5; i++) {
             await supabase.functions.invoke("generate-content", {
               body: {
@@ -156,6 +156,7 @@ export const useContentGeneration = (): ContentGenerationProgress & {
                 companyInfo: locationInfo,
                 serviceId: service.id,
                 locationId: location.id,
+                blogIndex: i,
                 model: "gpt-4o mini"
               },
             });
