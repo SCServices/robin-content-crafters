@@ -72,20 +72,6 @@ const contentTemplates = {
   }
 };
 
-// Reduced set of blog title patterns
-const blogTitlePatterns = [
-  '{number} Essential Tips for {service} in {location}',
-  'How to Choose the Right {service} Provider in {location}',
-  'The Ultimate Guide to {service} in {location}',
-  '{service} Best Practices for {location} Residents',
-  'Expert {service} Tips for {location} Property Owners',
-  'Maximizing Value from Your {service} Investment in {location}',
-  'Common {service} Problems in {location} and How to Fix Them',
-  'Latest Trends in {service} for {location}',
-  'Seasonal Guide to {service} in {location}',
-  'Environmental Impact of {service} Choices in {location}'
-];
-
 const buildPrompt = (type: string, companyInfo: any) => {
   const template = contentTemplates[type as keyof typeof contentTemplates];
   let prompt = '';
@@ -120,10 +106,7 @@ const buildPrompt = (type: string, companyInfo: any) => {
     case 'blog':
       prompt = `
         Create a UNIQUE and original blog post (one of a series of 5 different articles) about ${companyInfo.serviceName} in ${companyInfo.location}.
-        
-        Choose one of these title patterns:
-        ${blogTitlePatterns.join('\n')}
-
+    
         Important: This article should be completely different from other articles in the series.
         Structure the content to include:
         ${template.sections.map(section => `- ${section}`).join('\n')}
