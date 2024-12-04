@@ -1,55 +1,48 @@
-import { getRandomTemplate, serviceTitleTemplates, locationTitleTemplates, blogTitleTemplates } from "@/lib/titleTemplates";
+import { titleTemplates } from "../titleTemplates";
 
 export const createContentEntries = (
   companyId: string,
-  servicesData: any[],
-  locationsData: any[]
+  services: { id: string; name: string }[],
+  locations: { id: string; location: string }[]
 ) => {
-  const contentEntries = [];
+  const entries = [];
 
-  // Service pages
-  for (const service of servicesData) {
-    if (!service?.id) continue;
-    contentEntries.push({
+  for (const service of services) {
+    // Service page
+    entries.push({
       company_id: companyId,
       service_id: service.id,
-      title: getRandomTemplate(serviceTitleTemplates, { service: service.name }),
+      title: titleTemplates.service(service.name),
       type: "service",
+      status: "pending",
     });
-  }
 
-  // Location pages and blog posts
-  for (const service of servicesData) {
-    if (!service?.id) continue;
-    for (const location of locationsData) {
-      if (!location?.id) continue;
-      // Add location page
-      contentEntries.push({
+    // Location pages and blog posts
+    for (const location of locations) {
+      // Location page
+      entries.push({
         company_id: companyId,
         service_id: service.id,
         location_id: location.id,
-        title: getRandomTemplate(locationTitleTemplates, { 
-          service: service.name,
-          location: location.location 
-        }),
+        title: titleTemplates.location(service.name, location.location),
         type: "location",
+        status: "pending",
       });
 
-      // Add 5 blog posts for each service/location combination
+      // 5 blog posts per service/location
       for (let i = 0; i < 5; i++) {
-        contentEntries.push({
+        entries.push({
           company_id: companyId,
           service_id: service.id,
           location_id: location.id,
-          title: getRandomTemplate(blogTitleTemplates, {
-            service: service.name,
-            location: location.location
-          }),
+          title: titleTemplates.blog(service.name, location.location),
           type: "blog",
+          status: "pending",
+          blog_index: i, // Add the blog_index for blog posts
         });
       }
     }
   }
 
-  return contentEntries;
+  return entries;
 };
